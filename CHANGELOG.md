@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0
+
+`dsh-plugin verify` — the check that reads the tarball instead of the working copy.
+
+- Packs, installs that tarball into a throwaway directory, and mounts the bundle **from the installed copy**, so "works in the repo, broken after `npm i`" is caught before publishing.
+- Fails when the tarball omits the client bundle (found by convention, so it is not in the `files` check doctor runs) or anything else `package.json` points at.
+- `--no-mount` stops after packing, for plugins whose panel needs a host to be meaningful.
+
 ## 0.5.0
 
 `dsh-plugin init` — scaffolding that already passes the checks people hit after their first publish.

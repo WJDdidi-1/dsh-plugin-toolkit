@@ -198,6 +198,24 @@ The same checks run as a GitHub Action, so a tag cannot go out on a plugin that 
 
 Exit code is `0` when the plugin can be installed and `1` when it cannot, so it drops into CI unchanged.
 
+## Prove the tarball works, not just the repository
+
+`doctor` reads your working copy. Users install the tarball, and a `files` list can ship everything except the panel — `doctor` will not notice.
+
+```sh
+$ npx dsh-plugin-toolkit@0.6.0 verify .
+ok  packed 5 file(s), installed the tarball, mounted the panel
+    My panel This panel came from dsh-plugin init. Clicks: 0
+```
+
+It packs, installs that tarball into a throwaway directory, then mounts the bundle **from the installed copy**. When the `files` list drops the panel:
+
+```sh
+$ npx dsh-plugin-toolkit@0.6.0 verify .
+dsh-plugin verify: stopped at pack
+  ✗ pack: the tarball does not contain client.js, so the installed plugin has no panel
+```
+
 ## What `release` does
 
 `release` runs the sequence in the order that fails cheapest first:
