@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0
+
+`dsh-plugin init` — scaffolding that already passes the checks people hit after their first publish.
+
+- Writes eight files: `package.json` (with `engines.dsh`, the patch file and a `files` list that actually ships the code), `cordis.patch.yml`, `index.js`, `client.js` (a sidebar tab), a testkit test for that tab, a CI workflow that runs both, `README.md` and `.gitignore`.
+- Refuses a directory that is not empty unless `--force`, and refuses a name npm would refuse — the two mistakes that cost the most time later.
+- The template is embedded, so `init` works offline.
+
 ## 0.4.1
 
 - `examples/`: four runnable files (`mount-a-bundle`, `route-stubs`, `baseline`, `aria`), each showing one thing testkit does.

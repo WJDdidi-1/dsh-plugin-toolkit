@@ -25,6 +25,25 @@ Releasing one plugin fifteen times taught me three things the ecosystem's toolin
 3. **Reading a manifest is not the same as checking it.** A plugin can have a valid `package.json` and still be uninstallable: `files` that omit the entry the manifest points at, a bundle patch that does not exist, a README that never states the host range it declares.
 
 
+## Start from a plugin that already passes
+
+```sh
+$ npx dsh-plugin-toolkit@0.5.0 init ./my-panel --name my-panel --title "My panel"
+created 8 file(s) in /Users/you/my-panel
+  .github/workflows/ci.yml
+  .gitignore
+  README.md
+  client.js
+  cordis.patch.yml
+  index.js
+  package.json
+  test/panel.test.mjs
+
+next: npm install && npm test && npm run doctor
+```
+
+What you get is not a snippet: it is a plugin whose `doctor` already passes (`engines.dsh`, the patch file, the `files` list), with a client bundle that registers a sidebar tab, a testkit test for it, and a CI workflow that runs both. `init` refuses a directory that is not empty unless you pass `--force`, and refuses a name npm would refuse — those are the two mistakes that cost the most time later.
+
 ## Test a panel without a browser
 
 A plugin's client code is one file that calls `window.__ModuleLoader__.load({factory})` — there is no module to import, so the usual React test setup does not apply. `testkit` supplies the missing half: a DOM, the real React, and a host context that records what the panel registers.
