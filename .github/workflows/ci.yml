@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: node ${{ matrix.node }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm test
+
+  dogfood:
+    name: the tool on a real plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node bin/dsh-plugin.mjs doctor test/fixtures/good
+      - name: a broken plugin must fail
+        run: |
+          if node bin/dsh-plugin.mjs doctor test/fixtures/no-engines; then
+            echo "doctor accepted a plugin with no host range"; exit 1
+          fi
+      - run: node bin/dsh-plugin.mjs release test/fixtures/good --dry-run

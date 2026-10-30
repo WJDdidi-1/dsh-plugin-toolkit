@@ -1,0 +1,43 @@
+{
+  "name": "dsh-plugin-toolkit",
+  "version": "0.1.0",
+  "description": "Preflight, release and test DeepSeek Harness plugins: checks what the host needs, waits for npm to actually serve the version, and keeps the market index honest.",
+  "type": "module",
+  "bin": {
+    "dsh-plugin": "bin/dsh-plugin.mjs"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "dsh",
+    "plugin-tooling",
+    "release",
+    "preflight"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WJDdidi-1/dsh-plugin-toolkit.git"
+  },
+  "homepage": "https://github.com/WJDdidi-1/dsh-plugin-toolkit#readme",
+  "bugs": {
+    "url": "https://github.com/WJDdidi-1/dsh-plugin-toolkit/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "node --test",
+    "lint": "node --check bin/dsh-plugin.mjs"
+  }
+}

@@ -1,0 +1,6 @@
+node_modules/
+*.tgz
+
+# Screenshots and scratch files from local runs
+/tmp/
+*.png
