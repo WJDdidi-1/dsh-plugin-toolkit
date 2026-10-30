@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- A missing peer dependency now names the install command instead of failing with `ERR_MODULE_NOT_FOUND`.
+
 ## 0.2.0
 
 - `dsh-plugin-toolkit/testkit`: mount a single-file client bundle in jsdom with the real React and a recording host context — `click`, `type`, `press`, `must`, `attributes`, and normalised DOM baselines.
