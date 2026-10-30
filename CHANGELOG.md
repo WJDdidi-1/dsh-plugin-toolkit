@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0
+
+- `dsh-plugin dev`: copy a rebuilt bundle into the installed plugin, then confirm the reload from the host's `/plugins/events` stream. Subscribing happens *before* the write, because a copy made first is reported to nobody.
+- Without `--host` the copy still happens and the tool says the reload is unconfirmed — no guessed port, no false negative.
+- A failed `--build` copies nothing.
+
 ## 0.2.2
 
 - `unmount()` closes the jsdom window, so a panel that polls does not keep the test process alive.

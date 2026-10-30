@@ -65,6 +65,33 @@ $ npx dsh-plugin mount ../ai-context-doctor/plugin/client.js
 AIignore No workspace yet Could not read the report …
 ```
 
+## Edit a plugin that is already installed
+
+The host already swaps a rebuilt bundle without a page reload: it watches each plugin's entry artifact and reports a `rebuilt` frame on `/plugins/events`. `dev` puts the new file where the host is looking, then **proves** the frame arrived instead of asking you to check by eye.
+
+```sh
+npx dsh-plugin dev . --host http://127.0.0.1:54133
+```
+
+```
+demo-aiignore: /work/plugin/client.js -> ~/.dsh/profiles/desktop/node_modules/dsh-aiignore/client.js
+initial: copied 163647 bytes at 1:18:43 AM
+reloaded dsh-aiignore (rev e0c0230c4fc9)
+watching /work/plugin
+```
+
+That last line is the whole point: the revision came back from the app's own event stream, so "it reloaded" is a fact, not a hope.
+
+| Flag | Meaning |
+|---|---|
+| `--dest <dir>` | write into this installed copy instead of searching `~/.dsh/profiles/*/node_modules/<name>` |
+| `--entry <file>` | copy this file instead of `dsh.client.entry`, `client.js`, `lib/client.js` |
+| `--build <command>` | run this before each copy (a failed build copies nothing) |
+| `--host <url>` | confirm the reload against the app at this URL; without it the copy still happens and the tool says it is unconfirmed |
+| `--once` | copy once and exit, for scripts |
+
+Two things it does not do, because the host does not: React state inside the reloaded plugin is lost, and a failed swap does not roll back to the previous bundle.
+
 ## Use it in CI
 
 The same checks run as a GitHub Action, so a tag cannot go out on a plugin that would not install:
