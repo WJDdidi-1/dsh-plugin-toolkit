@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.2
+
+- `expectSnapshot(html, dir, name)`: the assertion form of `compare`, so a baseline test reads like a test and fails with the element that moved.
+- README: how to keep a DOM baseline, and how to assert what assistive tech sees.
+
 ## 0.3.1
 
 - `unmount()` now waits one macrotask before the DOM goes away. React schedules work during its own unmount, and closing jsdom first turned that into `ReferenceError: window is not defined` after a passing test. Found by the example plugin's second test.

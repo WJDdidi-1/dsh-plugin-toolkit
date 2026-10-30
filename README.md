@@ -55,6 +55,29 @@ await panel.unmount();
 
 What you get back: `text()`, `html()`, `query(selector)`, `must(selector)` (throws with the rendered HTML when it misses), `click(selector)`, `type(selector, value)`, `press(selector, key)`, `focus`, `attributes(selector)`, `snapshot(dir, name)` for a normalised DOM baseline, and `host` for assertions about what the bundle registered.
 
+### Keep a visual baseline
+
+The DOM is the baseline: normalising class order and whitespace gives a file that fails for the reasons a screenshot would — a lost label, a control that stopped rendering — and can be reviewed in a diff instead of by eye.
+
+```js
+import { expectSnapshot } from 'dsh-plugin-toolkit/testkit';
+
+const panel = await mountClient({ file: 'client.js' });
+expectSnapshot(panel.html(), '__snapshots__', 'panel');   // throws with the element that moved
+await panel.unmount();
+```
+
+First run writes nothing: it tells you to re-run with `UPDATE_SNAPSHOTS=1`, so a baseline is always a decision, never a side effect.
+
+### Check what assistive tech sees
+
+```js
+assert.equal(panel.attributes('[role="tab"][aria-selected="true"]').id, 'tab-protection');
+assert.match(panel.must('[role="status"]').textContent, /Score moved 71 → 77/);
+```
+
+`must()` throws with the rendered markup when the selector misses, which is the difference between "the assertion failed" and "here is what the user actually got".
+
 To look at a bundle by hand:
 
 ```sh
