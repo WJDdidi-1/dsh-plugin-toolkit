@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.3
+
+- `mount` on a path that is missing, or that is a directory, now says what to pass instead of raising `ENOENT: no such file or directory, open '…'`. Found by running the three commands in a clean HOME with a fresh clone.
+
 ## 0.3.2
 
 - `expectSnapshot(html, dir, name)`: the assertion form of `compare`, so a baseline test reads like a test and fails with the element that moved.
