@@ -108,6 +108,10 @@ The host already swaps a rebuilt bundle without a page reload: it watches each p
 npx dsh-plugin dev . --host http://127.0.0.1:54133
 ```
 
+![dsh-plugin dev printing the revision the app reported](docs/dev.gif)
+
+*Recorded from a real run against the running app: the last line is the revision the app sent back on `/plugins/events`, not a message the tool printed on faith.*
+
 ```
 demo-aiignore: /work/plugin/client.js -> ~/.dsh/profiles/desktop/node_modules/dsh-aiignore/client.js
 initial: copied 163647 bytes at 1:18:43 AM
