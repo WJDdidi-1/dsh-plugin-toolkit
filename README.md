@@ -1,5 +1,7 @@
 # dsh-plugin-toolkit
 
+![dsh-plugin-toolkit](docs/card.png)
+
 A preflight and release tool for [DeepSeek Harness](https://github.com/deepseek-ai/dsh) plugins, plus the pieces of the publishing ritual that kept going wrong by hand.
 
 ```
