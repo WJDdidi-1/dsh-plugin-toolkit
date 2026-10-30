@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.1
+
+- `npm`, `git` and `gh` are `.cmd` shims on Windows; `execFileSync('npm', …)` fails there with `spawnSync npm ENOENT`. One helper (`lib/exec.mjs`) now maps the name, instead of a `shell: true` at every call site. Caught by the Windows CI job that 0.6.0 added tests to.
+
 ## 0.6.0
 
 `dsh-plugin verify` — the check that reads the tarball instead of the working copy.

@@ -51,3 +51,9 @@ test('a manifest that doctor rejects stops before npm is asked anything', async 
   assert.equal(result.stage, 'doctor');
   assert.match(result.failures[0].message, /engines\.dsh/);
 });
+
+test('tool names get their Windows suffix in one place', async () => {
+  const { command } = await import('../lib/exec.mjs');
+  const expected = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+  assert.equal(command('npm'), expected);
+});
