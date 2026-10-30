@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.3
+
+- `git` and `gh` are `.exe` on Windows, not `.cmd`; 0.6.2 renamed them too and `git.cmd` does not exist. Only the npm family is a shim now.
+
 ## 0.6.2
 
 - 0.6.1 named the Windows shim but spawned `npm.cmd` directly, which Node 18.20/20.12 reject with `EINVAL` (the fix for CVE-2024-27980). `lib/exec.mjs` now runs through the shell on Windows and quotes each argument; elsewhere nothing changes.

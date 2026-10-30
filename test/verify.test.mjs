@@ -52,8 +52,10 @@ test('a manifest that doctor rejects stops before npm is asked anything', async 
   assert.match(result.failures[0].message, /engines\.dsh/);
 });
 
-test('tool names get their Windows suffix in one place', async () => {
+test('only the npm family gets a Windows suffix, because git and gh are .exe', async () => {
   const { command } = await import('../lib/exec.mjs');
-  const expected = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-  assert.equal(command('npm'), expected);
+  const win = process.platform === 'win32';
+  assert.equal(command('npm'), win ? 'npm.cmd' : 'npm');
+  assert.equal(command('git'), 'git');
+  assert.equal(command('gh'), 'gh');
 });
