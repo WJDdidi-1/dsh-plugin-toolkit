@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.4
+
+- CI now runs on Windows as well as Linux and macOS; two tests assumed a POSIX temp path (`/tmp/…`) and were rewritten with `path.join`.
+- Verified `mount`, `doctor` and `release --dry-run` on Node 18.20.8 (not just the version CI installs), and the SSE wait against a stream shaped like the app's.
+
 ## 0.3.3
 
 - `mount` on a path that is missing, or that is a directory, now says what to pass instead of raising `ENOENT: no such file or directory, open '…'`. Found by running the three commands in a clean HOME with a fresh clone.

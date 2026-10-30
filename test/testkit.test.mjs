@@ -71,6 +71,7 @@ test('the rendered markup matches its baseline', async () => {
 
 test('a path that is not a bundle says what to pass instead of raising ENOENT', async () => {
   const { loadBundle } = await import('../lib/testkit/load.mjs');
-  assert.throws(() => loadBundle('/tmp/definitely-not-here/client.js'), /no such file: .*mount takes the client bundle/);
-  assert.throws(() => loadBundle(new URL('..', import.meta.url).pathname), /is a directory .*mount takes the client bundle inside it/);
+  const missing = path.join(here, 'definitely-not-here', 'client.js');
+  assert.throws(() => loadBundle(missing), /no such file: .*mount takes the client bundle/);
+  assert.throws(() => loadBundle(here), /is a directory .*mount takes the client bundle inside it/);
 });

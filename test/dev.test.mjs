@@ -39,7 +39,7 @@ test('the installed copy is found in a profile, or taken from --dest', () => {
   fs.mkdirSync(installed, { recursive: true });
   assert.equal(resolveDest('demo-plugin', { home }), installed);
   assert.equal(resolveDest('other-plugin', { home }), null);
-  assert.equal(resolveDest('demo-plugin', { home, dest: '/tmp/elsewhere' }), path.resolve('/tmp/elsewhere'));
+  assert.equal(resolveDest('demo-plugin', { home, dest: path.join(home, 'elsewhere') }), path.resolve(path.join(home, 'elsewhere')));
 });
 
 test('copying updates the file the host watches', () => {
