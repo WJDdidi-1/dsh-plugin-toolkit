@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2
+
+- `unmount()` closes the jsdom window, so a panel that polls does not keep the test process alive.
+- The first paint waits for the panel's own fetches inside `act`, which removes the flood of "not wrapped in act" warnings that buried real failures.
+
 ## 0.2.1
 
 - A missing peer dependency now names the install command instead of failing with `ERR_MODULE_NOT_FOUND`.
