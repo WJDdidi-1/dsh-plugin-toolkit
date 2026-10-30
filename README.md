@@ -2,19 +2,48 @@
 
 ![dsh-plugin-toolkit](docs/card.png)
 
-A preflight and release tool for [DeepSeek Harness](https://github.com/deepseek-ai/dsh) plugins, plus the pieces of the publishing ritual that kept going wrong by hand.
+Everything a [DeepSeek Harness](https://github.com/deepseek-ai/dsh) plugin needs between `init` and a version the market index accepts: scaffolding, a test harness for the client bundle, a way to see a change without restarting the app, and a release that does not depend on remembering fourteen steps.
 
+```sh
+npx dsh-plugin-toolkit@0.7.0 init ./my-panel --name my-panel   # a plugin that already passes the checks
+npx dsh-plugin-toolkit@0.7.0 verify .                          # pack it, install the tarball, mount the panel
+npx dsh-plugin-toolkit@0.7.0 release --pr --merge              # tag, wait for npm, update the index, open and merge the PR
 ```
-npx dsh-plugin doctor .          # can this plugin be loaded and installed?
-npx dsh-plugin index             # does every market-index version state a host range?
-npx dsh-plugin release --dry-run # what would shipping this version do?
+
+## Three paths
+
+| You are… | Start with | Then |
+| --- | --- | --- |
+| writing your first plugin | [`init`](#1-write-a-plugin) | `doctor`, `verify` |
+| changing a panel that is already installed | [`dev`](#2-develop-a-panel) | `mount`, the testkit |
+| shipping a version | [`verify`](#3-ship-a-version) | `release`, `index` |
+
+### 1. Write a plugin
+
+[`init`](#start-from-a-plugin-that-already-passes) writes the files whose absence shows up as a failed first publish — `engines.dsh`, the patch file, a `files` list that ships the code, a client bundle, a test for it, and the CI that runs both. `doctor` then checks the same things without writing anything, and [`verify`](#prove-the-tarball-works-not-just-the-repository) checks the tarball instead of the working copy.
+
+```sh
+npx dsh-plugin-toolkit@0.7.0 init ./my-panel --name my-panel
+cd my-panel && npm install && npm test && npx dsh-plugin-toolkit@0.7.0 doctor .
 ```
 
-## Requirements
+### 2. Develop a panel
 
-- Node.js 18 or newer (`node --fetch` is used to read the registry; no dependencies)
-- Git and `gh` on `PATH` for the steps that touch GitHub
-- DeepSeek Harness `>=0.2.0` — the version whose market index carries `engines.dsh`, which is what makes the range check meaningful
+A plugin's client code is one file that calls `window.__ModuleLoader__.load({factory})` — there is no module to import, so the usual React test setup does not apply. [`testkit`](#test-a-panel-without-a-browser) supplies the missing half, and [`dev`](#edit-a-plugin-that-is-already-installed) pushes a rebuilt bundle into the running app.
+
+```sh
+npx dsh-plugin-toolkit@0.7.0 mount ./client.js     # what a user would see, without the app
+npx dsh-plugin-toolkit@0.7.0 dev . --host http://127.0.0.1:54133
+```
+
+### 3. Ship a version
+
+`verify` first (it is the only check that reads the tarball), then `release`, which tags, waits for the registry, writes the index entry with the publish time the registry reports, and — with `--pr --merge` — opens and merges the pull request.
+
+```sh
+npx dsh-plugin-toolkit@0.7.0 verify .
+npx dsh-plugin-toolkit@0.7.0 release . --pr --merge
+```
 
 ## Why this exists
 
@@ -24,11 +53,17 @@ Releasing one plugin fifteen times taught me three things the ecosystem's toolin
 2. **The market index is a second release, done by hand.** Each version needs an entry carrying `publishTimestamp` from the registry and `engines.dsh` from the manifest. Forget the range and the index validator rejects the PR with `Engines mismatch` — after the tag is already public.
 3. **Reading a manifest is not the same as checking it.** A plugin can have a valid `package.json` and still be uninstallable: `files` that omit the entry the manifest points at, a bundle patch that does not exist, a README that never states the host range it declares.
 
+## Requirements
+
+- Node.js 18 or newer (the registry is read with `fetch`; no runtime dependencies)
+- Git and `gh` on `PATH` for the steps that touch GitHub
+- DeepSeek Harness `>=0.2.0` — the version whose market index carries `engines.dsh`, which is what makes the range check meaningful
+- For `testkit`: `jsdom`, `react` and `react-dom` as dev dependencies (`npm install --save-dev jsdom react react-dom`)
 
 ## Start from a plugin that already passes
 
 ```sh
-$ npx dsh-plugin-toolkit@0.5.0 init ./my-panel --name my-panel --title "My panel"
+$ npx dsh-plugin-toolkit@0.7.0 init ./my-panel --name my-panel --title "My panel"
 created 8 file(s) in /Users/you/my-panel
   .github/workflows/ci.yml
   .gitignore
@@ -203,7 +238,7 @@ Exit code is `0` when the plugin can be installed and `1` when it cannot, so it 
 `doctor` reads your working copy. Users install the tarball, and a `files` list can ship everything except the panel — `doctor` will not notice.
 
 ```sh
-$ npx dsh-plugin-toolkit@0.6.0 verify .
+$ npx dsh-plugin-toolkit@0.7.0 verify .
 ok  packed 5 file(s), installed the tarball, mounted the panel
     My panel This panel came from dsh-plugin init. Clicks: 0
 ```
@@ -211,7 +246,7 @@ ok  packed 5 file(s), installed the tarball, mounted the panel
 It packs, installs that tarball into a throwaway directory, then mounts the bundle **from the installed copy**. When the `files` list drops the panel:
 
 ```sh
-$ npx dsh-plugin-toolkit@0.6.0 verify .
+$ npx dsh-plugin-toolkit@0.7.0 verify .
 dsh-plugin verify: stopped at pack
   ✗ pack: the tarball does not contain client.js, so the installed plugin has no panel
 ```
@@ -249,17 +284,14 @@ Without `--pr` it prints the `git add` / `gh pr create` commands instead of runn
 | 1 | A check failed, or the release stopped (the failing stage is named) |
 | 2 | Unknown command |
 
-## Looking at it without a Harness
+## What is not here yet
 
-The fixtures under `test/fixtures/` are three tiny plugins — one good, one missing its host range, one whose README contradicts its manifest — and the tests run every check against them:
+Honest list, so nobody plans around a feature that does not exist:
 
-```
-npm test
-```
-
-## Roadmap
-
-- `dev`: watch a client bundle and push it to a running app, instead of restarting the app for every change. Needs one probe first: whether the host exposes a channel that accepts a pushed bundle.
+- **No `npm publish`.** `release` pushes the tag and waits for the registry, so publishing stays in the workflow where your token and provenance live. It never holds your npm credentials.
+- **No check against a running app.** `verify` mounts the installed bundle in Node with a stubbed host. It cannot prove the panel appears in a real sidebar — only that the code the tarball ships renders.
+- **`dev --host` is not covered by CI.** The unit tests use a synthetic event stream; the live path is exercised by hand against a running app, on macOS only.
+- **No Windows testing of the `dev` file watcher.** The Windows CI job runs the whole suite, but the watcher is only asserted against a temp directory, not a real profile.
 
 ## License
 

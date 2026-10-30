@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.0
+
+Documentation, restructured around what you are trying to do rather than what the tool contains.
+
+- README opens with **Three paths** — write a plugin, develop a panel, ship a version — and each path shows the commands it needs.
+- `--help` gives every command one example line that can be pasted as-is, instead of syntax with placeholders.
+- The stale `Roadmap` (which still described `dev` as unbuilt, two releases after it shipped) is replaced by **What is not here yet**: no `npm publish`, no check against a running app, `dev --host` not covered by CI, no Windows test of the watcher.
+- `test/help.test.mjs` keeps all three honest: every command needs an example without placeholders, the three paths must show each command, and the README may not call a shipped feature unbuilt.
+
 ## 0.6.3
 
 - `git` and `gh` are `.exe` on Windows, not `.cmd`; 0.6.2 renamed them too and `git.cmd` does not exist. Only the npm family is a shim now.
