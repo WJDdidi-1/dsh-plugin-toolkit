@@ -1,0 +1,70 @@
+import assert from 'node:assert/strict';
+import path from 'node:path';
+import test from 'node:test';
+import { fileURLToPath } from 'node:url';
+
+import { mountClient } from '../lib/testkit/index.mjs';
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const bundle = path.join(here, '..', 'fixtures', 'client-bundle', 'client.js');
+
+test('a client bundle mounts and its text is readable', async () => {
+  const panel = await mountClient({ file: bundle });
+  assert.match(panel.text(), /Demo panel/);
+  assert.match(panel.text(), /Count 0/);
+  assert.equal(panel.must('[data-testid="inc"]').getAttribute('aria-label'), 'increment');
+  await panel.unmount();
+});
+
+test('a click goes through React and updates the DOM', async () => {
+  const panel = await mountClient({ file: bundle });
+  await panel.click('[data-testid="inc"]');
+  await panel.click('[data-testid="inc"]');
+  assert.match(panel.text(), /Count 2/);
+  assert.equal(panel.must('.demo-result').getAttribute('aria-live'), 'polite');
+  await panel.unmount();
+});
+
+test('the registered locale table is what the panel translates through', async () => {
+  const panel = await mountClient({ file: bundle, copy: { demo: { title: '演示' } } });
+  assert.equal(panel.host.registeredLocale('demo').title, 'Demo');
+  assert.equal(panel.host.locale.bind('demo')('title'), 'Demo');
+  assert.equal(panel.host.locale.bind('demo')('missing'), 'missing');
+  await panel.unmount();
+});
+
+test('a bundle that registers nothing is reported by name, not by stack trace', async () => {
+  await assert.rejects(() => mountClient({ file: bundle, slot: 'conversation.input.left' }), /registered no "conversation\.input\.left" slot/);
+});
+
+test('route stubs answer what they were told, and remember what was asked', async () => {
+  const { createFetch } = await import('../lib/testkit/index.mjs');
+  const stub = createFetch({
+    '/api/report': { body: { score: 71 } },
+    '/api/save': ({ }) => ({ status: 201, body: { saved: true } }),
+  });
+  const first = await stub('/api/report?fresh=1');
+  assert.equal(first.status, 200);
+  assert.deepEqual(await first.json(), { score: 71 });
+  const saved = await stub('/api/save', { method: 'POST', body: '{"x":1}' });
+  assert.equal(saved.status, 201);
+  const missing = await stub('/api/unknown');
+  assert.equal(missing.status, 404);
+  assert.deepEqual(stub.requests.map((request) => `${request.method} ${request.path}`), ['GET /api/report', 'POST /api/save', 'GET /api/unknown']);
+});
+
+test('a panel mounts against route stubs instead of a live plugin server', async () => {
+  const { createFetch } = await import('../lib/testkit/index.mjs');
+  const stub = createFetch({});
+  const panel = await mountClient({ file: bundle, fetch: stub });
+  assert.match(panel.text(), /Demo panel/);
+  await panel.unmount();
+});
+
+test('the rendered markup matches its baseline', async () => {
+  const panel = await mountClient({ file: bundle });
+  const dir = path.join(here, '..', 'fixtures', 'client-bundle', '__snapshots__');
+  if (process.env.UPDATE_SNAPSHOTS === '1') panel.writeSnapshot(dir, 'panel');
+  panel.snapshot(dir, 'panel');
+  await panel.unmount();
+});

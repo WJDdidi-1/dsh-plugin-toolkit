@@ -23,6 +23,48 @@ Releasing one plugin fifteen times taught me three things the ecosystem's toolin
 3. **Reading a manifest is not the same as checking it.** A plugin can have a valid `package.json` and still be uninstallable: `files` that omit the entry the manifest points at, a bundle patch that does not exist, a README that never states the host range it declares.
 
 
+## Test a panel without a browser
+
+A plugin's client code is one file that calls `window.__ModuleLoader__.load({factory})` — there is no module to import, so the usual React test setup does not apply. `testkit` supplies the missing half: a DOM, the real React, and a host context that records what the panel registers.
+
+```sh
+npm install --save-dev jsdom react react-dom
+```
+
+```js
+import { mountClient, createFetch } from 'dsh-plugin-toolkit/testkit';
+
+const panel = await mountClient({
+  file: 'client.js',
+  copy: { 'my-plugin': { title: 'My panel' } },
+  fetch: createFetch({
+    '/my-plugin/report': { body: { score: 71, noise: 3 } },
+    '/my-plugin/apply': () => ({ status: 201, body: { score: 92 } }),
+  }),
+});
+
+await panel.click('[data-testid="optimize"]');
+console.assert(panel.text().includes('92'), 'the score on screen did not move');
+console.assert(panel.must('[role="status"]').textContent.includes('92'));
+await panel.unmount();
+```
+
+What you get back: `text()`, `html()`, `query(selector)`, `must(selector)` (throws with the rendered HTML when it misses), `click(selector)`, `type(selector, value)`, `press(selector, key)`, `focus`, `attributes(selector)`, `snapshot(dir, name)` for a normalised DOM baseline, and `host` for assertions about what the bundle registered.
+
+To look at a bundle by hand:
+
+```sh
+npx dsh-plugin mount ./client.js            # print the text a user would see
+npx dsh-plugin mount ./client.js --html     # print the markup
+```
+
+That is how the AIignore panel was checked before release: the real bundle, mounted in Node, against a stubbed `/aiignore/*`:
+
+```
+$ npx dsh-plugin mount ../ai-context-doctor/plugin/client.js
+AIignore No workspace yet Could not read the report …
+```
+
 ## Use it in CI
 
 The same checks run as a GitHub Action, so a tag cannot go out on a plugin that would not install:
@@ -81,8 +123,7 @@ npm test
 
 ## Roadmap
 
-- `testkit`: load a single-file client bundle in a DOM with a fake host ctx, so panel behaviour can be asserted in CI instead of by hand.
-- `dev`: watch a client bundle and push it to a running app, instead of restarting the app for every change.
+- `dev`: watch a client bundle and push it to a running app, instead of restarting the app for every change. Needs one probe first: whether the host exposes a channel that accepts a pushed bundle.
 
 ## License
 
