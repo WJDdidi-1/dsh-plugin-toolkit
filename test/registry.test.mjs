@@ -85,3 +85,19 @@ test('the registry document is asked for in full, because the index needs `time`
   });
   assert.equal(seen, 'application/json');
 });
+
+test('a package the registry has never heard of fails at once instead of polling', async () => {
+  const { waitForVersion } = await import('../lib/registry.mjs');
+  let calls = 0;
+  const result = await waitForVersion('never-published-plugin', '1.0.0', {
+    fetch: async () => {
+      calls += 1;
+      return { status: 404, ok: false, json: async () => ({}) };
+    },
+    sleep: async () => {},
+    budgetMs: 60_000,
+    intervalMs: 1,
+  });
+  assert.equal(result.missingPackage, true);
+  assert.equal(calls, 1);
+});

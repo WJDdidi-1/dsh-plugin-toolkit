@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.0
+
+`release` can now finish the job instead of printing the next command.
+
+- `--pr` commits the index on `market/<version>`, pushes it, and opens the pull request with `gh`.
+- `--merge` (with `--pr`) waits for `gh pr checks` to settle and squash-merges.
+- A repository with no CI is treated as settled rather than waited on; `gh` prints "no checks reported" on **stderr** and exits 1, which is why stderr is now piped instead of dropped.
+- Re-running a release after a failure no longer throws: the same version with the same publish time is a no-op, and a different timestamp stops with both values in the message.
+- A package the registry has never heard of fails immediately (`the registry has no package named …`) instead of polling for eight minutes.
+- `release` forwards `fetch`, so a caller can answer instead of npm.
+
+Verified end to end against a throwaway package: tag → publish → registry wait → index write → PR #3 → checks → merged.
+
 ## 0.3.5
 
 Four bugs found by running `release` for real against a throwaway package, instead of only `--dry-run`:

@@ -166,10 +166,22 @@ Exit code is `0` when the plugin can be installed and `1` when it cannot, so it 
 2. Refuse to run on a dirty tree, or if the tag already exists.
 3. Create and push the tag, which starts the plugin's release workflow.
 4. Poll the registry until it actually serves that version, reporting each wait.
-5. Write the index entry with the publish time **the registry reports**, not the local clock.
-6. Print the exact `git add` / `gh pr create` commands for the index change.
+5. Write the index entry with the publish time **the registry reports**, not the local clock. It waits for `time[version]` specifically: the abbreviated registry document has no `time` field, and an entry with a null timestamp is rejected by the market checker.
+6. With `--pr`: commit that entry on `market/<version>`, push it, and open the pull request. With `--merge` as well: wait for `gh pr checks` to settle, then squash-merge.
 
-Steps that touch your repository are printed, never guessed at. `--dry-run` prints the whole sequence with the commands it would run.
+```sh
+npx dsh-plugin release . --pr --merge
+```
+
+```
+tagged plugin-v0.4.0, npm served my-plugin@0.4.0 after 82s
+updated market/index.json on market/0.4.0
+opened https://github.com/me/my-plugin/pull/3
+checks settled after 1s (1 look(s))
+merged
+```
+
+Without `--pr` it prints the `git add` / `gh pr create` commands instead of running them; `--dry-run` prints the whole sequence before anything happens. A re-run after a failure is safe: the same version with the same publish time is a no-op.
 
 ## Exit codes
 
