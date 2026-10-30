@@ -49,6 +49,8 @@ console.assert(panel.must('[role="status"]').textContent.includes('92'));
 await panel.unmount();
 ```
 
+`unmount()` is async: it lets React finish the work its own unmount schedules before the DOM goes away. Skipping the `await` surfaces as `ReferenceError: window is not defined` *after* the test has already passed, which is a confusing way to learn it.
+
 What you get back: `text()`, `html()`, `query(selector)`, `must(selector)` (throws with the rendered HTML when it misses), `click(selector)`, `type(selector, value)`, `press(selector, key)`, `focus`, `attributes(selector)`, `snapshot(dir, name)` for a normalised DOM baseline, and `host` for assertions about what the bundle registered.
 
 To look at a bundle by hand:
@@ -63,6 +65,14 @@ That is how the AIignore panel was checked before release: the real bundle, moun
 ```
 $ npx dsh-plugin mount ../ai-context-doctor/plugin/client.js
 AIignore No workspace yet Could not read the report …
+```
+
+## Start from the example
+
+[`dsh-plugin-example`](https://github.com/WJDdidi-1/dsh-plugin-example) is a ~70-line plugin: one sidebar tab, two languages, one behaviour test, CI that runs `doctor` through the composite action. It is the shape this toolkit expects, so it is also the fastest way to see whether the toolkit fits your plugin.
+
+```sh
+dsh plugin add dsh-plugin-example
 ```
 
 ## Edit a plugin that is already installed

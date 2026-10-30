@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1
+
+- `unmount()` now waits one macrotask before the DOM goes away. React schedules work during its own unmount, and closing jsdom first turned that into `ReferenceError: window is not defined` after a passing test. Found by the example plugin's second test.
+- The README links `dsh-plugin-example` and documents that `unmount()` is async.
+
 ## 0.3.0
 
 - `dsh-plugin dev`: copy a rebuilt bundle into the installed plugin, then confirm the reload from the host's `/plugins/events` stream. Subscribing happens *before* the write, because a copy made first is reported to nobody.
