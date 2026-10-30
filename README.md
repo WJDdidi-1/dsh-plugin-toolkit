@@ -78,6 +78,27 @@ assert.match(panel.must('[role="status"]').textContent, /Score moved 71 → 77/)
 
 `must()` throws with the rendered markup when the selector misses, which is the difference between "the assertion failed" and "here is what the user actually got".
 
+Every example below is a file in this repository, run by CI, and the output shown is the output it prints:
+
+| Example | What it shows |
+| --- | --- |
+| `node examples/mount-a-bundle.mjs` | mount a real bundle, read the text, click, read it again |
+| `node examples/route-stubs.mjs` | answer the routes a panel asks for, and assert on the requests |
+| `node examples/baseline.mjs` | a DOM baseline compared on every run |
+| `node examples/aria.mjs` | what assistive tech sees |
+
+```sh
+$ node examples/mount-a-bundle.mjs
+Demo panel Count 0 0
+Demo panel Count 1 1
+```
+
+```sh
+$ node examples/route-stubs.mjs
+Score 71
+asked for: 1 route(s), undeclared route answers 404
+```
+
 To look at a bundle by hand:
 
 ```sh

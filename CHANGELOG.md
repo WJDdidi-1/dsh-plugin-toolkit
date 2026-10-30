@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.1
+
+- `examples/`: four runnable files (`mount-a-bundle`, `route-stubs`, `baseline`, `aria`), each showing one thing testkit does.
+- `test/examples.test.mjs` runs every example and asserts it prints exactly what the README shows, and that the README names each one. An example that does not run teaches a shape that no longer exists.
+- `fixtures/fetching-bundle/`: a bundle that calls its host on mount, so the route-stub example asserts something real instead of printing zeros.
+
 ## 0.4.0
 
 `release` can now finish the job instead of printing the next command.
