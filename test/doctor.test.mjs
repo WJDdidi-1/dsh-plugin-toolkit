@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { doctor, hostRange } from '../lib/doctor.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const fixture = (name) => path.join(here, 'fixtures', name);
+const fixture = (name) => path.join(here, '..', 'fixtures', name);
 
 test('a manifest the host can load passes every check', () => {
   const report = doctor(fixture('good'));

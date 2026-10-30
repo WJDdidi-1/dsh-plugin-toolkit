@@ -29,10 +29,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node bin/dsh-plugin.mjs doctor test/fixtures/good
+      - run: node bin/dsh-plugin.mjs doctor fixtures/good
       - name: a broken plugin must fail
         run: |
-          if node bin/dsh-plugin.mjs doctor test/fixtures/no-engines; then
+          if node bin/dsh-plugin.mjs doctor fixtures/no-engines; then
             echo "doctor accepted a plugin with no host range"; exit 1
           fi
-      - run: node bin/dsh-plugin.mjs release test/fixtures/good --dry-run
+      - run: node bin/dsh-plugin.mjs release fixtures/good --dry-run
