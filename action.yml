@@ -1,0 +1,21 @@
+name: dsh-plugin preflight
+description: Check that a DeepSeek Harness plugin can actually be installed before you tag it.
+author: WJDdidi-1
+branding:
+  icon: package
+  color: blue
+inputs:
+  dir:
+    description: Folder that holds the plugin's package.json
+    required: false
+    default: .
+  command:
+    description: doctor (manifest checks) or index (audit market/index.json)
+    required: false
+    default: doctor
+runs:
+  using: composite
+  steps:
+    - name: Run dsh-plugin
+      shell: bash
+      run: node "$GITHUB_ACTION_PATH/bin/dsh-plugin.mjs" ${{ inputs.command }} "${{ inputs.dir }}"

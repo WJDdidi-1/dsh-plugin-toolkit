@@ -22,6 +22,20 @@ Releasing one plugin fifteen times taught me three things the ecosystem's toolin
 2. **The market index is a second release, done by hand.** Each version needs an entry carrying `publishTimestamp` from the registry and `engines.dsh` from the manifest. Forget the range and the index validator rejects the PR with `Engines mismatch` — after the tag is already public.
 3. **Reading a manifest is not the same as checking it.** A plugin can have a valid `package.json` and still be uninstallable: `files` that omit the entry the manifest points at, a bundle patch that does not exist, a README that never states the host range it declares.
 
+
+## Use it in CI
+
+The same checks run as a GitHub Action, so a tag cannot go out on a plugin that would not install:
+
+```yaml
+- uses: actions/checkout@v4
+- uses: WJDdidi-1/dsh-plugin-toolkit@v1
+  with:
+    dir: plugin        # the folder holding the plugin's package.json
+```
+
+`command: index` audits `market/index.json` instead, and fails on any version that cannot state a host range.
+
 ## What `doctor` checks
 
 | Check | Why it matters |

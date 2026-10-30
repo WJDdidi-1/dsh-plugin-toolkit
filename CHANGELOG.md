@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+- Ship a composite GitHub Action (`action.yml`), so a plugin repository can run the same checks with `uses: WJDdidi-1/dsh-plugin-toolkit@v1`.
+
 ## 0.1.0
 
 First cut: `doctor`, `index`, `release`.
