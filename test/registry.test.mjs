@@ -41,3 +41,47 @@ test('a slow registry ends as a timeout with what was seen, not as a crash', asy
   });
   assert.equal(result.timedOut, true);
 });
+
+test('a version listed without its publish time is not ready yet', async () => {
+  const { waitForVersion } = await import('../lib/registry.mjs');
+  const documents = [
+    { versions: { '1.0.0': {} } },
+    { versions: { '1.0.0': {} }, time: { '1.0.0': '2026-10-31T02:43:00.000Z' } },
+  ];
+  let calls = 0;
+  const result = await waitForVersion('demo', '1.0.0', {
+    requireTime: true,
+    fetch: async () => ({ status: 200, ok: true, json: async () => documents[Math.min(calls++, documents.length - 1)] }),
+    sleep: async () => {},
+    budgetMs: 60_000,
+    intervalMs: 1,
+  });
+  assert.equal(result.timedOut, undefined);
+  assert.equal(result.attempts, 2);
+  assert.equal(result.document.time['1.0.0'], '2026-10-31T02:43:00.000Z');
+});
+
+test('a release refuses to write an index entry with a null publish time', async () => {
+  const { release } = await import('../lib/release.mjs');
+  const result = await release({
+    dir: '/tmp/definitely-not-a-repo',
+    fetch: async () => ({ status: 200, ok: true, json: async () => ({ versions: { '1.0.0': {} } }) }),
+    sleep: async () => {},
+    budgetMs: 1000,
+    intervalMs: 1,
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.stage, 'preflight');
+});
+
+test('the registry document is asked for in full, because the index needs `time`', async () => {
+  const { packument } = await import('../lib/registry.mjs');
+  let seen;
+  await packument('demo', {
+    fetch: async (url, init) => {
+      seen = init.headers.accept;
+      return { status: 200, ok: true, json: async () => ({}) };
+    },
+  });
+  assert.equal(seen, 'application/json');
+});

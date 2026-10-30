@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.5
+
+Four bugs found by running `release` for real against a throwaway package, instead of only `--dry-run`:
+
+- The index entry came out with `publishTimestamp: null`. The registry was asked for the abbreviated packument (`application/vnd.npm.install-v1+json`), which has no `time` field at all — so the tool could see the version and still have no publish date. It now asks for the full document, and waits for `time[version]` before writing the entry.
+- `git rev-parse` on a tag that does not exist yet printed `fatal: ambiguous argument …` in the middle of a successful release; stderr is now dropped for that call.
+- "the working tree has uncommitted changes" now names up to three paths.
+- A folder without `package.json` raised a stack trace instead of returning a preflight failure.
+
 ## 0.3.4
 
 - CI now runs on Windows as well as Linux and macOS; two tests assumed a POSIX temp path (`/tmp/…`) and were rewritten with `path.join`.
