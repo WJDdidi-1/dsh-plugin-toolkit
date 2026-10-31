@@ -104,3 +104,22 @@ test('a client bundle declared through the ./client export is found', () => {
   const manifest = { name: 'demo', version: '1.0.0', dsh: { client: { platform: 'web' } }, exports: { './client': './dsh/client.js' } };
   assert.equal(checkClientEntry(dir, manifest), null);
 });
+
+test('a ./client export written as a conditions object is found too', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'client-conditions-'));
+  fs.mkdirSync(path.join(dir, 'lib'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'lib', 'client.cjs'), '// bundle');
+  const manifest = { name: 'demo', version: '1.0.0', dsh: { client: { platform: 'web' } }, exports: { './client': { default: './lib/client.cjs' } } };
+  assert.equal(checkClientEntry(dir, manifest), null);
+});
+
+test('advisories do not fail an audit', async () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'audit-home-'));
+  writePlugin(home, 'demo-plugin', { ...goodManifest('demo-plugin'), engines: undefined }, goodFiles);
+  const lines = [];
+  const result = await audit({ home, io: { log: (line) => lines.push(line) } });
+  assert.equal(result.ok, true);
+  assert.equal(result.plugins[0].hard.length, 0);
+  assert.deepEqual(result.plugins[0].advisory.map((failure) => failure.check), ['engines.dsh']);
+  assert.match(lines.join('\n'), /not ready for the market index/u);
+});

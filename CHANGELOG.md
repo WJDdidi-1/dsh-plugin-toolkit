@@ -1,3 +1,13 @@
+## 0.9.1
+
+- `audit` separates problems from advisories. Running 0.9.0 on a real profile
+  said "17 of 19 installed plugin(s) have problems" — 13 of those load fine and
+  only lack `engines.dsh` or a README Requirements section, which the market index
+  needs and the loader does not. Those are now counted separately, so the plugins
+  that are actually broken stay visible.
+- `client entry` and `dev` resolve a `./client` export written as a conditions
+  object (`{ default: './lib/client.cjs' }`), not only as a string.
+
 ## 0.9.0
 
 - `audit`: every plugin installed in a profile, in one pass — version, whether the

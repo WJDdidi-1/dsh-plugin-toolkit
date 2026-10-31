@@ -212,6 +212,10 @@ demo-panel             0.3.0     not loaded   1 problem: root export
 1 installed plugin(s) are not in the running app; restart the app once after installing.
 ```
 
+Advisories (`engines.dsh`, README Requirements) are counted apart from problems:
+the market index needs them, the loader does not, so they should not bury a plugin
+that is actually broken.
+
 Without `--host` the loaded column is `?`, because guessing would be worse than
 saying nothing. Only packages that declare a `dsh` field are audited — the rest of
 `node_modules` is ordinary dependencies, and auditing those is noise.
