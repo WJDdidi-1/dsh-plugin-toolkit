@@ -1,3 +1,9 @@
+## 0.8.8
+
+- `dev` reads the plugin graph the app sends first, so a plugin the app never
+  loaded is reported as that ("restart the app once after installing it") instead
+  of as a timeout. Found by running `dev` against a real app, not a fake stream.
+
 ## 0.8.7
 
 - `panel.aria(selector)` and `panel.expectAria(selector, expected)`: assert what a

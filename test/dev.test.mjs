@@ -133,3 +133,32 @@ test('without --host it still copies, and says the reload is unconfirmed', async
   assert.equal(fs.readFileSync(path.join(dest, 'client.js'), 'utf8'), '// v1');
   assert.ok(lines.some((line) => /pass --host/.test(line)), lines.join('\n'));
 });
+
+test('a plugin the running app never loaded is reported as that, not as a timeout', async () => {
+  const fetchImpl = async () => sseResponse([
+    { type: 'graph', graph: { entries: [{ id: 'someone-else' }] } },
+  ]);
+  const result = await verifyReload({ host: 'http://127.0.0.1:9', id: 'demo-plugin', timeoutMs: 50, fetchImpl });
+  assert.equal(result.ok, false);
+  assert.match(result.reason, /the running app has not loaded demo-plugin/);
+  assert.match(result.reason, /restart the app once/);
+});
+
+test('a plugin that is loaded but silent still reads as a timeout', async () => {
+  const encoder = new TextEncoder();
+  // A stream that never closes: the wait ends by timeout, not by the app.
+  const fetchImpl = async (url, { signal } = {}) => ({
+    ok: true,
+    status: 200,
+    body: new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'graph', graph: { entries: [{ id: 'demo-plugin' }] } })}\n\n`));
+        // The real stream dies when the controller aborts; a fake one has to say so.
+        signal?.addEventListener('abort', () => controller.error(Object.assign(new Error('aborted'), { name: 'AbortError' })));
+      },
+    }),
+  });
+  const result = await verifyReload({ host: 'http://127.0.0.1:9', id: 'demo-plugin', timeoutMs: 50, fetchImpl });
+  assert.equal(result.ok, false);
+  assert.match(result.reason, /no rebuilt frame for demo-plugin/);
+});

@@ -217,6 +217,12 @@ watching /work/plugin
 
 That last line is the whole point: the revision came back from the app's own event stream, so "it reloaded" is a fact, not a hope.
 
+A plugin the running app never loaded cannot be reloaded, and the app says so by leaving it out of the graph it sends first. `dev` reads that graph, so a freshly installed plugin gets the sentence that fixes it instead of a timeout:
+
+```
+copied, but not confirmed: the running app has not loaded demo-panel, so it will not report a reload; restart the app once after installing it
+```
+
 | Flag | Meaning |
 |---|---|
 | `--dest <dir>` | write into this installed copy instead of searching `~/.dsh/profiles/*/node_modules/<name>` |
