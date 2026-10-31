@@ -129,23 +129,25 @@ test('--publish runs the publish here, for repositories without a publish workfl
     return '';
   };
   const document = { versions: { '4.0.0': {} }, time: { '4.0.0': '2026-10-31T06:00:00.000Z' } };
+  const published = [];
+  const publishPackage = (dir) => {
+    published.push(dir);
+  };
 
-  // A PATH that answers `npm publish` with a marker instead of a real publish.
-  const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'rel-bin-'));
-  const marker = path.join(bin, 'published');
-  fs.writeFileSync(path.join(bin, 'npm'), `#!/bin/sh\necho "$@" >> "${marker}"\n`);
-  fs.chmodSync(path.join(bin, 'npm'), 0o755);
-  const original = process.env.PATH;
-  process.env.PATH = `${bin}:${original}`;
-  try {
-    const result = await release({
-      dir: plugin, publish: true, git,
-      fetch: async () => ({ status: 200, ok: true, json: async () => document }),
-      sleep: async () => {},
-    });
-    assert.equal(result.ok, true, JSON.stringify(result.failures ?? []));
-    assert.equal(fs.readFileSync(marker, 'utf8').trim(), 'publish');
-  } finally {
-    process.env.PATH = original;
-  }
+  const result = await release({
+    dir: plugin, publish: true, git, publishPackage,
+    fetch: async () => ({ status: 200, ok: true, json: async () => document }),
+    sleep: async () => {},
+  });
+  assert.equal(result.ok, true, JSON.stringify(result.failures ?? []));
+  assert.deepEqual(published, [plugin]);
+
+  // Without the flag the registry wait is the only thing that runs.
+  published.length = 0;
+  await release({
+    dir: plugin, git, publishPackage,
+    fetch: async () => ({ status: 200, ok: true, json: async () => document }),
+    sleep: async () => {},
+  });
+  assert.deepEqual(published, []);
 });
