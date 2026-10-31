@@ -10,6 +10,8 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
 import { init } from '../lib/init.mjs';
 import { verify } from '../lib/verify.mjs';
 
@@ -58,4 +60,11 @@ test('only the npm family gets a Windows suffix, because git and gh are .exe', a
   assert.equal(command('npm'), win ? 'npm.cmd' : 'npm');
   assert.equal(command('git'), 'git');
   assert.equal(command('gh'), 'gh');
+});
+
+test('verify mounts with dependencies resolved from the plugin, not from the tool', () => {
+  // `npx dsh-plugin-toolkit verify` runs out of npx's cache; a bare import of
+  // jsdom would look there and fail even though the plugin declared it.
+  const source = fs.readFileSync(path.join(ROOT, 'lib', 'verify.mjs'), 'utf8');
+  assert.match(source, /mountClient\(\{ file: entryFile, resolveFrom: dir \}\)/);
 });

@@ -1,3 +1,16 @@
+## 0.7.2
+
+`verify` runs from npx's cache, so it has to find jsdom and React where the
+plugin is, not where the tool is.
+
+- `testkit` resolves `jsdom`, `react` and `react-dom` from the plugin folder
+  first, then the working directory, then the tool's own dependencies.
+- `verify` passes the plugin folder through, so
+  `uses: WJDdidi-1/dsh-plugin-toolkit@v1` works in a workflow that ran `npm ci`
+  in the plugin: before this, the action failed with
+  `testkit needs a DOM: npm install --save-dev jsdom react react-dom` even
+  though the plugin declared them.
+
 ## 0.7.1
 
 The action now checks the tarball, which is the only thing a user installs.
