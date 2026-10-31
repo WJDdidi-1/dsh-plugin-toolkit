@@ -90,6 +90,14 @@ next: npm install && npm test && npm run doctor
 
 What you get is not a snippet: it is a plugin whose `doctor` already passes (`engines.dsh`, the patch file, the `files` list), with a client bundle that registers a sidebar tab, a testkit test for it, and a CI workflow that runs both. `init` refuses a directory that is not empty unless you pass `--force`, and refuses a name npm would refuse — those are the two mistakes that cost the most time later.
 
+## Where it lives
+
+The checker is docked **under the conversation**, above the input bar: a single
+row, collapsed by default. Open it and it carries the whole guide — who it is
+for, how to use it, what each check means, and what it cannot tell you — plus
+the folder field and the results. The same panel is also a **Plugin doctor** tab
+in the right sidebar, for when the conversation is busy.
+
 ## Test a panel without a browser
 
 A plugin's client code is one file that calls `window.__ModuleLoader__.load({factory})` — there is no module to import, so the usual React test setup does not apply. `testkit` supplies the missing half: a DOM, the real React, and a host context that records what the panel registers.

@@ -1,3 +1,18 @@
+## 0.10.0
+
+- **The checker is docked under the conversation.** It used to live only in the
+  right sidebar, behind a guide list nobody opens; now it sits above the input
+  bar as one collapsed row, and opens into the full guide: who it is for, how to
+  use it, what each check catches, and the caveats (read-only, folder not
+  profile, advisory vs hard, runtime behaviour is not provable).
+- The dock and the sidebar tab share one `useChecker()` hook and one `Form` /
+  `Result` pair, so the two cannot drift apart.
+- `dsh.client.inject` now names `@deepseek-ai/dsh-client-ui-conversation`, the
+  package that owns the dock seat.
+- Three tests: the dock registers under `conversation.input.dock`, it opens onto
+  the guide (and stays collapsed before that), and it runs the same request as
+  the tab.
+
 ## 0.9.7
 
 - **The tab type is now reachable.** Registering a tab *type* is not enough: the
