@@ -1,3 +1,14 @@
+## 0.8.3
+
+`verify` now imports the host half it just installed.
+
+- After installing the tarball, `verify` imports the module the loader will
+  import (`exports["."]`, else `main`) and requires an `apply` function. A root
+  module that throws on import — which `doctor`'s static read cannot see — is
+  now a failure: `the installed index.js does not import: boom`.
+- `--no-mount` skips the DOM, not the install, so the host half is checked in
+  both modes. The success line says which half ran.
+
 ## 0.8.2
 
 `doctor` now refuses the failure that shipped in 0.8.0.

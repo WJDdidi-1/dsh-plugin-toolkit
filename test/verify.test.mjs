@@ -68,3 +68,21 @@ test('verify mounts with dependencies resolved from the plugin, not from the too
   const source = fs.readFileSync(path.join(ROOT, 'lib', 'verify.mjs'), 'utf8');
   assert.match(source, /mountClient\(\{ file: entryFile, resolveFrom: dir \}\)/);
 });
+
+test('a root module that throws on import is refused, which doctor cannot see', async () => {
+  const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-verify-')), 'plugin');
+  init({ dir, name: 'silent-plugin' });
+  // doctor reads the source and sees an `apply` export; the module still
+  // throws the moment the loader imports it.
+  fs.writeFileSync(path.join(dir, 'index.js'), 'export function apply() {}\nthrow new Error("boom");\n');
+  const manifestPath = path.join(dir, 'package.json');
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  manifest.main = 'index.js';
+  manifest.files = ['index.js', 'client.js', 'cordis.patch.yml', 'README.md'];
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+
+  const result = await verify({ dir, mount: false });
+  assert.equal(result.ok, false);
+  assert.equal(result.stage, 'install');
+  assert.match(result.failures[0].message, /does not import: boom/);
+});
