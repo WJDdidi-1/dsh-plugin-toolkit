@@ -152,3 +152,21 @@ test('a client face that guards its services passes, which the example plugin pr
   assert.equal(result.ok, true, JSON.stringify(result.failures));
   assert.equal(result.stage, 'mount');
 });
+
+test('a wildcard export is shipped by its wildcard files entry', async () => {
+  // `exports["./locale/*.json"]` names a folder of files; `npm pack` lists the
+  // files, not the pattern. Comparing them as strings reported a correctly
+  // packed plugin as broken — which is how the neighbour plugin was flagged.
+  const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-verify-glob-')), 'plugin');
+  init({ dir, name: 'glob-locale' });
+  const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
+  manifest.exports = { ...manifest.exports, './locale/*.json': './locale/*.json' };
+  manifest.files = [...manifest.files, 'locale/*.json'];
+  fs.writeFileSync(path.join(dir, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+  fs.mkdirSync(path.join(dir, 'locale'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'locale', 'en.json'), '{}\n');
+
+  const result = await verify({ dir, mount: false });
+  assert.equal(result.ok, true, JSON.stringify(result.failures));
+  assert.ok(result.files.includes('locale/en.json'));
+});

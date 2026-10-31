@@ -1,3 +1,12 @@
+## 0.13.5
+
+- **A wildcard export no longer fails the pack check.** `exports` can name a
+  pattern (`"./locale/*.json"`), while `npm pack` lists the files it shipped
+  (`locale/en.json`). Comparing them as strings reported a correctly packed
+  plugin as broken; the check now matches patterns by prefix and suffix.
+- Found by running `verify` against the neighbour project's plugin, which ships
+  exactly that export.
+
 ## 0.13.4
 
 - **`docs/why-it-exists.md`**: the five failures that shaped these checks, each
