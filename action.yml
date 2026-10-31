@@ -10,12 +10,19 @@ inputs:
     required: false
     default: .
   command:
-    description: doctor (manifest checks) or index (audit market/index.json)
+    description: verify (pack, install, mount) or doctor (manifest checks only) or index (audit market/index.json)
     required: false
-    default: doctor
+    default: verify
+  version:
+    description: Version of dsh-plugin-toolkit to run
+    required: false
+    default: latest
 runs:
   using: composite
   steps:
     - name: Run dsh-plugin
       shell: bash
-      run: node "$GITHUB_ACTION_PATH/bin/dsh-plugin.mjs" ${{ inputs.command }} "${{ inputs.dir }}"
+      # The package is fetched instead of shipped with the action: `verify`
+      # mounts the panel, which needs jsdom and React, and pinning those inside
+      # a composite action would mean shipping node_modules in the repository.
+      run: npx --yes dsh-plugin-toolkit@${{ inputs.version }} ${{ inputs.command }} "${{ inputs.dir }}"

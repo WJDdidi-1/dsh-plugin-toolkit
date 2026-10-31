@@ -215,9 +215,17 @@ The same checks run as a GitHub Action, so a tag cannot go out on a plugin that 
 - uses: WJDdidi-1/dsh-plugin-toolkit@v1
   with:
     dir: plugin        # the folder holding the plugin's package.json
+    command: verify    # pack it, install the tarball, mount the panel
 ```
 
-`command: index` audits `market/index.json` instead, and fails on any version that cannot state a host range.
+`verify` is the default because it is the only check that reads what a user
+actually installs: `doctor` reads the working copy, so a `files` list that
+forgets `client.js` passes it and fails only after `npm i`.
+
+`command: doctor` stops at the manifest checks (fast, no install), and
+`command: index` audits `market/index.json` instead, failing on any version that
+cannot state a host range. Pin `version:` if you would rather not track the
+latest release.
 
 ## What `doctor` checks
 

@@ -1,3 +1,18 @@
+## 0.7.1
+
+The action now checks the tarball, which is the only thing a user installs.
+
+- `uses: WJDdidi-1/dsh-plugin-toolkit@v1` defaults to `command: verify` instead
+  of `doctor`. `doctor` reads the working copy, so a `files` list that omits
+  `client.js` passes it and the plugin installs without a panel.
+- The action fetches the published package with `npx` rather than shipping
+  `node_modules` in the repository — `verify` mounts the panel, which needs
+  jsdom and React, and those belong to the caller's dev dependencies.
+- New `version` input (default `latest`) so a workflow can pin the tool.
+- `test/action.test.mjs` guards the three things that break silently: the
+  default command, the commands it offers existing in the CLI, and the README
+  showing the action the way a consumer writes it.
+
 # Changelog
 
 ## 0.7.0
