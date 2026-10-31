@@ -1,3 +1,17 @@
+## 0.9.3
+
+- The panel needed one more thing than `dsh.client`: the host resolves the bundle
+  through `exports["./client"]` (`clientExportOf`), and drops the row when that
+  subpath is missing. 0.9.2 declared `dsh.client` but its `exports` map had no
+  `./client`, so the tab was still absent — this release exports `./client` and
+  `doctor` now checks the same thing the host does.
+- `init` scaffolds `exports: { '.': './index.js', './client': './client.js' }`.
+  Every plugin generated before this release was missing it, so every generated
+  panel was invisible for the same reason.
+- `doctor` reports a `dsh.client` whose `exports["./client"]` file does not exist,
+  and a `dsh.client` with no `./client` export at all. The `files`-list gap is now
+  caught at the manifest stage instead of at pack time.
+
 ## 0.9.2
 
 - `doctor` reports a shipped client bundle that no `dsh.client` declares. The host

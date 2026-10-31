@@ -27,11 +27,14 @@ test('the scaffold survives being packed, installed and mounted', async () => {
   assert.ok(result.files.includes('client.js'), 'the tarball has to contain the panel');
 });
 
-test('a files list that drops the panel passes doctor and fails verify', async () => {
-  const result = await verify({ dir: path.join(root, 'fixtures', 'not-shipped') });
+test('a files list that drops the panel is refused, and doctor now catches it too', async () => {
+  const dir = path.join(root, 'fixtures', 'not-shipped');
+  const result = await verify({ dir });
   assert.equal(result.ok, false);
-  assert.equal(result.stage, 'pack');
-  assert.match(result.failures[0].message, /does not contain client\.js/);
+  // This used to reach the tarball; reading package.json's own `files` list is
+  // enough to see the omission, so it stops at the manifest stage now.
+  assert.equal(result.stage, 'doctor');
+  assert.match(result.failures[0].message, /files does not ship client\.js/);
 });
 
 test('verify can stop after packing when mounting is not wanted', async () => {

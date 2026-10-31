@@ -114,7 +114,8 @@ test('a release with --pr stops at the pull request, and with --merge goes to me
   fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({
     name: 'demo-plugin', version: '2.0.0', files: ['index.js', 'client.js', 'cordis.patch.yml'],
     engines: { dsh: '>=0.2.0' },
-    dsh: { bundle: { patch: './cordis.patch.yml' }, client: { platform: 'web', entry: 'client.js' } },
+    exports: { './client': './client.js' },
+    dsh: { bundle: { patch: './cordis.patch.yml' }, client: { platform: 'web' } },
   }, null, 2));
   fs.writeFileSync(path.join(dir, 'README.md'), '# demo\n\n## Requirements\n\n| Harness |\n| --- |\n| `>=0.2.0` |\n');
   fs.writeFileSync(path.join(dir, 'cordis.patch.yml'), '- insert: []\n');

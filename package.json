@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-toolkit",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "description": "Preflight, release and test DeepSeek Harness plugins: checks what the host needs, waits for npm to actually serve the version, and keeps the market index honest.",
   "type": "module",
   "bin": {
@@ -8,6 +8,7 @@
   },
   "exports": {
     ".": "./index.js",
+    "./client": "./client.js",
     "./cli": "./lib/cli.mjs",
     "./testkit": "./lib/testkit/index.mjs"
   },

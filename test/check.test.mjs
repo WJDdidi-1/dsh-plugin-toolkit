@@ -36,7 +36,9 @@ test('a files list that forgets the bundle is caught here, not after install', a
   assert.equal(report.ok, false);
   const failed = report.checks.filter((entry) => entry.ok === false);
   assert.equal(failed.length, 1);
-  assert.match(failed[0].message, /the tarball does not contain client\.js/);
+  // doctor reads package.json's own `files` list, so it catches the omission
+  // before the tarball is built: the same gap used to surface only at pack time.
+  assert.match(failed[0].message, /files does not ship client\.js/);
 });
 
 test('something that is not a directory is refused without throwing', async () => {

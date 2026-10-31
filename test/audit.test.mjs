@@ -22,7 +22,8 @@ function goodManifest(name) {
   return {
     name, version: '1.0.0', files: ['index.js', 'client.js', 'cordis.patch.yml'],
     engines: { dsh: '>=0.2.0' },
-    dsh: { bundle: { patch: './cordis.patch.yml' }, client: { entry: 'client.js' } },
+    exports: { './client': './client.js' },
+    dsh: { bundle: { patch: './cordis.patch.yml' }, client: { platform: 'web' } },
   };
 }
 
@@ -118,7 +119,14 @@ test('a shipped client bundle without dsh.client is reported, because the harnes
   fs.writeFileSync(path.join(dir, 'client.js'), '// bundle');
   const manifest = { name: 'demo', version: '1.0.0' };
   assert.equal(checkClientDeclaration(dir, manifest), 'client.js ships but dsh.client is not declared, so the harness never serves the bundle and the panel cannot appear');
-  assert.equal(checkClientDeclaration(dir, { ...manifest, dsh: { client: { platform: 'web' } } }), null);
+  assert.match(
+    checkClientDeclaration(dir, { ...manifest, dsh: { client: { platform: 'web' } } }),
+    /exports has no "\.\/client" bundle/,
+  );
+  assert.equal(
+    checkClientDeclaration(dir, { ...manifest, exports: { './client': './client.js' }, dsh: { client: { platform: 'web' } } }),
+    null,
+  );
   assert.match(checkClientDeclaration(dir, { ...manifest, dsh: { client: { platform: 'node' } } }), /platform is "node"/u);
   const hostOnly = fs.mkdtempSync(path.join(os.tmpdir(), 'host-only-'));
   fs.writeFileSync(path.join(hostOnly, 'index.js'), '// host half only');

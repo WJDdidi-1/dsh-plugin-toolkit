@@ -18,8 +18,10 @@
       "patch": "./cordis.patch.yml"
     },
     "client": {
-      "platform": "web",
-      "entry": "client.js"
+      "platform": "web"
     }
+  },
+  "exports": {
+    "./client": "./client.js"
   }
 }
