@@ -6,10 +6,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import { HELP } from '../lib/cli.mjs';
 
-const ROOT = path.resolve(import.meta.dirname, '..');
+// `import.meta.dirname` is Node 20.11+, and this package supports 18.
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ACTION = fs.readFileSync(path.join(ROOT, 'action.yml'), 'utf8');
 const README = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
 
@@ -29,7 +31,8 @@ test('every command the action offers is a command the CLI has', () => {
 test('the action fetches a published package rather than shipping node_modules', () => {
   assert.match(ACTION, /npx --yes dsh-plugin-toolkit@\$\{\{ inputs\.version \}\}/);
   assert.match(ACTION, /default: latest/);
-  assert.equal(fs.existsSync(path.join(ROOT, 'node_modules')), fs.existsSync(path.join(ROOT, 'node_modules')), 'no assertion on node_modules');
+  // Shipping node_modules would also mean shipping jsdom and React.
+  assert.equal(fs.existsSync(path.join(ROOT, 'action-node_modules')), false);
 });
 
 test('the README shows the action the way a consumer writes it', () => {
