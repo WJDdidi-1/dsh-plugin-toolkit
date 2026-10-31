@@ -1,3 +1,19 @@
+## 0.8.0
+
+The toolkit can now be installed as a plugin, because a tool that cannot be
+installed the way its users install things is asking them to take its word.
+
+- A "Plugin doctor" tab in the right sidebar: name the folder that holds a
+  plugin's `package.json`, and it runs the same checks the market runs
+  (`doctor` plus the pack list) and says which one would fail.
+- `index.js` registers `GET /toolkit/check?dir=`, read-only, same-origin only,
+  and answers with `{ok, dir, checks:[{check, ok, message}]}`.
+- `cordis.patch.yml` and `dsh.bundle` in `package.json`, so `dsh plugin add
+  dsh-plugin-toolkit` installs the panel; the CLI keeps working from the same
+  package.
+- The panel is tested the way a user meets it: `mountClient` on the real
+  `client.js`, with a stub answering the route the host half registers.
+
 ## 0.7.3
 
 The scaffold was two minor versions behind the tool that wrote it.

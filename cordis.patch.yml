@@ -1,0 +1,6 @@
+# The market installs bundles through this patch, so it has to name the entry
+# the way the harness expects: the package, once.
+- insert:
+    - id: dsh-plugin-toolkit
+      name: dsh-plugin-toolkit
+      config: {}
