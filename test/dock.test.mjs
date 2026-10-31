@@ -145,7 +145,7 @@ test('the answer is the first thing in the list, and passes fold away', async ()
 test('before the first check the panel says what to do instead of showing nothing', async () => {
   const panel = await dock();
   await panel.click('.tk-dock-toggle');
-  assert.match(panel.text(), /粘贴放着 package\.json 的文件夹/);
+  assert.match(panel.text(), /填文件夹路径、owner\/repo 或 GitHub 链接/);
   await panel.unmount();
 });
 
@@ -171,5 +171,63 @@ test('the collapsed row carries the outcome, so a check is not hidden behind a c
   const chip = panel.must('.tk-chip');
   assert.equal(chip.getAttribute('data-ok'), 'false');
   assert.match(chip.textContent, /1 项没过/);
+  await panel.unmount();
+});
+
+test('a bare name comes back as repositories to pick from, not as a guess', async () => {
+  const candidates = {
+    ok: false,
+    kind: 'candidates',
+    query: 'dsh-plugin',
+    candidates: [
+      { fullName: 'tanzhangjia/dsh-plugins-examples', description: 'Example plugins', stars: 1, url: 'https://github.com/tanzhangjia/dsh-plugins-examples' },
+      { fullName: 'WJDdidi-1/dsh-plugin-example', description: 'A minimal panel plugin', stars: 0, url: 'https://github.com/WJDdidi-1/dsh-plugin-example' },
+    ],
+  };
+  const panel = await mountClient({
+    file: path.join(ROOT, 'client.js'),
+    slot: 'conversation.input.dock',
+    host: host(),
+    fetch: createFetch({ '/toolkit/check': { body: candidates } }),
+  });
+  await panel.click('.tk-dock-toggle');
+  await panel.type('.tk-input', 'dsh-plugin');
+  await panel.click('.tk-button');
+
+  const shown = panel.text();
+  assert.match(shown, /找到 2 个仓库/);
+  assert.match(shown, /tanzhangjia\/ ?dsh-plugins-examples/);
+  assert.match(shown, /WJDdidi-1\/ ?dsh-plugin-example/);
+  assert.match(shown, /Example plugins/);
+
+  // Picking one asks about that repository by name — no second search.
+  await panel.click('.tk-candidate');
+  const asked = panel.host.fetch.requests.filter((entry) => entry.path === '/toolkit/check');
+  assert.equal(asked.length, 2);
+  assert.match(asked[1].search, /dir=tanzhangjia%2Fdsh-plugins-examples/);
+  await panel.unmount();
+});
+
+test('a repository result names the repository, not just a temp folder', async () => {
+  const body = {
+    ok: false,
+    kind: 'github',
+    dir: '/tmp/dsh-toolkit-gh-1a2b/repo',
+    repo: { fullName: 'WJDdidi-1/dsh-plugin-example', url: 'https://github.com/WJDdidi-1/dsh-plugin-example' },
+    checks: [{ check: 'root export', ok: false, message: 'exports["."] points at the CLI' }],
+  };
+  const panel = await mountClient({
+    file: path.join(ROOT, 'client.js'),
+    slot: 'conversation.input.dock',
+    host: host(),
+    fetch: createFetch({ '/toolkit/check': { body } }),
+  });
+  await panel.click('.tk-dock-toggle');
+  await panel.type('.tk-input', 'WJDdidi-1/dsh-plugin-example');
+  await panel.click('.tk-button');
+
+  const link = panel.attributes('.tk-repo a');
+  assert.equal(link.href, 'https://github.com/WJDdidi-1/dsh-plugin-example');
+  assert.match(panel.text(), /WJDdidi-1\/dsh-plugin-example/);
   await panel.unmount();
 });

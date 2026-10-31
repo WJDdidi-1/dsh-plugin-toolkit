@@ -26,10 +26,30 @@ const result = {
   ],
 };
 
+const CANDIDATES = {
+  ok: false,
+  kind: 'candidates',
+  query: 'dsh-plugin',
+  candidates: [
+    { fullName: 'tanzhangjia/dsh-plugins-examples', description: 'Example plugins for the DeepSeek Harness', stars: 1, url: 'https://github.com/tanzhangjia/dsh-plugins-examples' },
+    { fullName: 'WJDdidi-1/dsh-plugin-example', description: 'A minimal panel plugin', stars: 0, url: 'https://github.com/WJDdidi-1/dsh-plugin-example' },
+    { fullName: 'hopefullstack-collab/dsh-plugin-company-example', description: '', stars: 0, url: 'https://github.com/hopefullstack-collab/dsh-plugin-company-example' },
+  ],
+};
+
+const REPO_RESULT = {
+  ...result,
+  kind: 'github',
+  dir: '/tmp/dsh-toolkit-gh-1a2b/repo',
+  repo: { fullName: 'WJDdidi-1/dsh-plugin-example', url: 'https://github.com/WJDdidi-1/dsh-plugin-example' },
+};
+
 const states = [
   { name: 'dock collapsed', slot: 'conversation.input.dock', before: async () => {} },
   { name: 'dock open', slot: 'conversation.input.dock', before: async (panel) => { await panel.click('.tk-dock-toggle'); } },
   { name: 'dock result', slot: 'conversation.input.dock', before: async (panel) => { await panel.click('.tk-dock-toggle'); await panel.type('.tk-input', '/Users/you/work/my-plugin'); await panel.click('.tk-button'); } },
+  { name: 'dock candidates', slot: 'conversation.input.dock', route: 'search', before: async (panel) => { await panel.click('.tk-dock-toggle'); await panel.type('.tk-input', 'dsh-plugin'); await panel.click('.tk-button'); } },
+  { name: 'dock repository', slot: 'conversation.input.dock', route: 'repo', before: async (panel) => { await panel.click('.tk-dock-toggle'); await panel.type('.tk-input', 'WJDdidi-1/dsh-plugin-example'); await panel.click('.tk-button'); } },
   { name: 'tab', slot: undefined, before: async () => {} },
   { name: 'tab result', slot: undefined, before: async (panel) => { await panel.type('.tk-input', '/Users/you/work/my-plugin'); await panel.click('.tk-button'); } },
 ];
@@ -41,7 +61,7 @@ for (const state of states) {
     file: path.join(ROOT, 'client.js'),
     slot: state.slot,
     host: createHost({ locale: { en: {}, zh: {} } }),
-    fetch: createFetch({ '/toolkit/check': { body: result } }),
+    fetch: createFetch({ '/toolkit/check': { body: state.route === 'search' ? CANDIDATES : state.route === 'repo' ? REPO_RESULT : result } }),
   });
   if (firstPanel === null) {
     firstPanel = panel.window.document.getElementById('dsh-plugin-toolkit:styles')?.textContent ?? '';

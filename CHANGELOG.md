@@ -1,3 +1,26 @@
+## 0.13.0
+
+Three more rounds of the panel, and one new thing to point it at.
+
+- **The language switch is a real segmented control.** It used to be a bordered
+  box with `overflow: hidden` and a filled button inside it: the fill was clipped
+  by the container's radius and the 0.5px border left a hairline of background
+  along two edges, which read as a missing colour block. Now the track is inset
+  and the selected pill is its own rounded shape, so the fill is complete at
+  every size and in both themes.
+- **A repository name is enough.** The input takes a folder, `owner/repo`, or a
+  GitHub URL. A bare name searches GitHub, lists the matches with their stars
+  and descriptions, and checks the one you click — the picked repository is
+  fetched as a tarball into a temp folder, so nothing is cloned and nothing is
+  installed. Results name the repository and link to it instead of showing a
+  temp path.
+- **Candidates are a list you can act on.** Owner is muted, the repository name
+  carries the weight, an arrow appears on the row, and the rows are keyboard
+  reachable with a visible focus ring.
+- **The guide says what changed.** The "before you trust it" note no longer
+  claims there are no network calls: a local folder is still read-only, a
+  repository is downloaded once, and the note now says so.
+
 ## 0.12.0
 
 Five rounds of the panel's own UI, each one driven by looking at the rendered

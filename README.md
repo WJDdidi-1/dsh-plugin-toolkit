@@ -20,10 +20,13 @@ npx dsh-plugin-toolkit@latest release --pr --merge              # tag, wait for 
 | changing a panel that is already installed | [`dev`](#2-develop-a-panel) | `mount`, the testkit, `audit` |
 | shipping a version | [`verify`](#3-ship-a-version) | `release`, `index` |
 
-It also installs as a plugin. `dsh plugin add dsh-plugin-toolkit` adds a
-**Plugin doctor** tab to the right sidebar: name the folder that holds a
-plugin's `package.json`, and it runs the same checks `verify` runs and lists
-what would fail — the same answers as the CLI, without leaving the app.
+It also installs as a plugin. `dsh plugin add dsh-plugin-toolkit` puts a
+**插件体检 / Plugin doctor** panel under the conversation and a tab in the right
+sidebar. Give it a folder that holds a plugin's `package.json`, or just
+`owner/repo` — or a repository name, which it searches GitHub for and lists the
+candidates to pick from. It then runs the same checks `verify` runs and says
+which one would break the install, with the reason on the line — the same
+answers as the CLI, without leaving the app.
 
 ```
 $ dsh plugin add dsh-plugin-toolkit
@@ -296,6 +299,17 @@ forgets `client.js` passes it and fails only after `npm i`.
 `command: index` audits `market/index.json` instead, failing on any version that
 cannot state a host range. Pin `version:` if you would rather not track the
 latest release.
+
+## Check a plugin you have not cloned
+
+The panel takes three kinds of input: a folder, `owner/repo`, or a GitHub URL.
+A bare name is a search, not a guess — it asks GitHub, lists the matches with
+their stars, and checks the one you pick. A repository is downloaded once as a
+tarball into a temp folder, so nothing is cloned into your workspace and
+nothing is installed.
+
+The CLI checks local folders only; for a repository, clone it or let the panel
+do the download.
 
 ## What `doctor` checks
 

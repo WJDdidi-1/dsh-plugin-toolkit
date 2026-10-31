@@ -20,9 +20,10 @@ window.__ModuleLoader__.load({
         fail: 'This would not install cleanly.',
         counts: (failed, total) => `${failed} of ${total} checks failed`,
         passedLabel: (n) => `${n} passed`,
-        empty: 'Paste the folder that holds package.json, then press Check.',
+        empty: 'A folder path, owner/repo, or a GitHub link. A bare name searches GitHub.',
         guideTitle: 'How to use this',
         checkingNow: 'Checking…',
+        candidates: (n) => `${n} repositories match`,
         chipFail: (n) => `${n} failed`,
         chipPass: 'passes',
         checked: 'Checked',
@@ -43,9 +44,10 @@ window.__ModuleLoader__.load({
         fail: '这样装上去会出问题。',
         counts: (failed, total) => `${total} 项里 ${failed} 项没过`,
         passedLabel: (n) => `${n} 项通过`,
-        empty: '粘贴放着 package.json 的文件夹，然后按「检查」。',
+        empty: '填文件夹路径、owner/repo 或 GitHub 链接；只写名字会去 GitHub 搜。',
         guideTitle: '使用说明',
         checkingNow: '正在检查…',
+        candidates: (n) => `找到 ${n} 个仓库`,
         chipFail: (n) => `${n} 项没过`,
         chipPass: '通过',
         checked: '检查的是',
@@ -71,7 +73,7 @@ window.__ModuleLoader__.load({
         steps: {
           title: 'How to use it',
           items: [
-            'Paste the folder that holds the plugin\'s package.json (a folder, not a file).',
+            'Paste a folder, or type owner/repo or a GitHub link. A bare name searches GitHub and lists what it found.',
             'Press Check. Nothing is installed and none of your files are touched.',
             'Read the list: ✓ passes, ✗ would break the install, with one line saying why.',
           ],
@@ -91,7 +93,7 @@ window.__ModuleLoader__.load({
         notes: {
           title: 'Before you trust it',
           items: [
-            'Read-only: it does not install anything, write files, or make network calls beyond this one request.',
+            'It never installs or edits your project. A local folder is read only; a GitHub repository is downloaded once as a tarball and checked in a temp folder.',
             'It looks at a folder, not at what you have installed — use dsh-plugin audit --host … for that.',
             'engines.dsh and README are market-index requirements; a plugin missing them still runs.',
             'It cannot prove runtime behaviour. A panel can still fail inside the real app when a service arrives late or a registration throws; those failures are appended to ~/.dsh/toolkit-client-report.ndjson.',
@@ -110,7 +112,7 @@ window.__ModuleLoader__.load({
         steps: {
           title: '怎么用',
           items: [
-            '粘贴放着 package.json 的那个文件夹（是文件夹，不是文件）。',
+            '填本地文件夹，或 owner/repo、GitHub 链接；只写名字会去 GitHub 搜，列出候选让你挑。',
             '按「检查」。不会安装任何东西，也不会改你的文件。',
             '看列表：✓ 通过，✗ 是装上去会坏的地方，右边一行说明原因。',
           ],
@@ -130,7 +132,7 @@ window.__ModuleLoader__.load({
         notes: {
           title: '用之前要知道的',
           items: [
-            '只读：不安装、不写文件、除这一次请求外不联网。',
+            '不安装、不改你的项目。查本地文件夹时只读；查 GitHub 仓库时会下载一次 tarball，在临时目录里检查。',
             '它看的是文件夹，不是你已装的插件——查已装的用 dsh-plugin audit --host …。',
             'engines.dsh 与 README 是市场索引的要求，缺了插件照样能跑。',
             '它证明不了运行期行为。面板在真实应用里仍可能因为服务来晚了、注册抛错而失败；那些失败会写进 ~/.dsh/toolkit-client-report.ndjson。',
@@ -250,6 +252,25 @@ window.__ModuleLoader__.load({
       '.tk-passes .tk-rows{margin-top:4px}',
       '.tk-summary{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}',
       '.tk-count{font-size:11px;color:var(--dsw-alias-label-tertiary,#888);font-variant-numeric:tabular-nums}',
+      '.tk-candidates{display:flex;flex-direction:column;gap:6px}',
+      '.tk-candidate-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}',
+      '.tk-candidate{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px;width:100%;text-align:left;',
+      'padding:7px 9px;border:0.5px solid var(--dsw-alias-border-l1,#e5e6eb);border-radius:6px;',
+      'background:var(--dsw-alias-bg-body,#fff);font:inherit;cursor:pointer;transition:border-color .12s ease,background .12s ease}',
+      '.tk-candidate:hover{border-color:var(--dsw-alias-state-business-primary,#4176e6);',
+      'background:var(--dsw-alias-bg-layer-1,#fafbfc)}',
+      '.tk-candidate:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary,#4176e6);outline-offset:1px}',
+      '.tk-candidate:hover{border-color:var(--dsw-alias-state-business-primary,#4176e6)}',
+      '.tk-candidate-name{font-size:12px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis}',
+      '.tk-candidate-owner{font-weight:400;color:var(--dsw-alias-label-tertiary,#888)}',
+      '.tk-candidate-go{margin-left:auto;font-size:12px;color:var(--dsw-alias-label-tertiary,#888)}',
+      '.tk-candidate:hover .tk-candidate-go{color:var(--dsw-alias-state-business-primary,#4176e6)}',
+      '.tk-candidate-stars{font-size:11px;color:var(--dsw-alias-label-tertiary,#888)}',
+      '.tk-candidate-desc{flex-basis:100%;font-size:11px;color:var(--dsw-alias-label-secondary,#555);',
+      'overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.tk-repo{margin:0;font-size:12px}',
+      '.tk-repo a{color:var(--dsw-alias-state-business-primary,#4176e6);text-decoration:none}',
+      '.tk-repo a:hover{text-decoration:underline}',
       '.tk-checked{margin:0;font-size:11px;color:var(--dsw-alias-label-tertiary,#888);overflow-wrap:anywhere}',
       '.tk-checked code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px}',
       '.tk-verdict{margin:0;font-size:12px;font-weight:600}',
@@ -269,11 +290,14 @@ window.__ModuleLoader__.load({
       'color:var(--dsw-alias-label-tertiary,#888)}',
       '.tk-message{font-size:12px;overflow-wrap:anywhere}',
       '.tk-panel-head{display:flex;align-items:center;gap:8px}',
-      '.tk-lang{display:inline-flex;flex:none;border:0.5px solid var(--dsw-alias-border-l2,#ccc);',
-      'border-radius:6px;overflow:hidden}',
-      '.tk-lang-button{height:22px;padding:0 8px;border:0;background:none;font:inherit;font-size:11px;',
-      'color:var(--dsw-alias-label-secondary,#555);cursor:pointer}',
-      '.tk-lang-button[data-on="true"]{background:var(--dsw-alias-state-business-primary,#4176e6);color:#fff}',
+      '.tk-lang{display:inline-flex;flex:none;gap:2px;padding:2px;border-radius:7px;',
+      'background:var(--dsw-alias-bg-layer-1,#f2f3f5)}',
+      '.tk-lang-button{height:20px;min-width:34px;padding:0 8px;border:0;border-radius:5px;background:none;',
+      'font:inherit;font-size:11px;line-height:20px;color:var(--dsw-alias-label-secondary,#555);cursor:pointer;',
+      'transition:background .12s ease,color .12s ease}',
+      '.tk-lang-button[data-on="true"]{background:var(--dsw-alias-state-business-primary,#4176e6);color:#fff;',
+      'box-shadow:0 0 0 0.5px var(--dsw-alias-state-business-primary,#4176e6)}',
+      '.tk-lang-button[data-on="false"]:hover{color:var(--dsw-alias-label-primary,#1f2329)}',
       '.tk-lang-button:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary,#4176e6);outline-offset:-1px}',
       '.tk-dock{border-top:0.5px solid var(--dsw-alias-border-l2,#e5e5e5);margin:0 12px}',
       '.tk-dock-head{display:flex}',
@@ -284,7 +308,10 @@ window.__ModuleLoader__.load({
       '.tk-dock-title{font-weight:600}',
       '.tk-dock-sub{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;',
       'color:var(--dsw-alias-label-tertiary,#888)}',
-      '.tk-dock-chevron{flex:none;font-size:12px;color:var(--dsw-alias-label-tertiary,#888)}',
+      '.tk-dock-chevron{flex:none;width:6px;height:6px;margin:0 2px 0 0;border-right:1.5px solid currentColor;',
+      'border-bottom:1.5px solid currentColor;transform:rotate(-45deg);color:var(--dsw-alias-label-tertiary,#888);',
+      'transition:transform .15s ease}',
+      '.tk-dock-chevron[data-open="true"]{transform:rotate(45deg);margin-bottom:3px}',
       '.tk-summary:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary,#4176e6);',
       'outline-offset:2px;border-radius:4px}',
       '.tk-dock-body{display:flex;flex-direction:column;gap:10px;max-width:76ch;padding:2px 2px 14px;',
@@ -338,14 +365,17 @@ window.__ModuleLoader__.load({
       const [busy, setBusy] = useState(false);
       const [failed, setFailed] = useState(null);
 
-      const check = useCallback(() => {
-        if (dir.trim().length === 0) {
+      const check = useCallback((explicit) => {
+        // A candidate button checks a name that is not in the input yet, so the
+        // target can be passed in instead of read from state.
+        const target = typeof explicit === 'string' ? explicit : dir;
+        if (target.trim().length === 0) {
           setFailed(translate('noDir'));
           return;
         }
         setBusy(true);
         setFailed(null);
-        fetch(`/toolkit/check?dir=${encodeURIComponent(dir.trim())}`)
+        fetch(`/toolkit/check?dir=${encodeURIComponent(target.trim())}`)
           .then((response) => (response.ok === true ? response.json() : Promise.reject(new Error(String(response.status)))))
           .then((payload) => setResult(payload))
           .catch((error) => setFailed(`${translate('failed')} · ${error.message}`))
@@ -385,11 +415,33 @@ window.__ModuleLoader__.load({
           ? h('p', { className: 'tk-empty' }, tr('empty'))
           : null,
         checker.result !== null
-          ? h(ResultBody, { result: checker.result, tr, lang })
+          ? h(ResultBody, { result: checker.result, tr, lang, checker })
           : null);
     }
 
-    function ResultBody({ result, tr, lang }) {
+    function Candidates({ result, tr, lang, checker }) {
+      return h('div', { className: 'tk-candidates' },
+        h('p', { className: 'tk-empty' }, COPY[lang].candidates(result.candidates.length)),
+        h('ul', { className: 'tk-candidate-list' }, result.candidates.map((item) => h('li', { key: item.fullName },
+          h('button', {
+            className: 'tk-candidate',
+            type: 'button',
+            onClick: () => {
+              // Picking a candidate is the same request, with a name the host
+              // can resolve without searching again.
+              checker.setDir(item.fullName);
+              checker.check(item.fullName);
+            },
+          },
+            h('span', { className: 'tk-candidate-name' },
+              h('span', { className: 'tk-candidate-owner' }, `${item.fullName.split('/')[0]}/`),
+              item.fullName.split('/')[1]),
+            item.stars > 0 ? h('span', { className: 'tk-candidate-stars' }, `★ ${item.stars}`) : null,
+            h('span', { className: 'tk-candidate-go', 'aria-hidden': 'true' }, '→'),
+            item.description !== '' ? h('span', { className: 'tk-candidate-desc' }, item.description) : null)))));
+    }
+
+    function ResultBody({ result, tr, lang, checker }) {
       const summary = useRef(null);
       // After a check the answer is the thing to read; leaving focus in the
       // input means a screen reader announces nothing.
@@ -402,6 +454,9 @@ window.__ModuleLoader__.load({
       // Failures first: a list that opens with six green lines buries the two
       // that matter below the fold of a docked panel.
       const ordered = [...failed, ...passed];
+      if (result.kind === 'candidates') {
+        return h(Candidates, { result, tr, lang, checker });
+      }
       return h('div', { className: 'tk-result-body' },
         h('div', { className: 'tk-summary', ref: summary, tabIndex: -1,
           'data-ok': result.ok === true ? 'true' : 'false', role: 'status' },
@@ -410,7 +465,13 @@ window.__ModuleLoader__.load({
           failed.length > 0
             ? h('span', { className: 'tk-count' }, COPY[lang].counts(failed.length, checks.length))
             : null),
-        typeof result.dir === 'string' && result.dir !== ''
+        result.repo !== undefined
+          ? h('p', { className: 'tk-repo' },
+            h('a', { href: result.repo.url, target: '_blank', rel: 'noreferrer noopener' }, result.repo.fullName))
+          : null,
+        // A repository's temp folder is an implementation detail; a local path is
+        // the thing the person typed, so that one stays.
+        result.repo === undefined && typeof result.dir === 'string' && result.dir !== ''
           ? h('p', { className: 'tk-checked' },
             h('span', {}, `${tr('checked')} `),
             h('code', {}, result.dir))
@@ -468,7 +529,7 @@ window.__ModuleLoader__.load({
           },
             h('span', { className: 'tk-dock-title' }, translate('dockTitle', lang)),
             h('span', { className: 'tk-dock-sub' }, translate('dockSub', lang)),
-            h('span', { className: 'tk-dock-chevron', 'aria-hidden': 'true' }, open === true ? '▾' : '▸')),
+            h('span', { className: 'tk-dock-chevron', 'data-open': open === true ? 'true' : 'false', 'aria-hidden': 'true' })),
           open !== true && checker.result !== null
             ? h('span', {
               className: 'tk-chip',

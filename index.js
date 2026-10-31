@@ -11,6 +11,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { doctor } from './lib/doctor.mjs';
+import { resolveTarget } from './lib/github.mjs';
 import { verify } from './lib/verify.mjs';
 
 export const name = 'dsh-plugin-toolkit';
@@ -115,7 +116,7 @@ async function readBody(req) {
   }
 }
 
-export function apply(ctx) {
+export function apply(ctx, options = {}) {
   const reportHandler = async (req, res) => {
     if (req.method !== 'POST') return sendJson(res, 405, { error: 'method-not-allowed' });
     const body = await readBody(req);
@@ -133,10 +134,32 @@ export function apply(ctx) {
     if (req.method !== 'GET') return sendJson(res, 405, { error: 'method-not-allowed' });
     if (sameOrigin(req) === false) return sendJson(res, 403, { error: 'cross-origin' });
     const url = new URL(req.url, 'http://localhost');
+    const input = url.searchParams.get('dir');
     try {
-      return sendJson(res, 200, await checkPlugin(url.searchParams.get('dir')));
+      // A folder path, `owner/repo`, a GitHub URL, or a bare name to search for.
+      const target = await resolveTarget(input, options.github);
+      if (target.kind === 'empty') {
+        return sendJson(res, 200, { ok: false, kind: 'empty', checks: [{ check: 'dir', ok: false, message: 'nothing to check' }] });
+      }
+      if (target.kind === 'candidates') {
+        return sendJson(res, 200, { ok: false, kind: 'candidates', query: target.query, candidates: target.candidates });
+      }
+      const report = await checkPlugin(target.dir);
+      const answer = { ...report, kind: target.kind };
+      if (target.repo !== undefined) answer.repo = target.repo;
+      return sendJson(res, 200, answer);
     } catch (error) {
-      return sendJson(res, 500, { error: 'check-failed', message: String(error && error.message) });
+      const message = String(error && error.message);
+      // A repository that cannot be fetched is a check result, not a server
+      // fault: the panel has to be able to say which one and why.
+      if (/github|answered \d{3}|rate limit/i.test(message) === true) {
+        return sendJson(res, 200, {
+          ok: false,
+          kind: 'github',
+          checks: [{ check: 'github', ok: false, message }],
+        });
+      }
+      return sendJson(res, 500, { error: 'check-failed', message });
     }
   };
 
