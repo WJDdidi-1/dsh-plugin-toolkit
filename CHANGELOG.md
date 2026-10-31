@@ -1,3 +1,15 @@
+## 0.8.1
+
+`0.8.0` installed and then did nothing: the loader starts a plugin by importing
+the bare package name, and `exports["."]` still pointed at the CLI, so the row
+had no `apply` to run.
+
+- `exports["."]` is `./index.js`; the CLI keeps `./cli` and `bin`, the testkit
+  keeps `./testkit`.
+- `test/entry.test.mjs` guards the shape: the root export is the plugin, the
+  patch file names the package once as `- insert:`, and every path
+  `package.json` points at is in `files`.
+
 ## 0.8.0
 
 The toolkit can now be installed as a plugin, because a tool that cannot be

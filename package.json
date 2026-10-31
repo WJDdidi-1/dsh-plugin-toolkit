@@ -1,13 +1,14 @@
 {
   "name": "dsh-plugin-toolkit",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Preflight, release and test DeepSeek Harness plugins: checks what the host needs, waits for npm to actually serve the version, and keeps the market index honest.",
   "type": "module",
   "bin": {
     "dsh-plugin": "bin/dsh-plugin.mjs"
   },
   "exports": {
-    ".": "./lib/cli.mjs",
+    ".": "./index.js",
+    "./cli": "./lib/cli.mjs",
     "./testkit": "./lib/testkit/index.mjs"
   },
   "files": [
@@ -74,5 +75,6 @@
     "bundle": {
       "patch": "./cordis.patch.yml"
     }
-  }
+  },
+  "main": "index.js"
 }

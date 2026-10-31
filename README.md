@@ -18,6 +18,15 @@ npx dsh-plugin-toolkit@0.7.0 release --pr --merge              # tag, wait for n
 | changing a panel that is already installed | [`dev`](#2-develop-a-panel) | `mount`, the testkit |
 | shipping a version | [`verify`](#3-ship-a-version) | `release`, `index` |
 
+It also installs as a plugin. `dsh plugin add dsh-plugin-toolkit` adds a
+**Plugin doctor** tab to the right sidebar: name the folder that holds a
+plugin's `package.json`, and it runs the same checks `verify` runs and lists
+what would fail — the same answers as the CLI, without leaving the app.
+
+```
+$ dsh plugin add dsh-plugin-toolkit
+```
+
 ### 1. Write a plugin
 
 [`init`](#start-from-a-plugin-that-already-passes) writes the files whose absence shows up as a failed first publish — `engines.dsh`, the patch file, a `files` list that ships the code, a client bundle, a test for it, and the CI that runs both. `doctor` then checks the same things without writing anything, and [`verify`](#prove-the-tarball-works-not-just-the-repository) checks the tarball instead of the working copy.
