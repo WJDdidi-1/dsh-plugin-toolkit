@@ -89,3 +89,28 @@ test('a root module that throws on import is refused, which doctor cannot see', 
   assert.equal(result.stage, 'install');
   assert.match(result.failures[0].message, /does not import: boom/);
 });
+
+test('a client face that throws on a bare context is refused, because it fails the whole boot', async () => {
+  const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-verify-boot-')), 'plugin');
+  init({ dir, name: 'boot-bomb' });
+  // The shape that broke a real profile: apply() reaches for a service that the
+  // web boot has not mounted yet, and no inject list makes the loader wait.
+  fs.writeFileSync(path.join(dir, 'client.js'), `window.__ModuleLoader__.load({
+  id: 'boot-bomb',
+  factory: () => ({
+    apply(ctx) {
+      ctx.locale.register('boot-bomb', {});
+      ctx.inject(['sidebarRightTabs', 'sidebarRight'], (tabCtx) => {
+        tabCtx.slots.register({ name: 'sidebar.right.pane.tab', key: 'boot-bomb' }, () => null);
+      });
+    },
+  }),
+});
+`);
+  const result = await verify({ dir });
+  assert.equal(result.ok, false);
+  assert.equal(result.stage, 'mount');
+  const messages = result.failures.map((failure) => failure.message).join('\n');
+  assert.match(messages, /declares no inject list/);
+  assert.match(messages, /apply\(\) throws when the services are absent/);
+});

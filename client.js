@@ -137,25 +137,43 @@ window.__ModuleLoader__.load({
     }
 
     function apply(ctx) {
-      injectStyles(document);
-      ctx.locale.register(NS, COPY);
-      ctx.inject(['sidebarRightTabs', 'sidebarRight'], (tabCtx) => {
-        if (tabCtx.slots === undefined || tabCtx.sidebarRightTabs === undefined) return;
-        tabCtx.effect(() => tabCtx.slots.inject('sidebar.right.pane.tab', () => tabCtx.slots.register({
-          name: 'sidebar.right.pane.tab',
-          key: NS,
-          locale: NS,
-        }, Panel)));
-        tabCtx.effect(() => tabCtx.sidebarRightTabs.register({
-          id: NS,
-          kind: KIND,
-          priority: 'extension',
-          title: () => 'Plugin doctor',
-        }));
-      });
+      // A panel that cannot find its services must degrade, not fail the boot:
+      // an exception here fails the whole web boot and takes every other plugin
+      // down with it. Every service below is optional for that reason.
+      try {
+        injectStyles(typeof document === 'undefined' ? undefined : document);
+      } catch {
+        // No document: the styles are cosmetic.
+      }
+      try {
+        if (ctx.locale !== undefined && typeof ctx.locale.register === 'function') ctx.locale.register(NS, COPY);
+      } catch {
+        // The panel keeps its English strings.
+      }
+      try {
+        if (typeof ctx.inject !== 'function') return;
+        ctx.inject(['sidebarRightTabs', 'sidebarRight'], (tabCtx) => {
+          if (tabCtx === undefined || tabCtx.slots === undefined || tabCtx.sidebarRightTabs === undefined) return;
+          tabCtx.effect(() => tabCtx.slots.inject('sidebar.right.pane.tab', () => tabCtx.slots.register({
+            name: 'sidebar.right.pane.tab',
+            key: NS,
+            locale: NS,
+          }, Panel)));
+          tabCtx.effect(() => tabCtx.sidebarRightTabs.register({
+            id: NS,
+            kind: KIND,
+            priority: 'extension',
+            title: () => 'Plugin doctor',
+          }));
+        });
+      } catch {
+        // No sidebar: the plugin still loads, it just has no place to show.
+      }
     }
 
-    module.exports = { apply, name: 'dsh-plugin-toolkit' };
+    // The services the tab body reads. Declaring them lets the loader wait for
+    // them instead of calling apply() before they exist.
+    module.exports = { inject: ['slots', 'locale'], apply, name: 'dsh-plugin-toolkit' };
     return module.exports;
   },
 });

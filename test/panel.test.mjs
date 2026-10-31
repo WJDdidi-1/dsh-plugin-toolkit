@@ -63,3 +63,15 @@ test('an empty folder is refused in the panel instead of asking the host', async
   assert.equal(panel.host.fetch.requests.length, 0);
   await panel.unmount();
 });
+
+test('the module face declares the services it reads, and apply survives a bare context', async () => {
+  const { loadBundle } = await import('../lib/testkit/load.mjs');
+  const face = loadBundle(path.join(ROOT, 'client.js'));
+  // Without this list the loader calls apply() before `slots` and `locale`
+  // exist, apply throws, and the web boot fails for every plugin in the profile.
+  assert.deepEqual(face.inject, ['slots', 'locale']);
+  assert.equal(typeof face.apply, 'function');
+  assert.doesNotThrow(() => face.apply({}));
+  assert.doesNotThrow(() => face.apply({ locale: { register() { throw new Error('no locale'); } } }));
+  assert.doesNotThrow(() => face.apply({ inject: (deps, callback) => callback({}) }));
+});

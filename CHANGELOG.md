@@ -1,3 +1,15 @@
+## 0.9.4
+
+- The client module now declares `inject: ['slots', 'locale']` and guards every
+  service it reads. Without the list the loader calls `apply()` before those
+  services exist; the throw fails the **whole web boot**, and the app then reports
+  that third-party plugins are unsupported and starts with them disabled. That is
+  what one unguarded `ctx.locale.register` did to a real profile.
+- `verify` now calls the client module's `apply()` with a bare context and refuses
+  a face without an `inject` list, so this class of failure is caught before
+  install instead of at boot.
+- `init` scaffolds the same guards, for the same reason.
+
 ## 0.9.3
 
 - The panel needed one more thing than `dsh.client`: the host resolves the bundle
