@@ -3,7 +3,7 @@ window.__ModuleLoader__.load({
   factory: (require) => {
     const module = { exports: {} };
     const React = require('react');
-    const { useState, useCallback } = React;
+    const { useState, useCallback, useEffect } = React;
 
     const NS = 'dsh-plugin-toolkit';
     const KIND = 'toolkit';
@@ -132,10 +132,73 @@ window.__ModuleLoader__.load({
      * type's `title`/`description` are called by the sidebar's guide list, not
      * by this component, and they need the same strings.
      */
-    const translate = (key) => {
-      const lang = typeof document === 'undefined' ? 'en' : (document.documentElement.lang === 'zh' ? 'zh' : 'en');
-      return COPY[lang][key] ?? key;
+    const translate = (key, lang = readLang()) => {
+      return (COPY[lang] ?? COPY.en)[key] ?? key;
     };
+
+    /**
+     * The panel's language is the user's choice, not the host's: the app may be
+     * in English while the person reading it is not. Chinese is the default,
+     * because that is the audience this plugin is written for, and the choice is
+     * remembered per browser.
+     */
+    const LANG_KEY = 'dsh-plugin-toolkit:lang';
+    const LANGUAGES = ['zh', 'en'];
+    const langListeners = new Set();
+    let langCache = null;
+
+    function readLang() {
+      if (langCache !== null) return langCache;
+      try {
+        const stored = window.localStorage.getItem(LANG_KEY);
+        if (LANGUAGES.includes(stored)) {
+          langCache = stored;
+          return langCache;
+        }
+      } catch {
+        // No storage (private mode, a sandboxed frame): fall through to the default.
+      }
+      langCache = 'zh';
+      return langCache;
+    }
+
+    function setLang(next) {
+      if (!LANGUAGES.includes(next)) return;
+      langCache = next;
+      try {
+        window.localStorage.setItem(LANG_KEY, next);
+      } catch {
+        // Remembering the choice is a convenience, never a requirement.
+      }
+      for (const listener of langListeners) listener();
+    }
+
+    function useLang() {
+      const [lang, set] = useState(readLang);
+      useEffect(() => {
+        const listener = () => set(readLang());
+        langListeners.add(listener);
+        return () => langListeners.delete(listener);
+      }, []);
+      return lang;
+    }
+
+    function LangSwitch({ lang }) {
+      return h('span', { className: 'tk-lang', role: 'group', 'aria-label': 'Language' },
+        LANGUAGES.map((code) => h('button', {
+          key: code,
+          type: 'button',
+          className: 'tk-lang-button',
+          'data-on': code === lang ? 'true' : 'false',
+          'aria-pressed': code === lang ? 'true' : 'false',
+          onClick: (event) => {
+            // The dock sits inside the composer: a click here must not reach
+            // the conversation's own handlers.
+            event.stopPropagation();
+            setLang(code);
+          },
+        }, code === 'zh' ? '中文' : 'EN')));
+    }
 
     const h = React.createElement;
 
@@ -165,6 +228,13 @@ window.__ModuleLoader__.load({
       '.tk-check{font-size:11px;text-transform:uppercase;letter-spacing:.04em;',
       'color:var(--dsw-alias-label-tertiary,#888)}',
       '.tk-message{font-size:12px;overflow-wrap:anywhere}',
+      '.tk-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px}',
+      '.tk-lang{display:inline-flex;flex:none;border:0.5px solid var(--dsw-alias-border-l2,#ccc);',
+      'border-radius:6px;overflow:hidden}',
+      '.tk-lang-button{height:22px;padding:0 8px;border:0;background:none;font:inherit;font-size:11px;',
+      'color:var(--dsw-alias-label-secondary,#555);cursor:pointer}',
+      '.tk-lang-button[data-on="true"]{background:var(--dsw-alias-state-business-primary,#4176e6);color:#fff}',
+      '.tk-lang-button:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary,#4176e6);outline-offset:-1px}',
       '.tk-dock{border-top:0.5px solid var(--dsw-alias-border-l2,#e5e5e5);margin:0 12px}',
       '.tk-dock-head{display:flex}',
       '.tk-dock-toggle{display:flex;align-items:center;gap:8px;width:100%;padding:7px 2px;',
@@ -236,13 +306,15 @@ window.__ModuleLoader__.load({
     }
 
     function Form({ checker }) {
+      const lang = useLang();
+      const tr = (key) => translate(key, lang);
       return h('div', { className: 'tk-form' },
         h('input', {
           className: 'tk-input',
           type: 'text',
           value: checker.dir,
-          placeholder: translate('placeholder'),
-          'aria-label': translate('placeholder'),
+          placeholder: tr('placeholder'),
+          'aria-label': tr('placeholder'),
           onChange: (event) => checker.setDir(event.target.value),
           onKeyDown: (event) => { if (event.key === 'Enter') checker.check(); },
         }),
@@ -251,25 +323,31 @@ window.__ModuleLoader__.load({
           type: 'button',
           disabled: checker.busy === true,
           onClick: checker.check,
-        }, checker.busy === true ? translate('checking') : translate('check')));
+        }, checker.busy === true ? tr('checking') : tr('check')));
     }
 
     function Result({ checker }) {
+      const lang = useLang();
+      const tr = (key) => translate(key, lang);
       return h('div', { className: 'tk-result' },
         checker.failed !== null ? h('p', { className: 'tk-failed', role: 'status' }, checker.failed) : null,
         checker.result !== null
           ? h('div', { className: 'tk-result-body' },
             h('p', { className: 'tk-verdict', 'data-ok': checker.result.ok === true ? 'true' : 'false', role: 'status' },
-              checker.result.ok === true ? translate('pass') : translate('fail')),
+              checker.result.ok === true ? tr('pass') : tr('fail')),
             h('ul', { className: 'tk-rows' }, checker.result.checks.map((entry) => h(Row, { key: entry.check, entry }))))
           : null);
     }
 
     function Panel() {
       const checker = useChecker();
+      const lang = useLang();
+      const tr = (key) => translate(key, lang);
       return h('div', { className: 'tk-panel' },
-        h('h2', { className: 'tk-title' }, translate('title')),
-        h('p', { className: 'tk-hint' }, translate('hint')),
+        h('div', { className: 'tk-panel-head' },
+          h('h2', { className: 'tk-title' }, tr('title')),
+          h(LangSwitch, { lang })),
+        h('p', { className: 'tk-hint' }, tr('hint')),
         h(Form, { checker }),
         h(Result, { checker }));
     }
@@ -282,19 +360,23 @@ window.__ModuleLoader__.load({
     function Dock() {
       const [open, setOpen] = useState(false);
       const checker = useChecker();
-      const guide = GUIDE[typeof document === 'undefined' || document.documentElement.lang !== 'zh' ? 'en' : 'zh'];
+      const lang = useLang();
+      const guide = GUIDE[lang] ?? GUIDE.zh;
 
       return h('section', { className: 'tk-dock', 'data-open': open === true ? 'true' : 'false' },
         h('div', { className: 'tk-dock-head' },
+          // The language switch is a sibling of the toggle, never inside it: a
+          // button inside a button is invalid and React drops the inner one.
           h('button', {
             className: 'tk-dock-toggle',
             type: 'button',
             'aria-expanded': open === true ? 'true' : 'false',
             onClick: () => setOpen(open !== true),
           },
-            h('span', { className: 'tk-dock-title' }, translate('dockTitle')),
-            h('span', { className: 'tk-dock-sub' }, translate('dockSub')),
-            h('span', { className: 'tk-dock-chevron', 'aria-hidden': 'true' }, open === true ? '▾' : '▸'))),
+            h('span', { className: 'tk-dock-title' }, translate('dockTitle', lang)),
+            h('span', { className: 'tk-dock-sub' }, translate('dockSub', lang)),
+            h('span', { className: 'tk-dock-chevron', 'aria-hidden': 'true' }, open === true ? '▾' : '▸')),
+          h(LangSwitch, { lang })),
         open === true
           ? h('div', { className: 'tk-dock-body' },
             h('div', { className: 'tk-guide' },

@@ -13,11 +13,15 @@ import { createFetch, mountClient } from '../lib/testkit/index.mjs';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 async function mount(routes) {
-  return mountClient({
+  const panel = await mountClient({
     file: path.join(ROOT, 'client.js'),
     copy: { en: {}, zh: {} },
     fetch: createFetch(routes),
   });
+  // These tests assert copy, and the panel opens in Chinese: switch once here
+  // rather than scattering the language through every assertion.
+  await panel.click('.tk-lang-button[data-on="false"]');
+  return panel;
 }
 
 test('the panel asks for a folder and reports what the checks said', async () => {
@@ -88,6 +92,7 @@ test('a service that throws is reported instead of turning into an unexplained r
   };
 
   const panel = await mountWith({ file: path.join(ROOT, 'client.js'), host, fetch });
+  await panel.click('.tk-lang-button[data-on="false"]');
 
   const reports = fetch.requests.filter((request) => request.path === '/toolkit/report');
   const failed = reports.filter((request) => String(request.body).includes('tab-failed'));
@@ -115,7 +120,10 @@ test('the tab type is reachable from the sidebar guide, not only by kind', async
   const definition = registered.find((entry) => entry.id === 'dsh-plugin-toolkit');
   assert.ok(definition !== undefined, 'the tab type is registered');
   assert.equal(definition.guide.length, 1);
-  assert.equal(definition.guide[0].title(), 'Plugin doctor');
+  // The title follows the panel's own language choice, Chinese first.
+  assert.equal(definition.guide[0].title(), '插件体检');
   assert.equal(typeof definition.guide[0].order, 'number');
+  await panel.click('.tk-lang-button[data-on="false"]');
+  assert.equal(definition.guide[0].title(), 'Plugin doctor');
   await panel.unmount();
 });

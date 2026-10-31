@@ -1,3 +1,19 @@
+## 0.11.0
+
+- **A language switch, in the panel.** 中文 / EN sits in the dock's header row and
+  in the sidebar tab, opens in Chinese (the audience this plugin is written for),
+  and remembers the choice in `localStorage` under `dsh-plugin-toolkit:lang`. The
+  panel no longer follows the host's language silently: the app can be in English
+  while the person reading it is not.
+- `useLang()` is a tiny subscription store, so the dock, the tab and the tab
+  type's `title()` all switch together.
+- **The testkit hands a bundle the real `window`.** `loadBundle` used to pass a
+  stand-in that carried only `__ModuleLoader__`, so `window.localStorage` was
+  `undefined` and any preference silently failed to save. That bug was found by
+  this feature failing its own persistence assertion.
+- Fixed invalid markup: the switch was nested inside the dock's toggle button.
+  React warns and drops the inner button, so it now sits beside it.
+
 ## 0.10.0
 
 - **The checker is docked under the conversation.** It used to live only in the

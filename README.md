@@ -98,6 +98,9 @@ for, how to use it, what each check means, and what it cannot tell you — plus
 the folder field and the results. The same panel is also a **Plugin doctor** tab
 in the right sidebar, for when the conversation is busy.
 
+The panel speaks both languages and opens in Chinese; the 中文 / EN switch sits
+in the dock's header row (and in the sidebar tab) and the choice is remembered.
+
 ## Test a panel without a browser
 
 A plugin's client code is one file that calls `window.__ModuleLoader__.load({factory})` — there is no module to import, so the usual React test setup does not apply. `testkit` supplies the missing half: a DOM, the real React, and a host context that records what the panel registers.

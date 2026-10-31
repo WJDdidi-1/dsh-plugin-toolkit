@@ -95,3 +95,30 @@ test('expectAria names the attribute that differs, not just that one did', async
     await panel.unmount();
   }
 });
+
+test('a bundle sees the real window, not a loader-shaped stand-in', async () => {
+  const { mkdtemp, writeFile } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const dir = await mkdtemp(path.join(tmpdir(), 'tk-window-'));
+  const file = path.join(dir, 'client.js');
+  // A panel that reads the browser's own storage. Handing the bundle a stand-in
+  // `window` that only carries `__ModuleLoader__` turns every one of these into
+  // a silent `undefined`, which is exactly how a language choice fails to stick.
+  await writeFile(file, `
+window.__ModuleLoader__.load({
+  id: 'reads-window',
+  factory: () => ({
+    name: 'reads-window',
+    inject: [],
+    apply(ctx) {
+      window.localStorage.setItem('seen', String(typeof window.localStorage));
+      ctx.slots.register({ name: 'sidebar.right.pane.tab', key: 'reads-window' }, () => null);
+    },
+  }),
+});
+`);
+
+  const panel = await mountClient({ file });
+  assert.equal(panel.window.localStorage.getItem('seen'), 'object');
+  await panel.unmount();
+});
