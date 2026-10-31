@@ -60,7 +60,7 @@ test('an empty folder is refused in the panel instead of asking the host', async
   const panel = await mount({ '/toolkit/check': { body: { ok: true, dir: null, checks: [] } } });
   await panel.click('.tk-button');
   assert.match(panel.text(), /Name the folder that holds the plugin's package\.json\./);
-  assert.equal(panel.host.fetch.requests.length, 0);
+  assert.deepEqual(panel.host.fetch.requests.filter((request) => request.path === '/toolkit/check'), []);
   await panel.unmount();
 });
 
@@ -74,4 +74,26 @@ test('the module face declares the services it reads, and apply survives a bare 
   assert.doesNotThrow(() => face.apply({}));
   assert.doesNotThrow(() => face.apply({ locale: { register() { throw new Error('no locale'); } } }));
   assert.doesNotThrow(() => face.apply({ inject: (deps, callback) => callback({}) }));
+});
+
+test('a service that throws is reported instead of turning into an unexplained red dot', async () => {
+  const { createFetch: makeFetch, createHost, mountClient: mountWith } = await import('../lib/testkit/index.mjs');
+  const fetch = makeFetch({});
+  const host = createHost({ fetch, locale: { en: {}, zh: {} } });
+  // The failure this incident produced: the tab registration throws *after*
+  // apply() returned, where the outer guards cannot see it. The row ends up
+  // "failed" and the app shows one red dot with no text anywhere.
+  host.sidebarRightTabs.register = () => {
+    throw new Error('the sidebar is full');
+  };
+
+  const panel = await mountWith({ file: path.join(ROOT, 'client.js'), host, fetch });
+
+  const reports = fetch.requests.filter((request) => request.path === '/toolkit/report');
+  const failed = reports.filter((request) => String(request.body).includes('tab-failed'));
+  assert.equal(failed.length, 1);
+  assert.match(String(failed[0].body), /the sidebar is full/);
+  // The panel still mounted: the report is the only visible difference.
+  assert.match(panel.text(), /Does this plugin survive an install\?/);
+  await panel.unmount();
 });

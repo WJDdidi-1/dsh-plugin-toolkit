@@ -1,3 +1,21 @@
+## 0.9.5
+
+- The panel reports its own failures. When a row fails to activate the app shows
+  one red dot and no text, so the bundle now posts what happened to
+  `POST /toolkit/report`; the host appends it to `~/.dsh/toolkit-client-report.ndjson`.
+  Every stage is reported — `apply`, `no-inject`, `no-sidebar`, `tab-registered`,
+  `tab-failed` — so "did it run at all" is answerable without a debugger.
+- The failure that motivated it: `ctx.inject` callbacks run *after* `apply()`
+  returns, so the guards added in 0.9.4 could not see a throwing registration and
+  the row still ended up failed. The callback body is now guarded and reported.
+- The client module no longer sets `name` on its face; it is the package's name
+  either way, and the face now matches the shape that works.
+- `mountClient` accepts a `host`, so a test can hand the panel a service that
+  throws on purpose. Without it "the service threw" — the failure mode that costs
+  the most to debug in the app — was untestable.
+- `README.zh.md`: the whole tour in Chinese, linked from the top of the README.
+  The install examples now say `@latest` instead of a version that goes stale.
+
 ## 0.9.4
 
 - The client module now declares `inject: ['slots', 'locale']` and guards every

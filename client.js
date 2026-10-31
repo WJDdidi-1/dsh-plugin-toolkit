@@ -136,44 +136,99 @@ window.__ModuleLoader__.load({
           : null);
     }
 
+    function describe(error) {
+      if (error === undefined || error === null) return 'unknown';
+      const text = error.stack !== undefined ? String(error.stack) : String(error.message !== undefined ? error.message : error);
+      return text.split('\n').slice(0, 3).join(' | ');
+    }
+
+    /**
+     * The panel's own crash reporter. When the row fails to activate the app
+     * shows one red dot and no text, and the bundle has no console anyone can
+     * read, so it posts what happened and the host appends it to
+     * `~/.dsh/toolkit-client-report.ndjson`.
+     */
+    function report(stage, detail) {
+      try {
+        if (typeof fetch !== 'function') return;
+        const body = JSON.stringify({
+          stage,
+          message: describe(detail),
+          services: ['slots', 'locale', 'sidebarRightTabs', 'sidebarRight'],
+        });
+        fetch('/toolkit/report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body,
+        }).catch(() => {});
+      } catch {
+        // Reporting is best effort; it never changes the outcome.
+      }
+    }
+
     function apply(ctx) {
       // A panel that cannot find its services must degrade, not fail the boot:
       // an exception here fails the whole web boot and takes every other plugin
       // down with it. Every service below is optional for that reason.
+      const has = (name) => {
+        try {
+          return ctx[name] !== undefined && ctx[name] !== null;
+        } catch {
+          return false;
+        }
+      };
+      report('apply', `services slots=${String(has('slots'))} locale=${String(has('locale'))} inject=${typeof ctx.inject}`);
       try {
         injectStyles(typeof document === 'undefined' ? undefined : document);
-      } catch {
+      } catch (error) {
         // No document: the styles are cosmetic.
+        report('styles', error);
       }
       try {
         if (ctx.locale !== undefined && typeof ctx.locale.register === 'function') ctx.locale.register(NS, COPY);
-      } catch {
+      } catch (error) {
         // The panel keeps its English strings.
+        report('locale', error);
       }
       try {
-        if (typeof ctx.inject !== 'function') return;
+        if (typeof ctx.inject !== 'function') {
+          report('no-inject', 'ctx.inject is not a function');
+          return;
+        }
         ctx.inject(['sidebarRightTabs', 'sidebarRight'], (tabCtx) => {
-          if (tabCtx === undefined || tabCtx.slots === undefined || tabCtx.sidebarRightTabs === undefined) return;
-          tabCtx.effect(() => tabCtx.slots.inject('sidebar.right.pane.tab', () => tabCtx.slots.register({
-            name: 'sidebar.right.pane.tab',
-            key: NS,
-            locale: NS,
-          }, Panel)));
-          tabCtx.effect(() => tabCtx.sidebarRightTabs.register({
-            id: NS,
-            kind: KIND,
-            priority: 'extension',
-            title: () => 'Plugin doctor',
-          }));
+          // Failures inside this callback happen after apply() returned, so the
+          // guards above do not cover them — this try/catch is the one that
+          // decides whether the row lands in "failed".
+          try {
+            if (tabCtx === undefined || tabCtx.slots === undefined || tabCtx.sidebarRightTabs === undefined) {
+              report('no-sidebar', `tabCtx slots=${String(tabCtx !== undefined && tabCtx.slots !== undefined)} sidebarRightTabs=${String(tabCtx !== undefined && tabCtx.sidebarRightTabs !== undefined)}`);
+              return;
+            }
+            tabCtx.effect(() => tabCtx.slots.inject('sidebar.right.pane.tab', () => tabCtx.slots.register({
+              name: 'sidebar.right.pane.tab',
+              key: NS,
+              locale: NS,
+            }, Panel)));
+            tabCtx.effect(() => tabCtx.sidebarRightTabs.register({
+              id: NS,
+              kind: KIND,
+              priority: 'extension',
+              title: () => 'Plugin doctor',
+            }));
+            report('tab-registered', `kind=${KIND}`);
+          } catch (error) {
+            report('tab-failed', error);
+          }
         });
-      } catch {
+      } catch (error) {
         // No sidebar: the plugin still loads, it just has no place to show.
+        report('inject', error);
       }
     }
 
     // The services the tab body reads. Declaring them lets the loader wait for
     // them instead of calling apply() before they exist.
-    module.exports = { inject: ['slots', 'locale'], apply, name: 'dsh-plugin-toolkit' };
+    module.exports = { inject: ['slots', 'locale'], apply };
     return module.exports;
   },
 });

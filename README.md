@@ -2,12 +2,14 @@
 
 ![dsh-plugin-toolkit](docs/card.png)
 
+English · [中文](./README.zh.md)
+
 Everything a [DeepSeek Harness](https://github.com/deepseek-ai/dsh) plugin needs between `init` and a version the market index accepts: scaffolding, a test harness for the client bundle, a way to see a change without restarting the app, and a release that does not depend on remembering fourteen steps.
 
 ```sh
-npx dsh-plugin-toolkit@0.7.0 init ./my-panel --name my-panel   # a plugin that already passes the checks
-npx dsh-plugin-toolkit@0.7.0 verify .                          # pack it, install the tarball, mount the panel
-npx dsh-plugin-toolkit@0.7.0 release --pr --merge              # tag, wait for npm, update the index, open and merge the PR
+npx dsh-plugin-toolkit@latest init ./my-panel --name my-panel   # a plugin that already passes the checks
+npx dsh-plugin-toolkit@latest verify .                          # pack it, install the tarball, mount the panel
+npx dsh-plugin-toolkit@latest release --pr --merge              # tag, wait for npm, update the index, open and merge the PR
 ```
 
 ## Three paths
@@ -32,8 +34,8 @@ $ dsh plugin add dsh-plugin-toolkit
 [`init`](#start-from-a-plugin-that-already-passes) writes the files whose absence shows up as a failed first publish — `engines.dsh`, the patch file, a `files` list that ships the code, a client bundle, a test for it, and the CI that runs both. `doctor` then checks the same things without writing anything, and [`verify`](#prove-the-tarball-works-not-just-the-repository) checks the tarball instead of the working copy.
 
 ```sh
-npx dsh-plugin-toolkit@0.7.0 init ./my-panel --name my-panel
-cd my-panel && npm install && npm test && npx dsh-plugin-toolkit@0.7.0 doctor .
+npx dsh-plugin-toolkit@latest init ./my-panel --name my-panel
+cd my-panel && npm install && npm test && npx dsh-plugin-toolkit@latest doctor .
 ```
 
 ### 2. Develop a panel
@@ -41,8 +43,8 @@ cd my-panel && npm install && npm test && npx dsh-plugin-toolkit@0.7.0 doctor .
 A plugin's client code is one file that calls `window.__ModuleLoader__.load({factory})` — there is no module to import, so the usual React test setup does not apply. [`testkit`](#test-a-panel-without-a-browser) supplies the missing half, and [`dev`](#edit-a-plugin-that-is-already-installed) pushes a rebuilt bundle into the running app.
 
 ```sh
-npx dsh-plugin-toolkit@0.7.0 mount ./client.js     # what a user would see, without the app
-npx dsh-plugin-toolkit@0.7.0 dev . --host http://127.0.0.1:54133
+npx dsh-plugin-toolkit@latest mount ./client.js     # what a user would see, without the app
+npx dsh-plugin-toolkit@latest dev . --host http://127.0.0.1:54133
 ```
 
 ### 3. Ship a version
@@ -50,8 +52,8 @@ npx dsh-plugin-toolkit@0.7.0 dev . --host http://127.0.0.1:54133
 `verify` first (it is the only check that reads the tarball), then `release`, which tags, waits for the registry, writes the index entry with the publish time the registry reports, and — with `--pr --merge` — opens and merges the pull request.
 
 ```sh
-npx dsh-plugin-toolkit@0.7.0 verify .
-npx dsh-plugin-toolkit@0.7.0 release . --pr --merge
+npx dsh-plugin-toolkit@latest verify .
+npx dsh-plugin-toolkit@latest release . --pr --merge
 ```
 
 ## Why this exists
@@ -72,7 +74,7 @@ Releasing one plugin fifteen times taught me three things the ecosystem's toolin
 ## Start from a plugin that already passes
 
 ```sh
-$ npx dsh-plugin-toolkit@0.7.0 init ./my-panel --name my-panel --title "My panel"
+$ npx dsh-plugin-toolkit@latest init ./my-panel --name my-panel --title "My panel"
 created 8 file(s) in /Users/you/my-panel
   .github/workflows/ci.yml
   .gitignore

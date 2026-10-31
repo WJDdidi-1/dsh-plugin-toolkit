@@ -7,6 +7,7 @@
  * the command that fixes it. Nothing here writes to the workspace.
  */
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 import { doctor } from './lib/doctor.mjs';
@@ -78,7 +79,56 @@ export async function checkPlugin(dir) {
   return { ok: checks.every((entry) => entry.ok === true), dir: target, checks };
 }
 
+/**
+ * The client half cannot see the host console, and a panel that fails to
+ * activate shows up as one red dot — no message, nowhere to look. This route is
+ * the plugin's own crash reporter: the bundle posts what happened, the host
+ * appends it to `~/.dsh/toolkit-client-report.ndjson`.
+ */
+function appendReport(entry) {
+  try {
+    const file = path.join(os.homedir(), '.dsh', 'toolkit-client-report.ndjson');
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.appendFileSync(file, `${JSON.stringify(entry)}\n`);
+  } catch {
+    // A report that fails to write must not become a second failure.
+  }
+}
+
+function clip(value, limit) {
+  if (typeof value !== 'string') return null;
+  return value.length > limit ? `${value.slice(0, limit)}…` : value;
+}
+
+async function readBody(req) {
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of req) {
+    size += chunk.length;
+    if (size > 8192) return null;
+    chunks.push(chunk);
+  }
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  } catch {
+    return null;
+  }
+}
+
 export function apply(ctx) {
+  const reportHandler = async (req, res) => {
+    if (req.method !== 'POST') return sendJson(res, 405, { error: 'method-not-allowed' });
+    const body = await readBody(req);
+    if (body === null || typeof body !== 'object') return sendJson(res, 400, { error: 'bad-report' });
+    appendReport({
+      at: new Date().toISOString(),
+      stage: clip(body.stage, 60),
+      message: clip(body.message, 500),
+      services: Array.isArray(body.services) ? body.services.slice(0, 20).map((name) => clip(String(name), 60)) : [],
+    });
+    return sendJson(res, 200, { ok: true });
+  };
+
   const checkHandler = async (req, res) => {
     if (req.method !== 'GET') return sendJson(res, 405, { error: 'method-not-allowed' });
     if (sameOrigin(req) === false) return sendJson(res, 403, { error: 'cross-origin' });
@@ -96,6 +146,7 @@ export function apply(ctx) {
     const server = serviceCtx !== null && serviceCtx !== undefined ? serviceCtx.webServer : undefined;
     if (server === null || server === undefined || typeof server.register !== 'function') return;
     server.register({ kind: 'exact', path: '/toolkit/check', handler: checkHandler });
+    server.register({ kind: 'exact', path: '/toolkit/report', handler: reportHandler });
     installed = true;
   };
 

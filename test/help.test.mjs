@@ -28,7 +28,9 @@ test('the README three paths name every command they promise', () => {
   const paths = readme.slice(readme.indexOf('## Three paths'), readme.indexOf('## Why this exists'));
   for (const command of COMMANDS) {
     if (command === 'index') continue; // the index audit is a release-time detail
-    assert.match(paths, new RegExp(`dsh-plugin-toolkit@[\\d.]+ ${command}\\b`), `the three paths never show ${command}`);
+    // `@latest` is allowed on purpose: a pinned version in the quickstart goes
+    // stale the day after the next release.
+    assert.match(paths, new RegExp(`dsh-plugin-toolkit@([\\d.]+|latest) ${command}\\b`), `the three paths never show ${command}`);
   }
 });
 
