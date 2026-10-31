@@ -135,9 +135,21 @@ First run writes nothing: it tells you to re-run with `UPDATE_SNAPSHOTS=1`, so a
 ### Check what assistive tech sees
 
 ```js
-assert.equal(panel.attributes('[role="tab"][aria-selected="true"]').id, 'tab-protection');
+panel.expectAria('[role="tab"][aria-selected="true"]', { label: 'Protection', selected: 'true' });
 assert.match(panel.must('[role="status"]').textContent, /Score moved 71 → 77/);
 ```
+
+`expectAria()` compares the attributes a screen reader actually reads — `role`,
+`label`, `live`, `selected`, `expanded`, `checked`, `pressed`, `disabled` — and
+names the one that differs:
+
+```
+[aria-live="polite"]: expected aria text to be "9", but it is "0"
+```
+
+A missing attribute is reported as `nothing`, not as an empty string, because
+those are different bugs. `panel.aria(selector)` returns the same object when you
+want to assert on it yourself.
 
 `must()` throws with the rendered markup when the selector misses, which is the difference between "the assertion failed" and "here is what the user actually got".
 

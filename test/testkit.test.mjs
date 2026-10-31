@@ -75,3 +75,23 @@ test('a path that is not a bundle says what to pass instead of raising ENOENT', 
   assert.throws(() => loadBundle(missing), /no such file: .*mount takes the client bundle/);
   assert.throws(() => loadBundle(here), /is a directory .*mount takes the client bundle inside it/);
 });
+
+test('expectAria names the attribute that differs, not just that one did', async () => {
+  const { mountClient } = await import('../lib/testkit/index.mjs');
+  const panel = await mountClient({ file: 'fixtures/client-bundle/client.js' });
+  try {
+    const live = panel.expectAria('[aria-live="polite"]', { live: 'polite', text: '0' });
+    assert.equal(live.live, 'polite');
+    assert.throws(
+      () => panel.expectAria('[aria-live="polite"]', { text: '9' }),
+      /expected aria text to be "9", but it is "0"/u,
+    );
+    // A missing attribute is reported as nothing, not as an empty string.
+    assert.throws(
+      () => panel.expectAria('[aria-live="polite"]', { selected: 'true' }),
+      /expected aria selected to be "true", but it is nothing/u,
+    );
+  } finally {
+    await panel.unmount();
+  }
+});

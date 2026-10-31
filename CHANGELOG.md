@@ -1,3 +1,9 @@
+## 0.8.7
+
+- `panel.aria(selector)` and `panel.expectAria(selector, expected)`: assert what a
+  screen reader reads, and get the attribute that differs named in the failure.
+  A missing attribute reports `nothing` rather than `""`.
+
 ## 0.8.6
 
 - `release --publish`: run `npm publish` locally instead of waiting for a
