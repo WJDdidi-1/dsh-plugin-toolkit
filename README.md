@@ -169,7 +169,7 @@ AIignore No workspace yet Could not read the report …
 
 ## Start from the example
 
-[`dsh-plugin-example`](https://github.com/WJDdidi-1/dsh-plugin-example) is a ~70-line plugin: one sidebar tab, two languages, one behaviour test, CI that runs `doctor` through the composite action. It is the shape this toolkit expects, so it is also the fastest way to see whether the toolkit fits your plugin.
+[`dsh-plugin-example`](https://github.com/WJDdidi-1/dsh-plugin-example) is a ~70-line plugin: one sidebar tab, two languages, one behaviour test, CI that runs `verify` through the composite action. It is the shape this toolkit expects, so it is also the fastest way to see whether the toolkit fits your plugin. It is a GitHub template too: **Use this template** starts you on a plugin whose first publish already passes.
 
 ```sh
 dsh plugin add dsh-plugin-example
