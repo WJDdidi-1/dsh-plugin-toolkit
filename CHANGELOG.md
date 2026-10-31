@@ -1,3 +1,20 @@
+## 0.9.6
+
+- **The host half now survives a context it does not own.** `apply()` ended with
+  an unguarded `installRoutes(ctx)`, and cordis does not return `undefined` for
+  an undeclared service — it throws `cannot get property "webServer" without
+  inject`. So the whole `apply` failed, no route was registered, and the plugin
+  manager showed one red dot with no text: the exact symptom the 0.9.5 report
+  channel was built to explain, caused by the code next to it.
+- `verify` now calls the host face's `apply` with a context that throws on every
+  undeclared property, the way cordis does. A plain `{}` hid this: reading
+  `ctx.webServer` off it is just `undefined`. Message:
+  `apply() throws when a service it never declared is read, which fails the row: …`
+- The scaffold was never affected — its host half registers nothing.
+- Regression tests: `test/host.test.mjs` (activation, deferred web server,
+  method guard) and a `verify` case that builds a plugin whose `apply` reads
+  `ctx.webServer` unguarded.
+
 ## 0.9.5
 
 - The panel reports its own failures. When a row fails to activate the app shows

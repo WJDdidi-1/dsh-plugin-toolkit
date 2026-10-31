@@ -114,3 +114,19 @@ test('a client face that throws on a bare context is refused, because it fails t
   assert.match(messages, /declares no inject list/);
   assert.match(messages, /apply\(\) throws when the services are absent/);
 });
+
+test('a host face that reads an undeclared service is refused, because the row fails silently', async () => {
+  const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-verify-host-')), 'plugin');
+  init({ dir, name: 'host-bomb' });
+  // The shape that produced the red dot with no message: cordis throws on the
+  // read itself, so the whole apply fails and no route is ever registered.
+  fs.writeFileSync(path.join(dir, 'index.js'), `export function apply(ctx) {
+  const server = ctx.webServer;
+  if (server) server.register({ kind: 'exact', path: '/host-bomb/check', handler: () => {} });
+}
+`);
+  const result = await verify({ dir, mount: false });
+  assert.equal(result.ok, false);
+  assert.equal(result.stage, 'install');
+  assert.match(result.failures[0].message, /apply\(\) throws when a service it never declared is read/);
+});

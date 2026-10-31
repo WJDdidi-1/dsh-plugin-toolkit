@@ -143,11 +143,19 @@ export function apply(ctx) {
   let installed = false;
   const installRoutes = (serviceCtx) => {
     if (installed) return;
-    const server = serviceCtx !== null && serviceCtx !== undefined ? serviceCtx.webServer : undefined;
-    if (server === null || server === undefined || typeof server.register !== 'function') return;
-    server.register({ kind: 'exact', path: '/toolkit/check', handler: checkHandler });
-    server.register({ kind: 'exact', path: '/toolkit/report', handler: reportHandler });
-    installed = true;
+    // Reading `ctx.webServer` on a context that does not declare `inject` does
+    // not yield undefined: cordis throws "cannot get property ... without
+    // inject". An unguarded read here fails the whole apply, which is exactly
+    // the red dot with no message this panel exists to explain.
+    try {
+      const server = serviceCtx !== null && serviceCtx !== undefined ? serviceCtx.webServer : undefined;
+      if (server === null || server === undefined || typeof server.register !== 'function') return;
+      server.register({ kind: 'exact', path: '/toolkit/check', handler: checkHandler });
+      server.register({ kind: 'exact', path: '/toolkit/report', handler: reportHandler });
+      installed = true;
+    } catch {
+      // No web server on this context: the guard still runs, the panel does not.
+    }
   };
 
   const defer = (deps, callback) => {
