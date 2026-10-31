@@ -1,3 +1,18 @@
+## 0.9.7
+
+- **The tab type is now reachable.** Registering a tab *type* is not enough: the
+  right sidebar's guide list is built from `tabs.guide()`, so a type with no
+  `guide` entry is registered, has a body slot, and is still impossible to open —
+  no tab appears anywhere. The type now contributes one guide entry
+  (`id: 'doctor'`, `order: 60`, localized title and description), which is what
+  puts "Plugin doctor" in the sidebar's guide.
+- The title and description come from the panel's own dictionary through a
+  module-level `translate()`, because the sidebar calls them from its guide list,
+  outside this component.
+- Regression test: mounting the bundle with a recording `sidebarRightTabs` now
+  asserts the registered definition carries a guide entry with a title and an
+  order.
+
 ## 0.9.6
 
 - **The host half now survives a context it does not own.** `apply()` ended with

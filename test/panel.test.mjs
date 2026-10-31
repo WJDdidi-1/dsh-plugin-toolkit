@@ -97,3 +97,25 @@ test('a service that throws is reported instead of turning into an unexplained r
   assert.match(panel.text(), /Does this plugin survive an install\?/);
   await panel.unmount();
 });
+
+test('the tab type is reachable from the sidebar guide, not only by kind', async () => {
+  const { createHost, mountClient: mountWith } = await import('../lib/testkit/index.mjs');
+  const registered = [];
+  const host = createHost({ locale: { en: {}, zh: {} } });
+  host.sidebarRightTabs.register = (definition) => {
+    registered.push(definition);
+    return () => {};
+  };
+
+  const panel = await mountWith({ file: path.join(ROOT, 'client.js'), host });
+
+  // A tab *type* with no guide entry is registered but never offered: the
+  // sidebar builds its guide list from `tabs.guide()`, so nothing opens it and
+  // the user sees no tab at all.
+  const definition = registered.find((entry) => entry.id === 'dsh-plugin-toolkit');
+  assert.ok(definition !== undefined, 'the tab type is registered');
+  assert.equal(definition.guide.length, 1);
+  assert.equal(definition.guide[0].title(), 'Plugin doctor');
+  assert.equal(typeof definition.guide[0].order, 'number');
+  await panel.unmount();
+});

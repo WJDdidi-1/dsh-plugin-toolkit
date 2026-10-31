@@ -20,6 +20,7 @@ window.__ModuleLoader__.load({
         fail: 'This would not install cleanly.',
         noDir: 'Name the folder that holds the plugin\'s package.json.',
         failed: 'Could not run the checks',
+        guideDescription: 'Run the install checks on a plugin folder',
       },
       zh: {
         tabTitle: '插件体检',
@@ -32,7 +33,18 @@ window.__ModuleLoader__.load({
         fail: '这样装上去会出问题。',
         noDir: '请填写放着 package.json 的插件文件夹。',
         failed: '检查没能跑起来',
+        guideDescription: '对任意插件文件夹跑一遍安装前的检查',
       },
+    };
+
+    /**
+     * The panel's copy, by the document language. Module scope because the tab
+     * type's `title`/`description` are called by the sidebar's guide list, not
+     * by this component, and they need the same strings.
+     */
+    const translate = (key) => {
+      const lang = typeof document === 'undefined' ? 'en' : (document.documentElement.lang === 'zh' ? 'zh' : 'en');
+      return COPY[lang][key] ?? key;
     };
 
     const h = React.createElement;
@@ -89,10 +101,7 @@ window.__ModuleLoader__.load({
       const [result, setResult] = useState(null);
       const [busy, setBusy] = useState(false);
       const [failed, setFailed] = useState(null);
-      const tr = (key) => {
-        const language = COPY[document.documentElement.lang === 'zh' ? 'zh' : 'en'];
-        return language[key] ?? key;
-      };
+      const tr = translate;
 
       const check = useCallback(() => {
         if (dir.trim().length === 0) {
@@ -209,11 +218,20 @@ window.__ModuleLoader__.load({
               key: NS,
               locale: NS,
             }, Panel)));
+            // A tab *type* with no guide entry is registered but unreachable:
+            // the sidebar's guide list is built from `tabs.guide()`, so the
+            // type would never be offered and nothing would open it.
             tabCtx.effect(() => tabCtx.sidebarRightTabs.register({
               id: NS,
               kind: KIND,
               priority: 'extension',
-              title: () => 'Plugin doctor',
+              title: () => translate('tabTitle'),
+              guide: [{
+                id: 'doctor',
+                order: 60,
+                title: () => translate('tabTitle'),
+                description: () => translate('guideDescription'),
+              }],
             }));
             report('tab-registered', `kind=${KIND}`);
           } catch (error) {
