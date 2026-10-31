@@ -1,5 +1,11 @@
 # dsh-plugin-toolkit
 
+[![npm](https://img.shields.io/npm/v/dsh-plugin-toolkit)](https://www.npmjs.com/package/dsh-plugin-toolkit)
+[![downloads](https://img.shields.io/npm/dw/dsh-plugin-toolkit)](https://www.npmjs.com/package/dsh-plugin-toolkit)
+[![CI](https://github.com/WJDdidi-1/dsh-plugin-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/WJDdidi-1/dsh-plugin-toolkit/actions/workflows/ci.yml)
+[![license](https://img.shields.io/npm/l/dsh-plugin-toolkit)](LICENSE)
+
+
 ![dsh-plugin-toolkit](docs/card.png)
 
 English · [中文](./README.zh.md)
@@ -209,6 +215,16 @@ That is how the AIignore panel was checked before release: the real bundle, moun
 $ npx dsh-plugin mount ../ai-context-doctor/plugin/client.js
 AIignore No workspace yet Could not read the report …
 ```
+
+## Put the badge on a plugin that passes
+
+If `verify` passes on your plugin, this badge says so and links back here:
+
+```md
+[![checked with dsh-plugin-toolkit](https://raw.githubusercontent.com/WJDdidi-1/dsh-plugin-toolkit/main/docs/badge.svg)](https://github.com/WJDdidi-1/dsh-plugin-toolkit)
+```
+
+It is a claim, not a decoration: add it only when `dsh-plugin verify .` exits 0.
 
 ## Start from the example
 

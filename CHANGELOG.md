@@ -1,3 +1,14 @@
+## 0.13.1
+
+- **A badge you can put on a plugin that passes.** `docs/badge.svg` plus the
+  snippet in both READMEs. It is a claim, not a decoration: the README says to
+  add it only when `verify` exits 0.
+- **Every scaffolded plugin links back.** `init` now writes the badge into the
+  generated README, so a plugin created with the toolkit advertises the toolkit
+  it was checked with.
+- **README badges** for version, downloads, CI and license, and the repository
+  homepage now points at the npm page.
+
 ## 0.13.0
 
 Three more rounds of the panel, and one new thing to point it at.

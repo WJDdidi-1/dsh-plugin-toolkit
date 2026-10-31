@@ -97,3 +97,12 @@ test('the scaffold pins the toolkit that generated it, not a number typed once',
   // doctor reads the working copy; the generated workflow has to check the tarball.
   assert.equal(/npx --yes dsh-plugin-toolkit@[\d.]+ doctor/.test(scaffold.ci), false);
 });
+
+test('the scaffolded README carries the badge, so every new plugin links back', async () => {
+  const dir = path.join(scratch(), 'badged');
+  const result = init({ dir, name: 'badged', title: 'Badged' });
+  assert.equal(result.ok, true);
+  const readme = fs.readFileSync(path.join(dir, 'README.md'), 'utf8');
+  assert.match(readme, /docs\/badge\.svg/);
+  assert.match(readme, /dsh-plugin-toolkit/);
+});

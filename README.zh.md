@@ -36,6 +36,16 @@ npx dsh-plugin-toolkit@latest release --pr --merge              # 打 tag、等 
 - Node.js 18 或更新（CI 在 18/20/22 × ubuntu/macos/windows 上跑）。
 - 要发布时需要一个能写 `market/index.json` 的仓库和 `gh`（已登录）。
 
+## 通过检查就挂个徽章
+
+`verify` 过了，可以用这个徽章，点回这里：
+
+```md
+[![checked with dsh-plugin-toolkit](https://raw.githubusercontent.com/WJDdidi-1/dsh-plugin-toolkit/main/docs/badge.svg)](https://github.com/WJDdidi-1/dsh-plugin-toolkit)
+```
+
+这是声明不是装饰：`dsh-plugin verify .` 退出码为 0 才挂。
+
 ## 从一个已经能通过检查的插件开始
 
 ```sh
