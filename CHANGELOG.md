@@ -1,3 +1,15 @@
+## 0.9.2
+
+- `doctor` reports a shipped client bundle that no `dsh.client` declares. The host
+  serves `client.js` only for packages declaring `dsh.client`, so a plugin could
+  ship the bundle, mount it in `verify`, and still have no panel in the app — the
+  same silent failure as a tarball without it.
+- The toolkit's own manifest now declares `dsh.client` (`platform: web`,
+  `inject: ['@deepseek-ai/dsh-client-ui-sidebar-right']`), which is what makes the
+  Plugin doctor tab reachable at all.
+- The `not-shipped` fixture declares its client entry, so it keeps demonstrating
+  the `files` gap instead of tripping the new declaration check.
+
 ## 0.9.1
 
 - `audit` separates problems from advisories. Running 0.9.0 on a real profile

@@ -313,6 +313,12 @@ dsh-plugin verify: stopped at pack
 
 ## When the panel does not appear
 
+The first question is whether the host ever served your bundle. A package that
+ships `client.js` but declares no `dsh.client` loads its host half and shows no
+panel — `doctor` now fails that, because the host serves client bundles only for
+packages that declare one:
+
+
 The install reports success and nothing shows up. In this order:
 
 1. **Did the host restart?** Client bundles are read at startup. `dsh plugin add`

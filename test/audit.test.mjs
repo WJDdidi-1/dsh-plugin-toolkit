@@ -5,7 +5,7 @@ import path from 'node:path';
 import test from 'node:test';
 
 import { audit, listInstalled } from '../lib/audit.mjs';
-import { checkClientEntry, doctor } from '../lib/doctor.mjs';
+import { checkClientDeclaration, checkClientEntry, doctor } from '../lib/doctor.mjs';
 
 function writePlugin(root, name, manifest, files = {}) {
   const dir = path.join(root, 'profiles', 'desktop', 'node_modules', name);
@@ -111,6 +111,18 @@ test('a ./client export written as a conditions object is found too', () => {
   fs.writeFileSync(path.join(dir, 'lib', 'client.cjs'), '// bundle');
   const manifest = { name: 'demo', version: '1.0.0', dsh: { client: { platform: 'web' } }, exports: { './client': { default: './lib/client.cjs' } } };
   assert.equal(checkClientEntry(dir, manifest), null);
+});
+
+test('a shipped client bundle without dsh.client is reported, because the harness never serves it', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'client-undeclared-'));
+  fs.writeFileSync(path.join(dir, 'client.js'), '// bundle');
+  const manifest = { name: 'demo', version: '1.0.0' };
+  assert.equal(checkClientDeclaration(dir, manifest), 'client.js ships but dsh.client is not declared, so the harness never serves the bundle and the panel cannot appear');
+  assert.equal(checkClientDeclaration(dir, { ...manifest, dsh: { client: { platform: 'web' } } }), null);
+  assert.match(checkClientDeclaration(dir, { ...manifest, dsh: { client: { platform: 'node' } } }), /platform is "node"/u);
+  const hostOnly = fs.mkdtempSync(path.join(os.tmpdir(), 'host-only-'));
+  fs.writeFileSync(path.join(hostOnly, 'index.js'), '// host half only');
+  assert.equal(checkClientDeclaration(hostOnly, manifest), null);
 });
 
 test('advisories do not fail an audit', async () => {

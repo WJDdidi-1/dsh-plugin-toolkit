@@ -56,7 +56,8 @@ test('--market writes the entry into another repository, and opens the PR there'
   const plugin = fs.mkdtempSync(path.join(os.tmpdir(), 'rel-plugin-'));
   fs.writeFileSync(path.join(plugin, 'package.json'), JSON.stringify({
     name: 'demo-plugin', version: '3.0.0', files: ['index.js', 'client.js', 'cordis.patch.yml'],
-    engines: { dsh: '>=0.2.0' }, dsh: { bundle: { patch: './cordis.patch.yml' } },
+    engines: { dsh: '>=0.2.0' },
+    dsh: { bundle: { patch: './cordis.patch.yml' }, client: { platform: 'web', entry: 'client.js' } },
   }, null, 2));
   fs.writeFileSync(path.join(plugin, 'README.md'), '# demo\n\n## Requirements\n\n| Harness |\n| --- |\n| `>=0.2.0` |\n');
   fs.writeFileSync(path.join(plugin, 'cordis.patch.yml'), '- insert: []\n');
@@ -117,7 +118,8 @@ test('--publish runs the publish here, for repositories without a publish workfl
   const plugin = fs.mkdtempSync(path.join(os.tmpdir(), 'rel-publish-'));
   fs.writeFileSync(path.join(plugin, 'package.json'), JSON.stringify({
     name: 'demo-plugin', version: '4.0.0', files: ['index.js', 'client.js', 'cordis.patch.yml'],
-    engines: { dsh: '>=0.2.0' }, dsh: { bundle: { patch: './cordis.patch.yml' } },
+    engines: { dsh: '>=0.2.0' },
+    dsh: { bundle: { patch: './cordis.patch.yml' }, client: { platform: 'web', entry: 'client.js' } },
   }, null, 2));
   fs.writeFileSync(path.join(plugin, 'README.md'), '# demo\n\n## Requirements\n\n| Harness |\n| --- |\n| `>=0.2.0` |\n');
   fs.writeFileSync(path.join(plugin, 'cordis.patch.yml'), '- insert: []\n');
