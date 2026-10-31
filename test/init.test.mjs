@@ -8,13 +8,27 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import { doctor } from '../lib/doctor.mjs';
 import { init } from '../lib/init.mjs';
 import { mountClient } from '../lib/testkit/index.mjs';
 
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
 function scratch() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-plugin-init-'));
+}
+
+/** The generated files, without running the checks the other tests run. */
+function scaffoldOf() {
+  const dir = path.join(scratch(), 'plugin');
+  const result = init({ dir, name: 'scaffold-check', title: 'Scaffold check' });
+  assert.equal(result.ok, true, JSON.stringify(result.failures));
+  return {
+    packageJson: JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8')),
+    ci: fs.readFileSync(path.join(dir, '.github', 'workflows', 'ci.yml'), 'utf8'),
+  };
 }
 
 test('the scaffold passes doctor, which is the point of it', () => {
@@ -47,7 +61,9 @@ test('the scaffold ships the test and the workflow it tells you to run', () => {
   assert.match(spec, /mountClient/);
   const workflow = fs.readFileSync(path.join(dir, '.github/workflows/ci.yml'), 'utf8');
   assert.match(workflow, /npm test/);
-  assert.match(workflow, /doctor \./);
+  // The workflow checks the tarball, not the working copy: `doctor .` cannot
+  // see that `files` left the client bundle out.
+  assert.match(workflow, /uses: WJDdidi-1\/dsh-plugin-toolkit@v1/);
 });
 
 test('an occupied directory is refused unless --force, so nothing is overwritten', () => {
@@ -70,4 +86,14 @@ test('a name that npm would reject is rejected here, not at publish time', () =>
     assert.equal(result.failures[0].check, 'name');
   }
   assert.equal(init({ dir: path.join(scratch(), 'ok'), name: '@me/my-panel' }).ok, true);
+});
+
+test('the scaffold pins the toolkit that generated it, not a number typed once', () => {
+  const version = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version;
+  const scaffold = scaffoldOf();
+  assert.equal(scaffold.packageJson.devDependencies['dsh-plugin-toolkit'], `^${version}`);
+  assert.match(scaffold.ci, /uses: WJDdidi-1\/dsh-plugin-toolkit@v1/);
+  assert.match(scaffold.ci, new RegExp(`version: ${version.replace(/\./g, '\\.')}`));
+  // doctor reads the working copy; the generated workflow has to check the tarball.
+  assert.equal(/npx --yes dsh-plugin-toolkit@[\d.]+ doctor/.test(scaffold.ci), false);
 });
