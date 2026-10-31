@@ -1,3 +1,14 @@
+## 0.13.3
+
+- **`verify` no longer fails a correct plugin.** The check that calls a client
+  module's `apply()` before its services exist handed it `{}`, so
+  `ctx.inject(...)` — the cordis API every plugin uses — threw
+  `ctx.inject is not a function` and the plugin was reported as broken. The
+  probe now models a real context: `inject`, `on`, `effect`, `logger`, `get`,
+  `set` and `provide` exist; only the services are absent.
+- Found by this repository's own example plugin, whose CI went red on the
+  previous release. That is the whole point of the example.
+
 ## 0.13.2
 
 - **A table of the four ways a plugin installs and still does nothing** — red

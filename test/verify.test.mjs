@@ -130,3 +130,25 @@ test('a host face that reads an undeclared service is refused, because the row f
   assert.equal(result.stage, 'install');
   assert.match(result.failures[0].message, /apply\(\) throws when a service it never declared is read/);
 });
+
+test('a client face that guards its services passes, which the example plugin proved', async () => {
+  // Regression: the probe used to hand the face `{}`, so `ctx.inject(...)` — the
+  // cordis API every plugin uses — threw "ctx.inject is not a function" and a
+  // correct plugin was reported as broken. Caught by this repository's own
+  // example plugin, which uses exactly this shape.
+  const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-verify-guarded-')), 'plugin');
+  init({ dir, name: 'guarded-panel' });
+  fs.writeFileSync(path.join(dir, 'client.js'), `window.__ModuleLoader__.load({
+  id: 'guarded-panel',
+  factory: () => ({
+    inject: ['slots', 'locale'],
+    apply(ctx) {
+      try { ctx.inject(['sidebarRightTabs'], (tabCtx) => { tabCtx.slots.register({ name: 'sidebar.right.pane.tab' }, () => null); }); } catch {}
+    },
+  }),
+});
+`);
+  const result = await verify({ dir });
+  assert.equal(result.ok, true, JSON.stringify(result.failures));
+  assert.equal(result.stage, 'mount');
+});
