@@ -1,3 +1,14 @@
+## 0.8.2
+
+`doctor` now refuses the failure that shipped in 0.8.0.
+
+- New check `root export`: when a package declares `dsh.bundle`, its root module
+  has to be the plugin. A root that is also a `bin` target — a CLI wearing a
+  plugin's clothes — is reported, and so is a root module with no `apply`.
+  pnpm reports success either way; the row just mounts nothing.
+- `test/doctor.test.mjs` covers both shapes, and a bundle with no root module
+  (a subpath plugin) stays legal.
+
 ## 0.8.1
 
 `0.8.0` installed and then did nothing: the loader starts a plugin by importing
