@@ -73,6 +73,19 @@ Releasing one plugin fifteen times taught me three things the ecosystem's toolin
 2. **The market index is a second release, done by hand.** Each version needs an entry carrying `publishTimestamp` from the registry and `engines.dsh` from the manifest. Forget the range and the index validator rejects the PR with `Engines mismatch` — after the tag is already public.
 3. **Reading a manifest is not the same as checking it.** A plugin can have a valid `package.json` and still be uninstallable: `files` that omit the entry the manifest points at, a bundle patch that does not exist, a README that never states the host range it declares.
 
+### Four ways a plugin installs and still does nothing
+
+Each of these shipped in a real version of this toolkit before the check below existed. A manifest check passes on all four.
+
+| What you see | What it was | Caught by |
+| --- | --- | --- |
+| The tab is a red dot and the panel never opens | `exports["."]` pointed at the CLI, so the loader's row had no plugin to apply | `root export` |
+| The plugin is installed, the app never serves it | `dsh.client` declared, `exports["./client"]` missing — the host drops the row | `client declaration` |
+| The app says the third-party plugin is unsupported and disables all of them | `apply()` read `ctx.webServer` without declaring it; cordis throws instead of returning `undefined` | `verify` (calls `apply` on a context that has no services) |
+| The tab registers, and nothing in the UI opens it | `sidebarRightTabs.register()` registers a *type*; the sidebar lists what `tabs.guide()` returns | a testkit test, not `doctor` |
+
+The first three are static: `doctor` and `verify` catch them without the app running. The fourth is a UI contract, so it needs the panel mounted and the registration inspected — that is what [`testkit`](#test-a-panel-without-a-browser) is for.
+
 ## Requirements
 
 - Node.js 18 or newer (the registry is read with `fetch`; no runtime dependencies)

@@ -1,3 +1,12 @@
+## 0.13.2
+
+- **A table of the four ways a plugin installs and still does nothing** — red
+  dot with no panel, a row the host drops, an app that disables every plugin
+  after one unguarded `apply()`, and a tab type nothing can open. Each row is a
+  bug this toolkit shipped and then learned to catch, and each row names the
+  check that catches it now.
+- Both READMEs. Nothing in the code changed.
+
 ## 0.13.1
 
 - **A badge you can put on a plugin that passes.** `docs/badge.svg` plus the

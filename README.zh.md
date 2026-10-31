@@ -31,6 +31,19 @@ npx dsh-plugin-toolkit@latest release --pr --merge              # 打 tag、等 
 
 每一条都能在发布前被机器拦住，所以每一条现在都是一项检查。这些检查对着**宿主的解析代码**写，而不是对着文件约定写——差别就是 `verify` 报 `mounted the panel` 而真实宿主什么都不加载。
 
+### 插件装上了却什么都不做的四种样子
+
+下面每一条都真实发布过，而且**只看 manifest 一个都发现不了**。
+
+| 你会看到 | 真正的原因 | 现在由谁拦 |
+| --- | --- | --- |
+| 标签是个红点，面板永远打不开 | `exports["."]` 指向了 CLI，加载器那一行没有插件可挂 | `root export` |
+| 插件装上了，应用从不加载它 | 声明了 `dsh.client`，但 `exports["./client"]` 不存在——宿主直接丢掉这一行 | `client declaration` |
+| 应用提示「第三方插件不支持」，把所有插件都禁用 | `apply()` 读了没声明的 `ctx.webServer`，cordis 不是返回 `undefined` 而是抛错 | `verify`（在一个没有任何服务的 ctx 上调用 `apply`） |
+| 标签注册成功，界面里却没有任何入口 | `sidebarRightTabs.register()` 注册的是**类型**，侧栏列的是 `tabs.guide()` 的返回 | testkit 的测试，不是 `doctor` |
+
+前三条是静态的：`doctor` 和 `verify` 不用开应用就能抓到。第四条是 UI 契约，必须把面板挂起来、检查注册出去的参数——那是 [`testkit`](#不用浏览器测面板) 的活。
+
 ## 安装要求
 
 - Node.js 18 或更新（CI 在 18/20/22 × ubuntu/macos/windows 上跑）。
