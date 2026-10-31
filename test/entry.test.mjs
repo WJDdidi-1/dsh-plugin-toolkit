@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
@@ -20,7 +20,9 @@ test('the root export is the plugin, and the CLI is reachable beside it', () => 
 });
 
 test('the plugin the root export names is a real plugin, not a wrapper', async () => {
-  const plugin = await import(path.join(ROOT, manifest.exports['.']));
+  // A bare absolute path is not an ESM URL on Windows: "D:\a\..." parses as
+  // the scheme "d:".
+  const plugin = await import(pathToFileURL(path.join(ROOT, manifest.exports['.'])).href);
   assert.equal(typeof plugin.apply, 'function');
   assert.equal(plugin.name, 'dsh-plugin-toolkit');
 });
