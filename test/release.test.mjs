@@ -50,3 +50,64 @@ test('the plan lists every step that a release has to finish, in order', () => {
   assert.ok(at(/registry serves/i) > at(/push the tag/i));
   assert.ok(at(/market index/i) > at(/registry serves/i));
 });
+
+test('--market writes the entry into another repository, and opens the PR there', async () => {
+  const { release } = await import('../lib/release.mjs');
+  const plugin = fs.mkdtempSync(path.join(os.tmpdir(), 'rel-plugin-'));
+  fs.writeFileSync(path.join(plugin, 'package.json'), JSON.stringify({
+    name: 'demo-plugin', version: '3.0.0', files: ['index.js', 'client.js', 'cordis.patch.yml'],
+    engines: { dsh: '>=0.2.0' }, dsh: { bundle: { patch: './cordis.patch.yml' } },
+  }, null, 2));
+  fs.writeFileSync(path.join(plugin, 'README.md'), '# demo\n\n## Requirements\n\n| Harness |\n| --- |\n| `>=0.2.0` |\n');
+  fs.writeFileSync(path.join(plugin, 'cordis.patch.yml'), '- insert: []\n');
+  fs.writeFileSync(path.join(plugin, 'index.js'), 'export function apply() {}\n');
+  fs.writeFileSync(path.join(plugin, 'client.js'), 'window.__ModuleLoader__.load({ id: "x", factory: () => ({}) });\n');
+
+  // The market lives in a different repository, which is the normal case for
+  // anyone listed in someone else's index.
+  const market = fs.mkdtempSync(path.join(os.tmpdir(), 'rel-market-'));
+  fs.mkdirSync(path.join(market, 'market'));
+  fs.writeFileSync(path.join(market, 'market/index.json'), JSON.stringify({
+    format: 1, plugins: [{ name: 'demo-plugin', versions: [] }],
+  }, null, 2));
+
+  const document = { versions: { '3.0.0': {} }, time: { '3.0.0': '2026-10-31T05:00:00.000Z' } };
+  const git = (args) => {
+    if (args[0] === 'rev-parse') throw new Error('missing');
+    return '';
+  };
+  const marketCalls = [];
+  const marketGit = (args) => {
+    marketCalls.push(args.join(' '));
+    return '';
+  };
+  const ghCalls = [];
+  const gh = (args) => {
+    ghCalls.push(args.join(' '));
+    return 'https://example.test/pr/11';
+  };
+
+  const result = await release({
+    dir: plugin,
+    marketDir: market,
+    pr: true,
+    git,
+    marketGit,
+    gh,
+    fetch: async () => ({ status: 200, ok: true, json: async () => document }),
+    sleep: async () => {},
+  });
+
+  assert.equal(result.ok, true, JSON.stringify(result.failures ?? []));
+  assert.equal(result.indexUpdate.file, path.join(market, 'market/index.json'));
+  const written = JSON.parse(fs.readFileSync(path.join(market, 'market/index.json'), 'utf8'));
+  assert.equal(written.plugins[0].versions[0].version, '3.0.0');
+  assert.equal(written.plugins[0].versions[0].engines.dsh, '>=0.2.0');
+  assert.deepEqual(marketCalls.slice(0, 4), [
+    'checkout -b market/3.0.0',
+    'add market/index.json',
+    'commit -m market: 3.0.0',
+    'push -u origin market/3.0.0',
+  ]);
+  assert.match(ghCalls[0], /^pr create --base main --head market\/3\.0\.0/);
+});

@@ -1,3 +1,12 @@
+## 0.8.5
+
+- `release --market <dir>`: write the index entry into a checkout of the
+  repository that owns the index, and open the pull request there. Before this,
+  `release` only touched a `market/index.json` inside the plugin's own repo, so
+  anyone listed in a central market had to patch the entry by hand — which is
+  where the timestamp goes wrong.
+- `--index` still names the file inside that repository.
+
 ## 0.8.4
 
 - README: `## When the panel does not appear` — the five checks that explain a

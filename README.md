@@ -320,6 +320,19 @@ merged
 
 Without `--pr` it prints the `git add` / `gh pr create` commands instead of running them; `--dry-run` prints the whole sequence before anything happens. A re-run after a failure is safe: the same version with the same publish time is a no-op.
 
+### When the index lives in someone else's repository
+
+Most plugins are listed in a central market repository, not their own. Point
+`--market` at a checkout of that repository and the entry — and the pull
+request — land there:
+
+```sh
+$ dsh-plugin release . --market ../market-repo --pr --merge
+tagged plugin-v0.4.0, npm served my-plugin@0.4.0 after 92s
+updated /Users/me/market-repo/market/index.json on market/0.4.0
+merged
+```
+
 ## Exit codes
 
 | Code | Meaning |
