@@ -1,3 +1,17 @@
+## 0.9.0
+
+- `audit`: every plugin installed in a profile, in one pass — version, whether the
+  installed copy passes the same checks `doctor` runs, and whether the running app
+  loaded it (read from the graph frame on `/plugins/events`). Answers "why is my
+  plugin not in the sidebar?" with the plugin named.
+- `doctor --installed` (used by `audit`): skip the `files` check. After install the
+  tarball is already unpacked, so `files` cannot decide what shipped — npm always
+  ships `package.json` and the README, and the check reported false problems for
+  every published plugin.
+- `client entry` accepts the bundle named by the `./client` export, which is how a
+  package with a `dsh/` folder names its bundle (`@liustack/modlens` was reported
+  as missing its own client bundle).
+
 ## 0.8.8
 
 - `dev` reads the plugin graph the app sends first, so a plugin the app never

@@ -15,7 +15,7 @@ npx dsh-plugin-toolkit@0.7.0 release --pr --merge              # tag, wait for n
 | You are… | Start with | Then |
 | --- | --- | --- |
 | writing your first plugin | [`init`](#1-write-a-plugin) | `doctor`, `verify` |
-| changing a panel that is already installed | [`dev`](#2-develop-a-panel) | `mount`, the testkit |
+| changing a panel that is already installed | [`dev`](#2-develop-a-panel) | `mount`, the testkit, `audit` |
 | shipping a version | [`verify`](#3-ship-a-version) | `release`, `index` |
 
 It also installs as a plugin. `dsh plugin add dsh-plugin-toolkit` adds a
@@ -195,6 +195,26 @@ AIignore No workspace yet Could not read the report …
 ```sh
 dsh plugin add dsh-plugin-example
 ```
+
+## See what is installed, and what the app loaded
+
+`doctor` checks one folder you name. The question that actually gets asked is
+"why is my plugin not in the sidebar?", and the answer needs three things at once:
+what is installed, whether each installed copy is valid, and which of them the
+running app actually loaded.
+
+```sh
+$ dsh-plugin audit --host http://127.0.0.1:54133
+dsh-aiignore           0.37.1    loaded       ok
+demo-panel             0.3.0     not loaded   1 problem: root export
+                                                    root export: the root export index.js does not export apply, so the loader imports the package and mounts nothing
+
+1 installed plugin(s) are not in the running app; restart the app once after installing.
+```
+
+Without `--host` the loaded column is `?`, because guessing would be worse than
+saying nothing. Only packages that declare a `dsh` field are audited — the rest of
+`node_modules` is ordinary dependencies, and auditing those is noise.
 
 ## Edit a plugin that is already installed
 
