@@ -247,6 +247,7 @@ latest release.
 | `patch file` | The path declared above must be a real file |
 | `client entry` | If `dsh.client` is declared, the bundle has to be there |
 | `files list` | Every path `package.json` points at (`exports`, patch, client) must be covered by `files` |
+| `root export` | The loader imports the bare package name; if that module is the CLI (or exports no `apply`), the row mounts nothing while the install reports success |
 
 Exit code is `0` when the plugin can be installed and `1` when it cannot, so it drops into CI unchanged.
 
@@ -255,7 +256,7 @@ Exit code is `0` when the plugin can be installed and `1` when it cannot, so it 
 `doctor` reads your working copy. Users install the tarball, and a `files` list can ship everything except the panel — `doctor` will not notice.
 
 ```sh
-$ npx dsh-plugin-toolkit@0.7.0 verify .
+$ npx dsh-plugin-toolkit verify .
 ok  packed 5 file(s), installed the tarball, mounted the panel
     My panel This panel came from dsh-plugin init. Clicks: 0
 ```
@@ -263,10 +264,36 @@ ok  packed 5 file(s), installed the tarball, mounted the panel
 It packs, installs that tarball into a throwaway directory, then mounts the bundle **from the installed copy**. When the `files` list drops the panel:
 
 ```sh
-$ npx dsh-plugin-toolkit@0.7.0 verify .
+$ npx dsh-plugin-toolkit verify .
 dsh-plugin verify: stopped at pack
   ✗ pack: the tarball does not contain client.js, so the installed plugin has no panel
 ```
+
+## When the panel does not appear
+
+The install reports success and nothing shows up. In this order:
+
+1. **Did the host restart?** Client bundles are read at startup. `dsh plugin add`
+   writes the profile; the running window still has the old bundle.
+2. **Is the root export the plugin?**
+   ```sh
+   node -e "import('my-plugin').then((m) => console.log(typeof m.apply))"
+   ```
+   `function` is what the loader needs. `undefined` means `exports["."]` points
+   at the CLI — `0.8.0` of this tool shipped exactly that.
+3. **Does the tarball ship the panel?** `dsh-plugin verify .` installs what users
+   get and mounts it. `doctor` cannot see this.
+4. **Is the patch row shaped right?** `cordis.patch.yml` needs one `- insert:`
+   entry with `id` and `name`:
+   ```yaml
+   - insert:
+       - id: my-plugin
+         name: my-plugin
+         config: {}
+   ```
+5. **Did the client bundle throw?** The host logs the loader error with the
+   plugin id; a bundle that throws at factory time looks identical to one that
+   never loaded.
 
 ## What `release` does
 

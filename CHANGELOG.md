@@ -1,3 +1,12 @@
+## 0.8.4
+
+- README: `## When the panel does not appear` — the five checks that explain a
+  successful install with nothing on screen (restart, root export, tarball,
+  patch row, a bundle that throws). Each one is a failure this tool has already
+  hit. A test keeps the section from losing a step.
+- `doctor` table lists the new `root export` check; the verify example no longer
+  pins an old version in its own docs.
+
 ## 0.8.3
 
 `verify` now imports the host half it just installed.

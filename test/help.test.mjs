@@ -37,3 +37,12 @@ test('the README does not describe a feature as unbuilt when it is shipped', () 
   assert.doesNotMatch(readme, /Roadmap/, 'a roadmap that has been delivered reads as if it has not');
   assert.match(readme, /## What is not here yet/, 'the honest list is the replacement');
 });
+
+test('the README has a section for the panel that does not appear', () => {
+  const readme = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
+  assert.match(readme, /## When the panel does not appear/);
+  // Every step of that section is a failure that actually happened.
+  for (const hint of ['restart', 'typeof m.apply', 'verify .', 'cordis.patch.yml', 'throw']) {
+    assert.ok(readme.includes(hint), `the troubleshooting section does not mention ${hint}`);
+  }
+});
