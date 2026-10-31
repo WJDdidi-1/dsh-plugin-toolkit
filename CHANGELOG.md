@@ -1,3 +1,11 @@
+## 0.13.4
+
+- **`docs/why-it-exists.md`**: the five failures that shaped these checks, each
+  with the exact error text, the root cause, the check that catches it now, and
+  how to reproduce it. Linked from both READMEs.
+- **A release for the GitHub Action** (`v1.0.0`), so the action can be published
+  to the Marketplace.
+
 ## 0.13.3
 
 - **`verify` no longer fails a correct plugin.** The check that calls a client

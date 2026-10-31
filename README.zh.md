@@ -44,6 +44,8 @@ npx dsh-plugin-toolkit@latest release --pr --merge              # 打 tag、等 
 
 前三条是静态的：`doctor` 和 `verify` 不用开应用就能抓到。第四条是 UI 契约，必须把面板挂起来、检查注册出去的参数——那是 [`testkit`](#不用浏览器测面板) 的活。
 
+这五个事故——红点没有面板、宿主丢掉一行、一行没加保护的 `apply()` 让应用禁用全部插件、注册了却没人能打开的标签、以及一个判错了的检查器——都写了原始报错和复现步骤：[插件装上了，却什么都不做](https://github.com/WJDdidi-1/dsh-plugin-toolkit/blob/main/docs/why-it-exists.md)。
+
 ## 安装要求
 
 - Node.js 18 或更新（CI 在 18/20/22 × ubuntu/macos/windows 上跑）。

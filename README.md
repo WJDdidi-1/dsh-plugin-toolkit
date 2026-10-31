@@ -73,6 +73,8 @@ Releasing one plugin fifteen times taught me three things the ecosystem's toolin
 2. **The market index is a second release, done by hand.** Each version needs an entry carrying `publishTimestamp` from the registry and `engines.dsh` from the manifest. Forget the range and the index validator rejects the PR with `Engines mismatch` — after the tag is already public.
 3. **Reading a manifest is not the same as checking it.** A plugin can have a valid `package.json` and still be uninstallable: `files` that omit the entry the manifest points at, a bundle patch that does not exist, a README that never states the host range it declares.
 
+The five failures behind these checks — a red dot with no panel, a row the host drops, an app that disables every plugin after one unguarded `apply()`, a tab nothing can open, and a checker that was wrong — are written up with their exact error text and how to reproduce each one: [Five plugins that installed and did nothing](https://github.com/WJDdidi-1/dsh-plugin-toolkit/blob/main/docs/why-it-exists.md).
+
 ### Four ways a plugin installs and still does nothing
 
 Each of these shipped in a real version of this toolkit before the check below existed. A manifest check passes on all four.
