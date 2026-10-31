@@ -1,3 +1,34 @@
+## 0.12.0
+
+Five rounds of the panel's own UI, each one driven by looking at the rendered
+thing rather than at the code.
+
+- **The tool comes before the guide.** The input, the button and the result now
+  sit directly under the header, and the guide moved below a rule into a
+  foldable `使用说明`. It used to take a screen and a half of scrolling to reach
+  the one control the panel exists for. The docked body is capped at `76ch`, and
+  the language switch no longer wraps onto its own line in the sidebar tab.
+- **Results answer first.** A summary bar states the verdict and the counts
+  (`3 项里 1 项没过`), the checked folder is shown in monospace, failures come
+  first with a tinted row and a left rule, and the passing checks fold into
+  `<details>` — closed when something failed, open when everything passed.
+- **No state renders as nothing.** Before the first check the panel says what to
+  do; while a check runs the region is `aria-busy`; a request that never reaches
+  the host still shows the folder it was asked about.
+- **Keyboard and screen reader.** `Escape` closes the dock from anywhere inside
+  it, the toggle carries `aria-controls`, and focus moves to the verdict when a
+  check lands, so the answer is announced instead of the input keeping focus.
+- **The outcome survives collapsing.** A chip in the collapsed row reads
+  `1 项没过` / `通过`, so the result is visible without opening the panel again.
+- `scripts/preview.mjs` renders the panel — collapsed, open, with a result, and
+  the sidebar tab — to one static HTML file, using the same testkit the tests
+  use. That is how these five rounds were reviewed; it reads the stylesheet from
+  the injected `<style>`, because a regex over the source truncates at the first
+  `;` inside a CSS string.
+- Fixed in the testkit: passing both `host` and `fetch` to `mountClient` used to
+  ignore the stub, so every request answered 404 and the failure looked like the
+  panel's fault.
+
 ## 0.11.0
 
 - **A language switch, in the panel.** 中文 / EN sits in the dock's header row and

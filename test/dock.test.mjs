@@ -98,3 +98,78 @@ test('the sidebar tab carries the same switch', async () => {
   assert.match(panel.text(), /Does this plugin survive an install/);
   await panel.unmount();
 });
+
+const MIXED = {
+  ok: false,
+  dir: '/tmp/example',
+  checks: [
+    { check: 'manifest', ok: true, message: 'example@0.1.0' },
+    { check: 'root export', ok: false, message: 'no apply' },
+    { check: 'readme', ok: true, message: 'Requirements found' },
+  ],
+};
+
+async function dock(routes = {}) {
+  return mountClient({
+    file: path.join(ROOT, 'client.js'),
+    slot: 'conversation.input.dock',
+    host: createHost({ locale: { en: {}, zh: {} } }),
+    fetch: createFetch({ '/toolkit/check': { body: MIXED }, ...routes }),
+  });
+}
+
+test('the input sits above the guide: the tool is not behind a wall of prose', async () => {
+  const panel = await dock();
+  await panel.click('.tk-dock-toggle');
+  const html = panel.html();
+  assert.ok(html.indexOf('tk-input') < html.indexOf('tk-guide-summary'),
+    'the form comes before the guide');
+  await panel.unmount();
+});
+
+test('the answer is the first thing in the list, and passes fold away', async () => {
+  const panel = await dock();
+  await panel.click('.tk-dock-toggle');
+  await panel.type('.tk-input', '/tmp/example');
+  await panel.click('.tk-button');
+
+  const first = panel.must('.tk-rows .tk-row');
+  assert.equal(first.getAttribute('data-ok'), 'false');
+  assert.match(panel.text(), /2 项通过/);
+  assert.match(panel.text(), /3 项里 1 项没过/);
+  // The passing checks are behind the fold, not gone.
+  assert.equal(panel.must('.tk-passes').open, false);
+  await panel.unmount();
+});
+
+test('before the first check the panel says what to do instead of showing nothing', async () => {
+  const panel = await dock();
+  await panel.click('.tk-dock-toggle');
+  assert.match(panel.text(), /粘贴放着 package\.json 的文件夹/);
+  await panel.unmount();
+});
+
+test('Escape closes the dock, and the toggle points at the body it opens', async () => {
+  const panel = await dock();
+  await panel.click('.tk-dock-toggle');
+  assert.equal(panel.must('.tk-dock-toggle').getAttribute('aria-controls'), 'dsh-toolkit-dock-body');
+  assert.equal(panel.must('.tk-dock').getAttribute('data-open'), 'true');
+
+  await panel.press('.tk-input', 'Escape');
+  assert.equal(panel.must('.tk-dock').getAttribute('data-open'), 'false');
+  await panel.unmount();
+});
+
+test('the collapsed row carries the outcome, so a check is not hidden behind a click', async () => {
+  const panel = await dock();
+  await panel.click('.tk-dock-toggle');
+  await panel.type('.tk-input', '/tmp/example');
+  await panel.click('.tk-button');
+  assert.equal(panel.query('.tk-chip'), null, 'no chip while the panel is open');
+
+  await panel.click('.tk-dock-toggle');
+  const chip = panel.must('.tk-chip');
+  assert.equal(chip.getAttribute('data-ok'), 'false');
+  assert.match(chip.textContent, /1 项没过/);
+  await panel.unmount();
+});

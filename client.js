@@ -3,7 +3,7 @@ window.__ModuleLoader__.load({
   factory: (require) => {
     const module = { exports: {} };
     const React = require('react');
-    const { useState, useCallback, useEffect } = React;
+    const { useState, useCallback, useEffect, useRef } = React;
 
     const NS = 'dsh-plugin-toolkit';
     const KIND = 'toolkit';
@@ -18,6 +18,14 @@ window.__ModuleLoader__.load({
         checking: 'Checking…',
         pass: 'Everything the market checks passes.',
         fail: 'This would not install cleanly.',
+        counts: (failed, total) => `${failed} of ${total} checks failed`,
+        passedLabel: (n) => `${n} passed`,
+        empty: 'Paste the folder that holds package.json, then press Check.',
+        guideTitle: 'How to use this',
+        checkingNow: 'Checking…',
+        chipFail: (n) => `${n} failed`,
+        chipPass: 'passes',
+        checked: 'Checked',
         noDir: 'Name the folder that holds the plugin\'s package.json.',
         failed: 'Could not run the checks',
         guideDescription: 'Run the install checks on a plugin folder',
@@ -33,6 +41,14 @@ window.__ModuleLoader__.load({
         checking: '检查中…',
         pass: '市场会检查的项都通过了。',
         fail: '这样装上去会出问题。',
+        counts: (failed, total) => `${total} 项里 ${failed} 项没过`,
+        passedLabel: (n) => `${n} 项通过`,
+        empty: '粘贴放着 package.json 的文件夹，然后按「检查」。',
+        guideTitle: '使用说明',
+        checkingNow: '正在检查…',
+        chipFail: (n) => `${n} 项没过`,
+        chipPass: '通过',
+        checked: '检查的是',
         noDir: '请填写放着 package.json 的插件文件夹。',
         failed: '检查没能跑起来',
         guideDescription: '对任意插件文件夹跑一遍安装前的检查',
@@ -204,23 +220,47 @@ window.__ModuleLoader__.load({
 
     const CSS = [
       '.tk-panel{padding:16px;display:flex;flex-direction:column;gap:10px;font-size:13px}',
-      '.tk-title{margin:0;font-size:14px;font-weight:600}',
+      '.tk-title{margin:0;flex:1;min-width:0;font-size:14px;font-weight:600}',
       '.tk-hint{margin:0;font-size:12px;color:var(--dsw-alias-label-tertiary,#888)}',
       '.tk-form{display:flex;gap:8px}',
       '.tk-input{flex:1;min-width:0;height:28px;padding:0 9px;font:inherit;font-size:12px;',
       'border:0.5px solid var(--dsw-alias-border-l2,#ccc);border-radius:6px;',
       'background:var(--dsw-alias-bg-layer-1,#fff);color:inherit}',
+      '.tk-input:hover{border-color:var(--dsw-alias-border-l3,#c9ccd1)}',
       '.tk-input:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary,#4176e6);outline-offset:-1px}',
       '.tk-button{height:28px;padding:0 12px;border-radius:6px;border:0;cursor:pointer;font:inherit;',
       'background:var(--dsw-alias-state-business-primary,#4176e6);color:#fff}',
-      '.tk-button:disabled{opacity:.6;cursor:default}',
+      '.tk-button:hover{filter:brightness(1.06)}',
+      '.tk-button:disabled{opacity:.6;cursor:default;filter:none}',
+      '.tk-button:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary,#4176e6);outline-offset:2px}',
+      '.tk-chip{flex:none;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;',
+      'font-variant-numeric:tabular-nums}',
+      '.tk-chip[data-ok="true"]{color:var(--dsw-alias-state-success-primary,#2f855a);',
+      'background:var(--dsw-alias-state-success-bg,#eef8ee)}',
+      '.tk-chip[data-ok="false"]{color:var(--dsw-alias-state-error-primary,#c0392b);',
+      'background:var(--dsw-alias-state-error-bg,#fdf3f2)}',
       '.tk-failed{margin:0;font-size:12px;color:var(--dsw-alias-state-error-primary,#c0392b)}',
+      '.tk-empty{margin:0;font-size:12px;color:var(--dsw-alias-label-tertiary,#888)}',
+      '.tk-passes{margin:0}',
+      '.tk-passes summary{cursor:pointer;font-size:11px;color:var(--dsw-alias-label-tertiary,#888);',
+      'padding:2px 0;list-style:none}',
+      '.tk-passes summary::-webkit-details-marker{display:none}',
+      '.tk-passes summary::before{content:"▸ ";font-size:10px}',
+      '.tk-passes[open] summary::before{content:"▾ "}',
+      '.tk-passes .tk-rows{margin-top:4px}',
+      '.tk-summary{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}',
+      '.tk-count{font-size:11px;color:var(--dsw-alias-label-tertiary,#888);font-variant-numeric:tabular-nums}',
+      '.tk-checked{margin:0;font-size:11px;color:var(--dsw-alias-label-tertiary,#888);overflow-wrap:anywhere}',
+      '.tk-checked code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px}',
       '.tk-verdict{margin:0;font-size:12px;font-weight:600}',
       '.tk-verdict[data-ok="true"]{color:var(--dsw-alias-state-success-primary,#2f855a)}',
       '.tk-verdict[data-ok="false"]{color:var(--dsw-alias-state-warn-primary,#b7791f)}',
       '.tk-rows{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}',
-      '.tk-row{display:flex;gap:8px;align-items:baseline;padding:5px 8px;border-radius:6px;',
-      'background:var(--dsw-alias-bg-layer-1,#fafafa)}',
+      '.tk-row{display:flex;gap:8px;align-items:baseline;padding:6px 8px;border-radius:6px;}',
+      '.tk-rows .tk-row + .tk-row{margin-top:3px}',
+      '.tk-row[data-ok="false"]{background:var(--dsw-alias-state-error-bg,#fdf3f2);',
+      'box-shadow:inset 2px 0 0 var(--dsw-alias-state-error-primary,#c0392b)}',
+      '.tk-row[data-ok="true"] .tk-message{color:var(--dsw-alias-label-secondary,#555)}',
       '.tk-mark{width:12px;flex:none;font-weight:600}',
       '.tk-row[data-ok="true"] .tk-mark{color:var(--dsw-alias-state-success-primary,#2f855a)}',
       '.tk-row[data-ok="false"] .tk-mark{color:var(--dsw-alias-state-error-primary,#c0392b)}',
@@ -228,7 +268,7 @@ window.__ModuleLoader__.load({
       '.tk-check{font-size:11px;text-transform:uppercase;letter-spacing:.04em;',
       'color:var(--dsw-alias-label-tertiary,#888)}',
       '.tk-message{font-size:12px;overflow-wrap:anywhere}',
-      '.tk-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px}',
+      '.tk-panel-head{display:flex;align-items:center;gap:8px}',
       '.tk-lang{display:inline-flex;flex:none;border:0.5px solid var(--dsw-alias-border-l2,#ccc);',
       'border-radius:6px;overflow:hidden}',
       '.tk-lang-button{height:22px;padding:0 8px;border:0;background:none;font:inherit;font-size:11px;',
@@ -237,22 +277,32 @@ window.__ModuleLoader__.load({
       '.tk-lang-button:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary,#4176e6);outline-offset:-1px}',
       '.tk-dock{border-top:0.5px solid var(--dsw-alias-border-l2,#e5e5e5);margin:0 12px}',
       '.tk-dock-head{display:flex}',
-      '.tk-dock-toggle{display:flex;align-items:center;gap:8px;width:100%;padding:7px 2px;',
+      '.tk-dock-toggle{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:7px 2px;',
       'border:0;background:none;font:inherit;font-size:12px;color:inherit;cursor:pointer;text-align:left}',
       '.tk-dock-toggle:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary,#4176e6);',
       'outline-offset:-1px;border-radius:4px}',
       '.tk-dock-title{font-weight:600}',
       '.tk-dock-sub{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;',
       'color:var(--dsw-alias-label-tertiary,#888)}',
-      '.tk-dock-chevron{flex:none;color:var(--dsw-alias-label-tertiary,#888)}',
-      '.tk-dock-body{display:flex;flex-direction:column;gap:12px;padding:2px 2px 14px;',
-      'max-height:46vh;overflow:auto;font-size:12px}',
-      '.tk-guide{margin:0;display:flex;flex-direction:column;gap:5px}',
-      '.tk-guide h3{margin:0;font-size:12px;font-weight:600}',
+      '.tk-dock-chevron{flex:none;font-size:12px;color:var(--dsw-alias-label-tertiary,#888)}',
+      '.tk-summary:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary,#4176e6);',
+      'outline-offset:2px;border-radius:4px}',
+      '.tk-dock-body{display:flex;flex-direction:column;gap:10px;max-width:76ch;padding:2px 2px 14px;',
+      'max-height:60vh;overflow:auto;font-size:12px}',
+      '.tk-guide-all{margin-top:2px;padding-top:12px;border-top:0.5px solid var(--dsw-alias-border-l1,#ececec)}',
+      '.tk-guide-all[open]{display:flex;flex-direction:column;gap:14px}',
+      '.tk-guide-summary{cursor:pointer;font-size:11px;font-weight:600;list-style:none;',
+      'color:var(--dsw-alias-label-secondary,#555);padding:2px 0}',
+      '.tk-guide-summary::-webkit-details-marker{display:none}',
+      '.tk-guide-summary::before{content:"▸ ";font-size:11px;color:var(--dsw-alias-label-tertiary,#888)}',
+      '.tk-guide-all[open] .tk-guide-summary::before{content:"▾ ";}',
+      '.tk-guide{margin:0;display:flex;flex-direction:column;gap:4px}',
+      '.tk-guide h3{margin:0;font-size:12px;font-weight:600;',
+      'color:var(--dsw-alias-label-primary,#1f2329)}',
       '.tk-guide p{margin:0;color:var(--dsw-alias-label-secondary,#555)}',
       '.tk-guide ol,.tk-guide ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px;',
       'color:var(--dsw-alias-label-secondary,#555)}',
-      '.tk-guide-rows{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:0}',
+      '.tk-guide-rows{display:grid;grid-template-columns:132px 1fr;gap:4px 12px;margin:0}',
       '.tk-guide-rows dt{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;',
       'color:var(--dsw-alias-label-primary,#222)}',
       '.tk-guide-rows dd{margin:0;color:var(--dsw-alias-label-secondary,#555)}',
@@ -329,13 +379,47 @@ window.__ModuleLoader__.load({
     function Result({ checker }) {
       const lang = useLang();
       const tr = (key) => translate(key, lang);
-      return h('div', { className: 'tk-result' },
+      return h('div', { className: 'tk-result', 'aria-busy': checker.busy === true ? 'true' : 'false' },
         checker.failed !== null ? h('p', { className: 'tk-failed', role: 'status' }, checker.failed) : null,
+        checker.failed === null && checker.result === null && checker.busy !== true
+          ? h('p', { className: 'tk-empty' }, tr('empty'))
+          : null,
         checker.result !== null
-          ? h('div', { className: 'tk-result-body' },
-            h('p', { className: 'tk-verdict', 'data-ok': checker.result.ok === true ? 'true' : 'false', role: 'status' },
-              checker.result.ok === true ? tr('pass') : tr('fail')),
-            h('ul', { className: 'tk-rows' }, checker.result.checks.map((entry) => h(Row, { key: entry.check, entry }))))
+          ? h(ResultBody, { result: checker.result, tr, lang })
+          : null);
+    }
+
+    function ResultBody({ result, tr, lang }) {
+      const summary = useRef(null);
+      // After a check the answer is the thing to read; leaving focus in the
+      // input means a screen reader announces nothing.
+      useEffect(() => {
+        summary.current?.focus();
+      }, [result]);
+      const checks = result.checks ?? [];
+      const failed = checks.filter((entry) => entry.ok !== true);
+      const passed = checks.filter((entry) => entry.ok === true);
+      // Failures first: a list that opens with six green lines buries the two
+      // that matter below the fold of a docked panel.
+      const ordered = [...failed, ...passed];
+      return h('div', { className: 'tk-result-body' },
+        h('div', { className: 'tk-summary', ref: summary, tabIndex: -1,
+          'data-ok': result.ok === true ? 'true' : 'false', role: 'status' },
+          h('span', { className: 'tk-verdict' },
+            result.ok === true ? tr('pass') : tr('fail')),
+          failed.length > 0
+            ? h('span', { className: 'tk-count' }, COPY[lang].counts(failed.length, checks.length))
+            : null),
+        typeof result.dir === 'string' && result.dir !== ''
+          ? h('p', { className: 'tk-checked' },
+            h('span', {}, `${tr('checked')} `),
+            h('code', {}, result.dir))
+          : null,
+        h('ul', { className: 'tk-rows' }, failed.map((entry) => h(Row, { key: entry.check, entry }))),
+        passed.length > 0
+          ? h('details', { className: 'tk-passes', open: failed.length === 0 ? true : undefined },
+            h('summary', {}, COPY[lang].passedLabel(passed.length)),
+            h('ul', { className: 'tk-rows' }, passed.map((entry) => h(Row, { key: entry.check, entry }))))
           : null);
     }
 
@@ -363,7 +447,15 @@ window.__ModuleLoader__.load({
       const lang = useLang();
       const guide = GUIDE[lang] ?? GUIDE.zh;
 
-      return h('section', { className: 'tk-dock', 'data-open': open === true ? 'true' : 'false' },
+      return h('section', {
+        className: 'tk-dock',
+        'data-open': open === true ? 'true' : 'false',
+        // Escape closes it wherever the focus is inside: a docked panel that
+        // traps the keyboard is worse than one that is hard to find.
+        onKeyDown: (event) => {
+          if (event.key === 'Escape' && open === true) setOpen(false);
+        },
+      },
         h('div', { className: 'tk-dock-head' },
           // The language switch is a sibling of the toggle, never inside it: a
           // button inside a button is invalid and React drops the inner one.
@@ -371,15 +463,31 @@ window.__ModuleLoader__.load({
             className: 'tk-dock-toggle',
             type: 'button',
             'aria-expanded': open === true ? 'true' : 'false',
+            'aria-controls': 'dsh-toolkit-dock-body',
             onClick: () => setOpen(open !== true),
           },
             h('span', { className: 'tk-dock-title' }, translate('dockTitle', lang)),
             h('span', { className: 'tk-dock-sub' }, translate('dockSub', lang)),
             h('span', { className: 'tk-dock-chevron', 'aria-hidden': 'true' }, open === true ? '▾' : '▸')),
+          open !== true && checker.result !== null
+            ? h('span', {
+              className: 'tk-chip',
+              'data-ok': checker.result.ok === true ? 'true' : 'false',
+            }, checker.result.ok === true
+              ? COPY[lang].chipPass
+              : COPY[lang].chipFail((checker.result.checks ?? []).filter((entry) => entry.ok !== true).length))
+            : null,
           h(LangSwitch, { lang })),
         open === true
-          ? h('div', { className: 'tk-dock-body' },
-            h('div', { className: 'tk-guide' },
+          ? h('div', { className: 'tk-dock-body', id: 'dsh-toolkit-dock-body' },
+            // The input comes first: the guide is reference material, and making
+            // people scroll past a wall of prose to reach the one control they
+            // came for is how a docked panel stops being used.
+            h(Form, { checker }),
+            h(Result, { checker }),
+            h('details', { className: 'tk-guide-all', open: true },
+              h('summary', { className: 'tk-guide-summary' }, translate('guideTitle', lang)),
+              h('div', { className: 'tk-guide' },
               h('h3', {}, guide.who.title),
               h('p', {}, guide.who.body)),
             h('div', { className: 'tk-guide' },
@@ -395,11 +503,9 @@ window.__ModuleLoader__.load({
             h('div', { className: 'tk-guide' },
               h('h3', {}, guide.notes.title),
               h('ul', {}, guide.notes.items.map((item) => h('li', { key: item }, item)))),
-            h('div', { className: 'tk-guide' },
-              h('h3', {}, guide.cli.title),
-              h('p', {}, h('code', {}, guide.cli.body))),
-            h(Form, { checker }),
-            h(Result, { checker }))
+              h('div', { className: 'tk-guide' },
+                h('h3', {}, guide.cli.title),
+                h('p', {}, h('code', {}, guide.cli.body)))))
           : null);
     }
 

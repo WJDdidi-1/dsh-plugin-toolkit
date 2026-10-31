@@ -59,6 +59,12 @@ cd my-panel && npm install && npm test
 
 面板中英双语，默认中文；**中文 / EN** 开关就在对话栏那一行的右侧（右侧栏标签里也有），选过之后会记住。
 
+不开应用也能看：
+
+```sh
+node scripts/preview.mjs /tmp/panel.html   # 收起、展开、有结果、侧栏标签
+```
+
 ## 不用浏览器测面板
 
 ```js
