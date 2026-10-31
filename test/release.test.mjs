@@ -111,3 +111,41 @@ test('--market writes the entry into another repository, and opens the PR there'
   ]);
   assert.match(ghCalls[0], /^pr create --base main --head market\/3\.0\.0/);
 });
+
+test('--publish runs the publish here, for repositories without a publish workflow', async () => {
+  const { release } = await import('../lib/release.mjs');
+  const plugin = fs.mkdtempSync(path.join(os.tmpdir(), 'rel-publish-'));
+  fs.writeFileSync(path.join(plugin, 'package.json'), JSON.stringify({
+    name: 'demo-plugin', version: '4.0.0', files: ['index.js', 'client.js', 'cordis.patch.yml'],
+    engines: { dsh: '>=0.2.0' }, dsh: { bundle: { patch: './cordis.patch.yml' } },
+  }, null, 2));
+  fs.writeFileSync(path.join(plugin, 'README.md'), '# demo\n\n## Requirements\n\n| Harness |\n| --- |\n| `>=0.2.0` |\n');
+  fs.writeFileSync(path.join(plugin, 'cordis.patch.yml'), '- insert: []\n');
+  fs.writeFileSync(path.join(plugin, 'index.js'), 'export function apply() {}\n');
+  fs.writeFileSync(path.join(plugin, 'client.js'), 'window.__ModuleLoader__.load({ id: "x", factory: () => ({}) });\n');
+
+  const git = (args) => {
+    if (args[0] === 'rev-parse') throw new Error('missing');
+    return '';
+  };
+  const document = { versions: { '4.0.0': {} }, time: { '4.0.0': '2026-10-31T06:00:00.000Z' } };
+
+  // A PATH that answers `npm publish` with a marker instead of a real publish.
+  const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'rel-bin-'));
+  const marker = path.join(bin, 'published');
+  fs.writeFileSync(path.join(bin, 'npm'), `#!/bin/sh\necho "$@" >> "${marker}"\n`);
+  fs.chmodSync(path.join(bin, 'npm'), 0o755);
+  const original = process.env.PATH;
+  process.env.PATH = `${bin}:${original}`;
+  try {
+    const result = await release({
+      dir: plugin, publish: true, git,
+      fetch: async () => ({ status: 200, ok: true, json: async () => document }),
+      sleep: async () => {},
+    });
+    assert.equal(result.ok, true, JSON.stringify(result.failures ?? []));
+    assert.equal(fs.readFileSync(marker, 'utf8').trim(), 'publish');
+  } finally {
+    process.env.PATH = original;
+  }
+});

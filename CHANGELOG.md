@@ -1,3 +1,12 @@
+## 0.8.6
+
+- `release --publish`: run `npm publish` locally instead of waiting for a
+  publish workflow. Plenty of small plugins have no release pipeline; before
+  this, `release` tagged, pushed and then waited for a registry that would never
+  receive the version.
+- The publish failure reports the last line of npm's stderr, so a 403 reads like
+  a 403.
+
 ## 0.8.5
 
 - `release --market <dir>`: write the index entry into a checkout of the

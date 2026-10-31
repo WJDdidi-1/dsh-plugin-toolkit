@@ -320,6 +320,15 @@ merged
 
 Without `--pr` it prints the `git add` / `gh pr create` commands instead of running them; `--dry-run` prints the whole sequence before anything happens. A re-run after a failure is safe: the same version with the same publish time is a no-op.
 
+### When nothing publishes for you
+
+`release` assumes a tag starts a workflow that publishes. Repositories without
+one use `--publish`, which runs `npm publish` in the same step:
+
+```sh
+$ dsh-plugin release . --publish
+```
+
 ### When the index lives in someone else's repository
 
 Most plugins are listed in a central market repository, not their own. Point
