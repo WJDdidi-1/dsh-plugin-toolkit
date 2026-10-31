@@ -10,11 +10,15 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import { fetchRepo, parseTarget, resolveTarget, searchRepos } from '../lib/github.mjs';
 
+const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+
 test('a folder path stays a folder path', () => {
-  for (const input of ['/tmp/kit', '.', './fixtures/good', '../kit']) {
+  // Paths that exist wherever the suite runs: the repo root is not /tmp/kit in CI.
+  for (const input of [ROOT, '.', path.join('fixtures', 'good'), '..']) {
     const parsed = parseTarget(input);
     assert.equal(parsed.kind, 'local', input);
     assert.equal(path.isAbsolute(parsed.dir), true, input);
