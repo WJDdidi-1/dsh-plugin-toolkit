@@ -1,3 +1,15 @@
+## 0.13.6
+
+- **The dock no longer leaves half the composer blank.** Its content stopped at
+  `76ch` and was pinned to the left, so on a wide window the panel looked
+  broken: a form in the left third and nothing beside it. The content is now one
+  column of `760px`, centred, with equal margins — and the guide uses the width
+  it does have as two columns, with the check table spanning both.
+- The header (title, language switch, chevron) lines up with that column instead
+  of sitting at the far right of the window.
+- `scripts/preview.mjs` renders at the real conversation width (1120px), which
+  is how this was found: at 720px the old layout looked fine.
+
 ## 0.13.5
 
 - **A wildcard export no longer fails the pack check.** `exports` can name a

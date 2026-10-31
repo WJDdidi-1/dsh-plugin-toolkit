@@ -231,3 +231,20 @@ test('a repository result names the repository, not just a temp folder', async (
   assert.match(panel.text(), /WJDdidi-1\/dsh-plugin-example/);
   await panel.unmount();
 });
+
+test('the dock keeps one centred column instead of pinning content to the left', async () => {
+  // A panel whose content stops at 600px inside a 1100px composer reads as a
+  // rendering bug: the width is either used or the margins are equal.
+  const panel = await mountClient({ file: path.join(ROOT, 'client.js'), slot: 'conversation.input.dock', host: host() });
+  await panel.click('.tk-dock-toggle');
+
+  const body = panel.document.querySelector('.tk-dock-body');
+  const main = panel.document.querySelector('.tk-dock-main');
+  const head = panel.document.querySelector('.tk-dock-head');
+  assert.ok(main !== null, 'the form and the result share one column');
+  assert.equal(panel.window.getComputedStyle(main).maxWidth, '760px');
+  assert.equal(panel.window.getComputedStyle(head).maxWidth, '760px');
+  assert.equal(panel.window.getComputedStyle(main).marginLeft, 'auto');
+  assert.equal(body.querySelectorAll('.tk-guide-grid > .tk-guide').length, 5);
+  await panel.unmount();
+});

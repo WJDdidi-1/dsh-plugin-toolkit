@@ -224,7 +224,7 @@ window.__ModuleLoader__.load({
       '.tk-panel{padding:16px;display:flex;flex-direction:column;gap:10px;font-size:13px}',
       '.tk-title{margin:0;flex:1;min-width:0;font-size:14px;font-weight:600}',
       '.tk-hint{margin:0;font-size:12px;color:var(--dsw-alias-label-tertiary,#888)}',
-      '.tk-form{display:flex;gap:8px}',
+      '.tk-form{display:flex;gap:8px;max-width:720px}',
       '.tk-input{flex:1;min-width:0;height:28px;padding:0 9px;font:inherit;font-size:12px;',
       'border:0.5px solid var(--dsw-alias-border-l2,#ccc);border-radius:6px;',
       'background:var(--dsw-alias-bg-layer-1,#fff);color:inherit}',
@@ -300,7 +300,7 @@ window.__ModuleLoader__.load({
       '.tk-lang-button[data-on="false"]:hover{color:var(--dsw-alias-label-primary,#1f2329)}',
       '.tk-lang-button:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary,#4176e6);outline-offset:-1px}',
       '.tk-dock{border-top:0.5px solid var(--dsw-alias-border-l2,#e5e5e5);margin:0 12px}',
-      '.tk-dock-head{display:flex}',
+      '.tk-dock-head{display:flex;max-width:760px;margin:0 auto;width:100%}',
       '.tk-dock-toggle{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:7px 2px;',
       'border:0;background:none;font:inherit;font-size:12px;color:inherit;cursor:pointer;text-align:left}',
       '.tk-dock-toggle:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary,#4176e6);',
@@ -314,10 +314,18 @@ window.__ModuleLoader__.load({
       '.tk-dock-chevron[data-open="true"]{transform:rotate(45deg);margin-bottom:3px}',
       '.tk-summary:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary,#4176e6);',
       'outline-offset:2px;border-radius:4px}',
-      '.tk-dock-body{display:flex;flex-direction:column;gap:10px;max-width:76ch;padding:2px 2px 14px;',
+      '.tk-dock-body{display:flex;flex-direction:column;gap:10px;padding:2px 2px 14px;',
       'max-height:60vh;overflow:auto;font-size:12px}',
+      '.tk-dock-main{display:flex;flex-direction:column;gap:10px;min-width:0}',
+      // One readable column, centred. Filling a 1100px composer with 1100px of
+      // prose is worse than using 760px of it, but a column pinned to the left
+      // reads as a rendering bug — the margins have to be equal.
+      '.tk-dock-body>.tk-dock-main,.tk-dock-body>.tk-guide-all{width:100%;max-width:760px;margin:0 auto}',
       '.tk-guide-all{margin-top:2px;padding-top:12px;border-top:0.5px solid var(--dsw-alias-border-l1,#ececec)}',
       '.tk-guide-all[open]{display:flex;flex-direction:column;gap:14px}',
+      '.tk-guide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px 32px;align-items:start}',
+      '.tk-guide-grid>.tk-guide{min-width:0}',
+      '.tk-guide-grid>.tk-guide-checks{grid-column:1/-1;max-width:760px}',
       '.tk-guide-summary{cursor:pointer;font-size:11px;font-weight:600;list-style:none;',
       'color:var(--dsw-alias-label-secondary,#555);padding:2px 0}',
       '.tk-guide-summary::-webkit-details-marker{display:none}',
@@ -329,7 +337,7 @@ window.__ModuleLoader__.load({
       '.tk-guide p{margin:0;color:var(--dsw-alias-label-secondary,#555)}',
       '.tk-guide ol,.tk-guide ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px;',
       'color:var(--dsw-alias-label-secondary,#555)}',
-      '.tk-guide-rows{display:grid;grid-template-columns:132px 1fr;gap:4px 12px;margin:0}',
+      '.tk-guide-rows{display:grid;grid-template-columns:150px 1fr;gap:6px 16px;margin:0}',
       '.tk-guide-rows dt{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;',
       'color:var(--dsw-alias-label-primary,#222)}',
       '.tk-guide-rows dd{margin:0;color:var(--dsw-alias-label-secondary,#555)}',
@@ -544,17 +552,22 @@ window.__ModuleLoader__.load({
             // The input comes first: the guide is reference material, and making
             // people scroll past a wall of prose to reach the one control they
             // came for is how a docked panel stops being used.
-            h(Form, { checker }),
-            h(Result, { checker }),
+            // On a wide window the guide sits beside the work instead of below
+            // it: a form in the left half and nothing in the right half is what
+            // "the panel looks broken" looks like.
+            h('div', { className: 'tk-dock-main' },
+              h(Form, { checker }),
+              h(Result, { checker })),
             h('details', { className: 'tk-guide-all', open: true },
               h('summary', { className: 'tk-guide-summary' }, translate('guideTitle', lang)),
+              h('div', { className: 'tk-guide-grid' },
               h('div', { className: 'tk-guide' },
               h('h3', {}, guide.who.title),
               h('p', {}, guide.who.body)),
             h('div', { className: 'tk-guide' },
               h('h3', {}, guide.steps.title),
               h('ol', {}, guide.steps.items.map((item) => h('li', { key: item }, item)))),
-            h('div', { className: 'tk-guide' },
+            h('div', { className: 'tk-guide tk-guide-checks' },
               h('h3', {}, guide.checks.title),
               h('dl', { className: 'tk-guide-rows' },
                 guide.checks.rows.map(([name, what]) => [
@@ -567,6 +580,7 @@ window.__ModuleLoader__.load({
               h('div', { className: 'tk-guide' },
                 h('h3', {}, guide.cli.title),
                 h('p', {}, h('code', {}, guide.cli.body)))))
+            )
           : null);
     }
 

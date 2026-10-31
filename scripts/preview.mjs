@@ -67,7 +67,7 @@ for (const state of states) {
     firstPanel = panel.window.document.getElementById('dsh-plugin-toolkit:styles')?.textContent ?? '';
   }
   await state.before(panel);
-  sections.push(`<section class="frame"><h2>${state.name}</h2><div class="stage">${panel.html()}</div></section>`);
+  sections.push(`<section class="frame"><h2>${state.name}</h2><div class="stage${state.slot === undefined ? '' : ' dock'}">${panel.html()}</div></section>`);
   await panel.unmount();
 }
 
@@ -81,9 +81,10 @@ const page = `<!doctype html><html lang="zh"><head><meta charset="utf-8"><title>
     --dsw-alias-border-l1:#e5e6eb; --dsw-alias-border-l2:#d9dbe1; --dsw-alias-bg-body:#fff; --dsw-alias-bg-l1:#f7f8fa;
     --dsw-alias-state-business-primary:#4176e6; --dsw-alias-state-success-primary:#2ea121; --dsw-alias-state-error-primary:#d54941; }
   body { margin:0; padding:32px; background:#eef0f4; font:13px/1.5 -apple-system, "PingFang SC", system-ui, sans-serif; color:#1f2329; }
-  .frame { background:#fff; border-radius:12px; padding:20px; margin:0 0 24px; max-width:720px; }
+  .frame { background:#fff; border-radius:12px; padding:20px; margin:0 0 24px; max-width:1120px; }
   .frame h2 { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:#8f959e; margin:0 0 14px; }
   .stage { border:1px dashed #d9dbe1; border-radius:8px; padding:12px; }
+  .stage.dock { padding:0; }
   ${css}
 </style></head><body>${sections.join('\n')}</body></html>`;
 
