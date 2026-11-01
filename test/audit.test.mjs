@@ -59,20 +59,6 @@ const goodFiles = {
   'client.js': 'window.__ModuleLoader__.load({ id: "x", factory: () => ({}) });\n',
 };
 
-function graphFetch(ids) {
-  const encoder = new TextEncoder();
-  const graph = { type: 'graph', graph: { entries: ids.map((id) => ({ id })) } };
-  return async () => ({
-    ok: true,
-    status: 200,
-    body: new ReadableStream({
-      start(controller) {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(graph)}\n\n`));
-        controller.close();
-      },
-    }),
-  });
-}
 
 test('only packages that declare a dsh field count as plugins', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'audit-home-'));
