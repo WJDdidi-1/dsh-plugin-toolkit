@@ -1,3 +1,10 @@
+## 0.13.8
+
+- **A screenshot of the panel** (`docs/panel.png`), taken from the preview render
+  of a plugin that fails two checks, in both READMEs under a new *The panel*
+  section. The card at the top of the README shows the CLI; the panel had no
+  picture of its own.
+
 ## 0.13.7
 
 - **`docs/pipeline.svg`**: the five steps `verify` runs, in order, with the

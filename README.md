@@ -18,6 +18,12 @@ npx dsh-plugin-toolkit@latest verify .                          # pack it, insta
 npx dsh-plugin-toolkit@latest release --pr --merge              # tag, wait for npm, update the index, open and merge the PR
 ```
 
+## The panel
+
+![The Plugin doctor tab, on a plugin that fails two checks](https://raw.githubusercontent.com/WJDdidi-1/dsh-plugin-toolkit/main/docs/panel.png)
+
+The same checks, in the right sidebar: type a folder, an `owner/repo`, or a GitHub link, and it says which one would fail and why. Nothing is installed and nothing is written.
+
 ## Three paths
 
 | You are… | Start with | Then |

@@ -12,6 +12,12 @@ npx dsh-plugin-toolkit@latest verify .                          # 打包、安�
 npx dsh-plugin-toolkit@latest release --pr --merge              # 打 tag、等 npm、更新索引、开 PR 并合并
 ```
 
+## 面板
+
+![Plugin doctor 标签页，正在检查一个有两项没过的插件](https://raw.githubusercontent.com/WJDdidi-1/dsh-plugin-toolkit/main/docs/panel.png)
+
+同一套检查，放在右侧栏：填文件夹、`owner/repo` 或 GitHub 链接，它直接告诉你哪一项会失败、为什么。不安装任何东西，也不写你的文件。
+
 ## 三条路径
 
 | 你是谁 | 从这里开始 | 然后 |
