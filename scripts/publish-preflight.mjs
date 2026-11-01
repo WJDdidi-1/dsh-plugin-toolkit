@@ -44,7 +44,13 @@ for (const file of shipped) {
 }
 
 // 3. The pack list must contain what package.json points at.
-const packed = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json'], { cwd: root, encoding: 'utf8' }));
+// On Windows `npm` is `npm.cmd`, and spawning a `.cmd` needs a shell.
+const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const packed = JSON.parse(execFileSync(npm, ['pack', '--dry-run', '--json'], {
+  cwd: root,
+  encoding: 'utf8',
+  shell: process.platform === 'win32',
+}));
 const names = new Set(packed[0].files.map((file) => file.path));
 for (const required of ['package.json', 'index.js', 'client.js', 'bin/dsh-plugin.mjs', 'lib/cli.mjs', 'cordis.patch.yml']) {
   if (!names.has(required)) problems.push(`the tarball does not ship ${required}`);
