@@ -20,6 +20,14 @@ npx dsh-plugin-toolkit@latest release --pr --merge              # 打 tag、等 
 | 改一个已经装上的面板 | `dev` | `mount`、testkit、`audit` |
 | 要发一个版本 | `verify` | `release`、`index` |
 
+## `verify` 到底做了什么
+
+![五个步骤，以及每一步能抓住的失败](https://raw.githubusercontent.com/WJDdidi-1/dsh-plugin-toolkit/main/docs/pipeline.svg)
+
+顺序是有意义的。先打包，检查读到的就是 npm 会发布的文件清单，而不是你手边那个文件夹；装 tarball，import 的就是加载器真正会 import 的那个根导出；挂载，就是真的在 jsdom 里把客户端 bundle 跑一遍，宿主还会记录它注册了什么。
+
+每一步的存在，都是因为曾经有插件通过了前一步、却装进去什么都不做。
+
 ## 为什么会有这个工具
 
 我发布自己第一个面板插件的那天，同一个错误在四个地方各出现一次，而且每次的报错都指向别处：

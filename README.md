@@ -65,6 +65,14 @@ npx dsh-plugin-toolkit@latest verify .
 npx dsh-plugin-toolkit@latest release . --pr --merge
 ```
 
+## What `verify` actually does
+
+![Five steps, and the failure each one catches](https://raw.githubusercontent.com/WJDdidi-1/dsh-plugin-toolkit/main/docs/pipeline.svg)
+
+The order matters. Packing first means the check reads the file list npm will publish, not the folder you have. Installing the tarball means the root export is imported the way the loader imports it. Mounting means the client bundle is actually executed, in jsdom, with a host that records what it registered.
+
+Each step exists because a plugin once got past the step before it and still installed into nothing.
+
 ## Why this exists
 
 Releasing one plugin fifteen times taught me three things the ecosystem's tooling does not cover:

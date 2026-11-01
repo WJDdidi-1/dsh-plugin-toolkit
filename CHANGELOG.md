@@ -1,3 +1,9 @@
+## 0.13.7
+
+- **`docs/pipeline.svg`**: the five steps `verify` runs, in order, with the
+  failure each one catches and the two that only a running host shows. Linked
+  from both READMEs under a new *What `verify` actually does* section.
+
 ## 0.13.6
 
 - **The dock no longer leaves half the composer blank.** Its content stopped at
