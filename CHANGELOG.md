@@ -1,3 +1,12 @@
+## 0.13.9
+
+- **The README's own image was missing.** Both READMEs open with
+  `docs/card.png`, which was never committed — this repository ignores `*.png`,
+  and the card was the one asset that never got `git add -f`. The image now
+  exists (1200x630), and `npm pack` ships it.
+- **The DeepSeek Harness link was a 404.** `github.com/deepseek-ai/dsh` does not
+  exist; the repository is `deepseek-ai/deepseek-harness`.
+
 ## 0.13.8
 
 - **A screenshot of the panel** (`docs/panel.png`), taken from the preview render

@@ -4,7 +4,7 @@
 
 [English](./README.md) · 中文
 
-一个 [DeepSeek Harness](https://github.com/deepseek-ai/dsh) 插件从 `init` 到被市场索引接受之间需要的一切：脚手架、客户端 bundle 的测试台、不重启应用就能看到改动的方法，以及一条不用背十四个步骤的发布流程。
+一个 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 插件从 `init` 到被市场索引接受之间需要的一切：脚手架、客户端 bundle 的测试台、不重启应用就能看到改动的方法，以及一条不用背十四个步骤的发布流程。
 
 ```sh
 npx dsh-plugin-toolkit@latest init ./my-panel --name my-panel   # 生成一个已经能通过检查的插件

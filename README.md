@@ -10,7 +10,7 @@
 
 English · [中文](./README.zh.md)
 
-Everything a [DeepSeek Harness](https://github.com/deepseek-ai/dsh) plugin needs between `init` and a version the market index accepts: scaffolding, a test harness for the client bundle, a way to see a change without restarting the app, and a release that does not depend on remembering fourteen steps.
+Everything a [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) plugin needs between `init` and a version the market index accepts: scaffolding, a test harness for the client bundle, a way to see a change without restarting the app, and a release that does not depend on remembering fourteen steps.
 
 ```sh
 npx dsh-plugin-toolkit@latest init ./my-panel --name my-panel   # a plugin that already passes the checks
