@@ -1,3 +1,7 @@
+## 0.13.11
+
+- `--home` is readable again: the flag reader named the wrong variable, so `dsh-plugin audit --home <dir>` failed with `args is not defined` before it ran.
+
 ## 0.13.10
 
 - **`audit` now says why a plugin is not loaded.** One line covered three
