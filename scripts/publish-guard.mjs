@@ -3,9 +3,10 @@
 //
 // Run it locally with: node scripts/publish-guard.mjs
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-const root = path.resolve(process.argv[2] ?? path.join(path.dirname(new URL(import.meta.url).pathname), '..'));
+const root = path.resolve(process.argv[2] ?? path.join(fileURLToPath(new URL('.', import.meta.url)), '..'));
 const manifest = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const problems = [];
 
