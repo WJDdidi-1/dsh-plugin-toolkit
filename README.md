@@ -296,6 +296,12 @@ Advisories (`engines.dsh`, README Requirements) are counted apart from problems:
 the market index needs them, the loader does not, so they should not bury a plugin
 that is actually broken.
 
+`audit` exits `1` when an installed plugin has a hard failure **or** when the
+running app did not load at least one installed plugin, so CI can gate on a
+profile where the app silently skipped a plugin. It exits `0` when every
+installed plugin is loaded and valid. If no graph was read (`--host` omitted),
+the loaded column is `?` and only hard failures change the exit code.
+
 Without `--host` the loaded column is `?`, because guessing would be worse than
 saying nothing. Only packages that declare a `dsh` field are audited — the rest of
 `node_modules` is ordinary dependencies, and auditing those is noise.
@@ -486,7 +492,7 @@ merged
 | Code | Meaning |
 | --- | --- |
 | 0 | Done, or nothing to complain about |
-| 1 | A check failed, or the release stopped (the failing stage is named) |
+| 1 | A check failed, an installed plugin was not loaded by the running app, or the release stopped (the failing stage is named) |
 | 2 | Unknown command |
 
 ## What is not here yet
