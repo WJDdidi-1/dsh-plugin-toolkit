@@ -27,6 +27,31 @@ function goodManifest(name) {
   };
 }
 
+function writeProfile(root, name, bundles) {
+  const dir = path.join(root, 'profiles', name);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, 'package.json'),
+    JSON.stringify({ name: `dsh-profile-${name}`, private: true, dsh: { profile: { bundles } } }, null, 2),
+  );
+  return dir;
+}
+
+function graphFetch(ids) {
+  const encoder = new TextEncoder();
+  const graph = { type: 'graph', graph: { entries: ids.map((id) => ({ id })) } };
+  return async () => ({
+    ok: true,
+    status: 200,
+    body: new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(graph)}\n\n`));
+        controller.close();
+      },
+    }),
+  });
+}
+
 const goodFiles = {
   'README.md': '# demo\n\n## Requirements\n\n| Harness |\n| --- |\n| `>=0.2.0` |\n',
   'cordis.patch.yml': '- insert: []\n',
@@ -87,6 +112,67 @@ test('without a host, loaded is unknown rather than false', async () => {
   writePlugin(home, 'demo-plugin', goodManifest('demo-plugin'), goodFiles);
   const result = await audit({ home, io: { log: () => {} } });
   assert.equal(result.plugins[0].loaded, null);
+});
+
+test('a plugin missing from dsh.profile.bundles is told to add it there, not to restart', async () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'audit-home-'));
+  writeProfile(home, 'desktop', ['someone-else']);
+  writePlugin(home, 'demo-plugin', goodManifest('demo-plugin'), goodFiles);
+  const lines = [];
+  const result = await audit({
+    home,
+    host: 'http://127.0.0.1:9',
+    fetchImpl: graphFetch([]),
+    io: { log: (line) => lines.push(line) },
+  });
+  const row = result.plugins.find((plugin) => plugin.name === 'demo-plugin');
+  assert.equal(row.loaded, false);
+  assert.match(row.reason, /dsh\.profile\.bundles/u);
+  assert.match(row.action, /add "demo-plugin" to dsh\.profile\.bundles/u);
+  const text = lines.join('\n');
+  assert.match(text, /demo-plugin.*not loaded.*dsh\.profile\.bundles/u);
+  assert.match(text, /fix: .*dsh\.profile\.bundles/u);
+});
+
+test('a plugin with no dsh.bundle is told there is nothing to mount, not to restart', async () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'audit-home-'));
+  writeProfile(home, 'desktop', ['demo-plugin']);
+  const manifest = { ...goodManifest('demo-plugin'), dsh: { client: { platform: 'web' } } };
+  writePlugin(home, 'demo-plugin', manifest, goodFiles);
+  const lines = [];
+  const result = await audit({
+    home,
+    host: 'http://127.0.0.1:9',
+    fetchImpl: graphFetch([]),
+    io: { log: (line) => lines.push(line) },
+  });
+  const row = result.plugins.find((plugin) => plugin.name === 'demo-plugin');
+  assert.equal(row.loaded, false);
+  assert.match(row.reason, /no dsh\.bundle/u);
+  assert.match(row.reason, /nothing for the loader to mount/u);
+  assert.match(row.action, /dsh\.bundle\.patch/u);
+  assert.match(lines.join('\n'), /demo-plugin.*not loaded.*no dsh\.bundle/u);
+  assert.match(lines.join('\n'), /fix: .*dsh\.bundle\.patch/u);
+});
+
+test('a plugin listed in dsh.profile.bundles is the one case that needs a restart', async () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'audit-home-'));
+  writeProfile(home, 'desktop', ['demo-plugin']);
+  writePlugin(home, 'demo-plugin', goodManifest('demo-plugin'), goodFiles);
+  const lines = [];
+  const result = await audit({
+    home,
+    host: 'http://127.0.0.1:9',
+    fetchImpl: graphFetch([]),
+    io: { log: (line) => lines.push(line) },
+  });
+  const row = result.plugins.find((plugin) => plugin.name === 'demo-plugin');
+  assert.equal(row.loaded, false);
+  assert.match(row.reason, /listed in dsh\.profile\.bundles/u);
+  assert.match(row.reason, /started before it was installed/u);
+  assert.match(row.action, /restart the app/u);
+  assert.match(lines.join('\n'), /demo-plugin.*not loaded.*started before it was installed/u);
+  assert.match(lines.join('\n'), /fix: .*restart the app/u);
 });
 
 test('an installed copy is not judged by a files list it already survived', () => {
