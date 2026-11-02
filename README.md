@@ -407,6 +407,20 @@ dsh-plugin explain: 1 known cause(s)
   fix: declare the range you actually support: "engines": { "dsh": ">=0.2.0" }
 ```
 
+When the report gives you a log path such as `logs: ~/.dsh/logs/…` instead of
+a sentence, point `--log` at the file. It reads the log and explains the last
+line that matches a known cause, so the installer's generic first line does not
+hide the specific one underneath it:
+
+```sh
+$ npx dsh-plugin-toolkit explain --log ~/.dsh/logs/install.log
+dsh-plugin explain: 1 known cause(s)
+  cause: two plugins register the same id or slot, so the second one cannot apply
+  symptom: the plugin is installed but the loader refuses its entry
+  check: patch file
+  fix: give the row in cordis.patch.yml a unique id, and do not re-register a slot another plugin owns
+```
+
 Add the checkout and it also tells you whether that check actually fails there:
 
 ```sh
@@ -415,8 +429,12 @@ $ npx dsh-plugin-toolkit explain "plugin install failed" ./my-panel
   in ./my-panel: ✗ engines.dsh: engines.dsh is missing, so the market index cannot state the host requirement
 ```
 
+The same checkout argument works after the log:
+`dsh-plugin explain --log ~/.dsh/logs/install.log ./my-panel`.
+
 Text it does not recognise exits `2` instead of guessing: a wrong diagnosis
-sends you editing the wrong file.
+sends you editing the wrong file. A log with no known cause also exits `2` and
+lists the causes it looked for.
 
 ## Prove the tarball works, not just the repository
 
