@@ -7,6 +7,10 @@
   prints the cause, the `doctor` check that verifies it and the fix; given a
   checkout it runs that check and reports whether it actually fails. Unknown
   text exits 2 rather than guessing.
+- **The publish guard test states the tag it is testing.** It inherited
+  `GITHUB_REF_NAME` from the workflow, so it passed on pull requests and failed
+  on the release tag it exists to protect — the tag run exported
+  `plugin-v0.13.12` while the scratch manifest said `99.99.99`.
 
 ## 0.13.11
 
