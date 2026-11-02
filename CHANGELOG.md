@@ -1,3 +1,13 @@
+## 0.13.12
+
+- **`explain` maps a pasted install error to the check that finds its cause.**
+  A plugin hub files failed installs back into each plugin's repository; 61
+  repositories were carrying those reports on 2026-11-02, and every one opens
+  with one of four sentences that name no file. `dsh-plugin explain "<error>"`
+  prints the cause, the `doctor` check that verifies it and the fix; given a
+  checkout it runs that check and reports whether it actually fails. Unknown
+  text exits 2 rather than guessing.
+
 ## 0.13.11
 
 - `--home` is readable again: the flag reader named the wrong variable, so `dsh-plugin audit --home <dir>` failed with `args is not defined` before it ran.
