@@ -101,8 +101,17 @@ jobs:
       - name: the registry must not already have this version
         run: node scripts/publish-guard.mjs
 
+      # `npm publish dist/x.tgz` is read as the GitHub shorthand dist/x.tgz and
+      # fails with "Permission denied (publickey)"; the ./ makes it a path.
+      - name: exactly one tarball reached this job
+        run: |
+          set -euo pipefail
+          count=$(ls dist/*.tgz | wc -l | tr -d ' ')
+          test "$count" = "1" || { echo "expected one tarball in dist, found $count"; exit 1; }
+          ls -l dist/*.tgz
+
       - name: publish the verified tarball
-        run: npm publish dist/*.tgz --provenance --access public
+        run: npm publish ./dist/*.tgz --provenance --access public
 
       - name: the registry serves it, and a clean install works
         run: |
