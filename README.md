@@ -372,8 +372,33 @@ their stars, and checks the one you pick. A repository is downloaded once as a
 tarball into a temp folder, so nothing is cloned into your workspace and
 nothing is installed.
 
-The CLI checks local folders only; for a repository, clone it or let the panel
-do the download.
+The CLI reads a repository straight from the GitHub API:
+
+```bash
+dsh-plugin doctor --remote V1ki/dsh-plugin-subscriptions
+```
+
+```text
+dsh-plugin doctor: 1 problem(s) in V1ki/dsh-plugin-subscriptions
+  ⨯ engines.dsh: engines.dsh is missing, so a host that enforces the range rejects the install as "incompatible with dsh"; declare the range you support, e.g. "engines": { "dsh": ">=0.2.0" }
+```
+
+That is the whole reason this mode exists: the plugin hub files failed installs
+back into plugin repositories, and the report is a sentence — `plugin install
+failed`, `plugin does not support the DSH version in use` — that never names a
+file. Reading `package.json` over the API is enough to name it.
+
+What it can see, and what it cannot:
+
+- Manifest checks (`engines.dsh`, `files`, `dsh.client`, `exports`) run on the
+  real `package.json`.
+- File checks (does `exports["./client"]` point at a file that exists, does the
+  root export `apply`) need the tree. A package that runs `prepack`,
+  `prepublishOnly`, `prepare` or `build` publishes files it does not commit, so
+  those checks are **skipped with a note** instead of calling a working plugin
+  broken.
+- Public repositories work anonymously, but GitHub allows 60 requests an hour.
+  Export `GH_TOKEN` (or `GITHUB_TOKEN`) to audit more than one or two.
 
 ## What `doctor` checks
 

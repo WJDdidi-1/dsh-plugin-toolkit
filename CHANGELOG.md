@@ -1,3 +1,18 @@
+## 0.14.0
+
+- `dsh-plugin doctor --remote owner/repo` audits a published plugin through the
+  GitHub API — no clone, no install. It reports the same manifest problems the
+  installer trips over, in the words the installer uses (`engines.dsh is
+  missing, so a host that enforces the range rejects the install as
+  "incompatible with dsh"`), because the plugin hub's failure reports name a
+  symptom and never a file. Packages that build before they pack get their
+  file-level checks marked skipped, not failed.
+- `files` entries that name a folder (`"lib"`) now ship everything below it, as
+  npm does; before, `lib/index.js` was reported as missing.
+- `files` no longer has to mention `package.json`, the README, the LICENSE, the
+  CHANGELOG or the `main` file: npm puts those in the tarball whatever `files`
+  says, so flagging them was a false alarm.
+
 ## 0.13.13
 
 - **`explain --log <file>` reads the log the hub points at.** A report names
