@@ -390,6 +390,34 @@ do the download.
 
 Exit code is `0` when the plugin can be installed and `1` when it cannot, so it drops into CI unchanged.
 
+## When an install fails
+
+A plugin hub files failed installs back into the plugin's repository, and the
+report always opens with the same sentence — `plugin install failed`,
+`plugin distribution incomplete`, `plugin does not support the DSH version in
+use`, `failed to apply loader entry`. None of them names a file, so the author
+is left reading a symptom. Paste the sentence and get the cause:
+
+```sh
+$ npx dsh-plugin-toolkit explain "dsh: installation rejected: Plugin my-panel@1.0.0 is incompatible with dsh 0.2.1-rc.5"
+dsh-plugin explain: 1 known cause(s)
+  cause: engines.dsh is missing, or the range it declares excludes the host doing the install
+  symptom: the installer rejects the plugin before unpacking it
+  check: engines.dsh
+  fix: declare the range you actually support: "engines": { "dsh": ">=0.2.0" }
+```
+
+Add the checkout and it also tells you whether that check actually fails there:
+
+```sh
+$ npx dsh-plugin-toolkit explain "plugin install failed" ./my-panel
+...
+  in ./my-panel: ✗ engines.dsh: engines.dsh is missing, so the market index cannot state the host requirement
+```
+
+Text it does not recognise exits `2` instead of guessing: a wrong diagnosis
+sends you editing the wrong file.
+
 ## Prove the tarball works, not just the repository
 
 `doctor` reads your working copy. Users install the tarball, and a `files` list can ship everything except the panel — `doctor` will not notice.
