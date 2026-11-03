@@ -1,3 +1,13 @@
+## Unreleased
+
+- **`dsh-plugin fix <dir> --engines` writes the host range `doctor` asks for.**
+  Most of the plugins the hub reports as failing to install have no
+  `engines.dsh` at all, and `doctor` could only name the missing field. The new
+  command prints the range it would write and leaves `package.json` untouched
+  unless `--write` is passed; a missing or non-range value becomes `>=0.2.0`,
+  while a range that already passes the check is left alone. `--range` asks for
+  a different range explicitly. `doctor` is unchanged.
+
 ## 0.14.0
 
 - `dsh-plugin doctor --remote owner/repo` audits a published plugin through the
