@@ -441,7 +441,8 @@ same range `init` writes. A range that already passes the check is left alone,
 because `>=0.3.0` can be a deliberate statement about the host APIs the plugin
 uses; `--range <range>` asks for a different one explicitly. `fix` changes only
 `engines.dsh` and leaves the other `engines` entries in place. `doctor` itself
-still never writes anything, and its checks are unchanged.
+still runs read-only, and its checks are unchanged; `fix` changes the manifest
+only when you pass `--write`.
 
 ## When an install fails
 
