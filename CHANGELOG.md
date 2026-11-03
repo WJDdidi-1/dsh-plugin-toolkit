@@ -1,4 +1,4 @@
-## Unreleased
+## 0.15.0
 
 - **`dsh-plugin fix <dir> --engines` writes the host range `doctor` asks for.**
   Most of the plugins the hub reports as failing to install have no
