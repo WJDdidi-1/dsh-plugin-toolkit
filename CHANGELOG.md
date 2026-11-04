@@ -1,4 +1,4 @@
-## Unreleased
+## 0.18.0
 
 - **`dsh-plugin audit --remote --from <file>` audits the whole list at once.**
   It reads one `owner/repo` per line (or `-` for standard input), asks the
