@@ -752,8 +752,8 @@ Honest list, so nobody plans around a feature that does not exist:
 ## Changelog
 
 [`CHANGELOG.md`](CHANGELOG.md) lists what changed in each release, including
-the `0.16.0` repair loop: `doctor --fix`, `audit --remote --json`, and the
-repair guide.
+the `0.17.0` remote repair loop: `fix --remote`, `--patch`, and the guide to
+repairing a repository you have not cloned.
 
 ## License
 
