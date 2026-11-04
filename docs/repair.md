@@ -15,8 +15,12 @@ means, and the smallest edit that clears it. Make the edit, run `doctor` again,
 and repeat until it exits `0`. That is the whole loop.
 
 `doctor --remote owner/repo` prints the same lines for a repository you have not
-cloned, but it cannot edit anything. Clone the repository first and run the
-commands here against the checkout.
+cloned, but it cannot edit anything. For a missing host range, `fix owner/repo
+--remote --patch repair.patch` saves the `engines.dsh` diff without a checkout;
+apply it after cloning (or paste it into a pull request). The command creates
+parent directories and refuses to replace an existing file unless `--force` is
+passed. For every other check, clone the repository and run the commands here
+against the checkout.
 
 ## The loop
 
