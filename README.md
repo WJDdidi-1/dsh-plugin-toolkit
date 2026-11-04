@@ -520,7 +520,10 @@ A plugin hub files failed installs back into the plugin's repository, and the
 report always opens with the same sentence — `plugin install failed`,
 `plugin distribution incomplete`, `plugin does not support the DSH version in
 use`, `failed to apply loader entry`. None of them names a file, so the author
-is left reading a symptom. Paste the sentence and get the cause:
+is left reading a symptom. [Repair a failed install](https://github.com/WJDdidi-1/dsh-plugin-toolkit/blob/main/docs/repair.md) has one
+section per `doctor` check, with the exact line it prints and the smallest edit
+that clears it; `doctor --fix . --write` applies the `engines.dsh` edit for you
+and re-runs the checks. Paste the sentence and get the cause:
 
 ```sh
 $ npx dsh-plugin-toolkit explain "dsh: installation rejected: Plugin my-panel@1.0.0 is incompatible with dsh 0.2.1-rc.5"
