@@ -63,13 +63,20 @@ copy: { 'my-panel-1': { tabTitle: 'Bob's panel', title: 'Bob's panel', body: 'Th
 
 so the scaffold's own `npm test` exits `1` before the panel is mounted.
 
-## What the next change has to cover
+## Fixed in 0.20.0
 
-The title is interpolated at three places in `lib/init.mjs`:
+The title was interpolated at three places in `lib/init.mjs`:
 
 - the `client.js` `COPY` entries (single-quoted JavaScript strings);
 - the generated test's `copy` object (the same quoting problem);
 - the generated test's assertion `assert.match(panel.text(), /${title}/)`, which
   also needs escaping for regular-expression metacharacters, not only quotes.
 
-The metric was `3` against a threshold of `0`, so the defect reproduces.
+`init` now quotes the first two with a JavaScript string-literal escape
+(`jsString`) and the assertion with a regular-expression source escape
+(`jsRegExp`). Backslashes, quotes, newlines, other control characters and regex
+metacharacters survive the template, so `init --title "Bob's panel"` writes a
+`client.js` and `test/panel.test.mjs` that pass `node --check`, and the
+scaffold's own `npm test` passes.
+
+The metric was `3` against a threshold of `0`, so the defect reproduced.
