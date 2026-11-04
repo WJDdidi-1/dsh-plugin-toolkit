@@ -52,7 +52,7 @@
     "access": "public"
   },
   "scripts": {
-    "test": "node --test",
+    "test": "node scripts/run-tests.mjs",
     "lint": "node --check bin/dsh-plugin.mjs",
     "snapshots": "UPDATE_SNAPSHOTS=1 node --test test/testkit.test.mjs"
   },
