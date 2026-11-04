@@ -1,5 +1,14 @@
 ## Unreleased
 
+- **`dsh-plugin fix --host <version>` aims the `engines.dsh` repair at the DSH
+  that rejected the install.** The proposed range includes that host and stops
+  before the next major — `fix --remote <owner/repo> --engines --host 0.3.0`
+  plans `>=0.3.0 <1.0.0` and prints why, and `--write` applies the same range in
+  a local checkout. Naming a host is an explicit request, so a valid but too
+  broad range is replaced; without `--host` the existing default and the
+  leave-a-valid-range-alone rule are unchanged. `audit --remote --host
+  --patch-dir` writes the host-targeted repair too, and an invalid host is
+  refused rather than guessed at.
 - **`dsh-plugin audit --remote <owner/repo> --host <version>` says whether the
   plugin will install on the DSH you run.** The line carries the range
   `package.json` declares and one of `compatible`, `incompatible` or `unknown`
