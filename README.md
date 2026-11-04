@@ -484,11 +484,11 @@ $ npm run benchmark
 ```
 
 (`node scripts/benchmark-audit.mjs` runs the same harness without npm's banner.)
-The checkout runs that command. A fresh install of the published `0.19.0`
-tarball does not: `scripts/` is not in `files`, so `npm run benchmark` exits
-with `MODULE_NOT_FOUND` on `scripts/benchmark-audit.mjs`. See
+The tarball ships both that script and the list it reads, so the command runs in
+a checkout and in an installed copy. The test suite packs the package, installs
+the tarball into a temp directory and runs the documented command there;
 [`docs/benchmark-tarball.md`](https://github.com/WJDdidi-1/dsh-plugin-toolkit/blob/main/docs/benchmark-tarball.md)
-for the exact output.
+records the packaging gap this closes.
 
 It runs the same list twice: `--jobs 1`, which is the loop the command used
 before batching, and the default `--jobs 4`. Measured on this host:
