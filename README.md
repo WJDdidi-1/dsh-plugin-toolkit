@@ -679,6 +679,20 @@ uses; `--range <range>` asks for a different one explicitly. `fix` changes only
 own still runs read-only, and its checks are unchanged; `fix` and `doctor --fix`
 change the manifest only when you pass `--write`.
 
+When the failed install names the host version, `--host` aims the range at that
+host instead of using the default. The written range accepts the host and stops
+before the next major, and the command prints that reasoning:
+
+```sh
+$ npx dsh-plugin-toolkit@latest fix ./my-panel --engines --host 0.3.0 --write
+dsh-plugin fix: wrote engines.dsh ">=0.3.0 <1.0.0" (was missing)
+    host 0.3.0 is inside ">=0.3.0 <1.0.0"; 1.0.0 is excluded, so the range includes the host you run and stops before the next major
+    /Users/you/my-panel/package.json
+```
+
+A host version that is not complete semver is refused, and `--range` still wins
+when it is passed beside `--host`.
+
 For a repository you have not cloned, see
 [Repair a repository you have not cloned](#repair-a-repository-you-have-not-cloned):
 `fix <owner>/<repo> --remote` fetches `package.json` through the GitHub API and
@@ -701,7 +715,9 @@ dsh-plugin doctor: 1 problem(s) in PrismLean/dsh-run-guard
 
 That is still only a verdict. `fix <owner>/<repo> --remote` reads the same
 manifest and prints the edit as a unified diff against `package.json`; it sends
-only a GET to GitHub and writes nothing:
+only a GET to GitHub and writes nothing. Add `--host <version>` to aim the
+proposed range at the DSH that rejected the install; the plan prints the range
+and why it includes that host and excludes the next major:
 
 ```sh
 $ npx dsh-plugin-toolkit@latest fix PrismLean/dsh-run-guard --remote
@@ -733,7 +749,9 @@ $ git apply /tmp/dsh-run-guard-engines.patch
 
 `--patch` creates parent directories and refuses to replace an existing file
 unless you pass `--force`; its output names the file, and the repository it read
-is still untouched. `git apply --check` is the dry run: it fails before changing
+is still untouched. The same host-aware plan works with `--patch`, and
+`audit --remote --host <version> --patch-dir <dir>` writes host-targeted repairs
+for a whole list. `git apply --check` is the dry run: it fails before changing
 anything if the manifest moved since the diff was printed. Commit the applied
 change as you would any other edit.
 
