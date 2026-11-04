@@ -1,3 +1,16 @@
+## Unreleased
+
+- **`dsh-plugin audit --remote --from <file>` audits the whole list at once.**
+  It reads one `owner/repo` per line (or `-` for standard input), asks the
+  read-only GitHub contents API about every entry, and prints one line per
+  repository with its verdict: `clean`, `failing`, or `unreadable`. A counted
+  summary follows, `--json` still prints the existing finding array, and the
+  command exits `1` when anything is failing or unreadable and `0` only when
+  every repository is clean. A repository GitHub could not read is reported as
+  unreadable instead of being counted as a pass, and the same `--from` accepts
+  the JSON evidence shape (an array, or an object with `rows`) that the old
+  shell loop printed.
+
 ## 0.17.0
 
 - **`dsh-plugin fix <owner>/<repo> --remote` prints the `engines.dsh` repair
