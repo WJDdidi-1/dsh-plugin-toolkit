@@ -463,6 +463,18 @@ network error) is printed in `notes` and still exits `1`: a repository the tool
 could not read is never reported as clean. Packages that build before they pack
 keep their file-level checks in `notes` as before.
 
+When the list is a repair queue rather than a report, add `--patch-dir`:
+
+```sh
+$ dsh-plugin audit --remote --from repos.txt --patch-dir repairs/
+```
+
+It creates the directory and writes one `owner__repo.patch` for every
+repository whose `engines.dsh` check fails, with the same diff `fix --remote
+--patch` produces. Repositories that are clean, unreadable, or need a repair
+the tool cannot make automatically are skipped. The repository itself is still
+only read, and `--force` replaces a patch that is already there.
+
 ## What `doctor` checks
 
 | Check | Why it matters |
