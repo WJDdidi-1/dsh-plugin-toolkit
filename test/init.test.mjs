@@ -42,6 +42,28 @@ test('the scaffold passes doctor, which is the point of it', () => {
   assert.equal(report.notes.hostRange, '>=0.2.0');
 });
 
+test('a scoped, unscoped or numeric-like name writes a patch id YAML keeps as a string', (t) => {
+  // Psych is the parser the harness's YAML loader is closest to; skip where
+  // Ruby is not installed instead of making the suite depend on it.
+  const ruby = spawnSync('ruby', ['-e', 'require "yaml"'], { encoding: 'utf8' });
+  if (ruby.error !== undefined || ruby.status !== 0) {
+    t.skip('ruby/Psych is not installed');
+    return;
+  }
+
+  const script = 'rows = YAML.safe_load(File.read(ARGV[0])); puts JSON.generate(rows.dig(0, "insert", 0, "id"))';
+  for (const name of ['@me/my-panel', 'my-panel', '123-panel', '123']) {
+    const dir = path.join(scratch(), 'plugin');
+    assert.equal(init({ dir, name, title: 'Panel' }).ok, true, name);
+
+    const parsed = spawnSync('ruby', ['-ryaml', '-rjson', '-e', script, path.join(dir, 'cordis.patch.yml')], {
+      encoding: 'utf8',
+    });
+    assert.equal(parsed.status, 0, `${name} does not parse as YAML:\n${parsed.stderr}`);
+    assert.equal(JSON.parse(parsed.stdout), name);
+  }
+});
+
 test('the scaffolded client bundle renders without a browser', async () => {
   const dir = path.join(scratch(), 'plugin');
   init({ dir, name: 'my-panel', title: 'My panel' });

@@ -1,5 +1,10 @@
 ## 0.20.1
 
+- **`dsh-plugin init` writes a YAML-safe patch id.** A scoped package name such
+  as `@me/my-panel` is quoted in `cordis.patch.yml`, so the file parses instead
+  of failing on `id: @me/my-panel`; an id like `123` stays a string rather than
+  becoming a number. Ruby/Psych parses the generated patch for scoped,
+  unscoped and numeric-like names, and `insert[0].id` is the exact name.
 - **`dsh-plugin init --title` escapes the title in every generated JavaScript
   file.** An apostrophe, backslash, newline or regular-expression character no
   longer breaks the scaffold: `init --title "Bob's panel"` writes a `client.js`

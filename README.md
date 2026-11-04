@@ -886,8 +886,8 @@ The install reports success and nothing shows up. In this order:
    entry with `id` and `name`:
    ```yaml
    - insert:
-       - id: my-plugin
-         name: my-plugin
+       - id: 'my-plugin'
+         name: 'my-plugin'
          config: {}
    ```
 5. **Did the client bundle throw?** The host logs the loader error with the
