@@ -1,5 +1,10 @@
 ## Unreleased
 
+- **The tarball ships the throughput benchmark the README cites.**
+  `scripts/benchmark-audit.mjs` and the 3 November list it reads are now in
+  `files`, so `npm run benchmark` runs in an installed copy instead of exiting
+  with `MODULE_NOT_FOUND`. A test packs the package, installs the tarball into a
+  temp directory and runs the documented command there.
 - **`dsh-plugin fix --host <version>` aims the `engines.dsh` repair at the DSH
   that rejected the install.** The proposed range includes that host and stops
   before the next major — `fix --remote <owner/repo> --engines --host 0.3.0`

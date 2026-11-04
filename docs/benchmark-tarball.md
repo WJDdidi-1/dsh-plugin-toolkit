@@ -1,12 +1,12 @@
-# The published tarball cannot run the benchmark
+# The tarball ships the benchmark
 
 [`README.md`](../README.md#measured-throughput) tells readers to run
 `npm run benchmark`, whose script is `node scripts/benchmark-audit.mjs`. The
-published `0.19.0` tarball does not ship `scripts/`, so the documented command
-fails inside a fresh install. The checkout still works because it has the
-script; only the installed copy is missing it.
+checkout has always had the script, but the published `0.19.0` tarball did not:
+`package.json`'s `files` list left out `scripts/`, so the command failed inside a
+fresh install with `MODULE_NOT_FOUND`.
 
-## Reproduction
+## What went wrong in 0.19.0
 
 Measured on 2026-11-04 with Node.js `v24.15.0` and npm `11.12.1`:
 
@@ -22,37 +22,30 @@ $ npm run benchmark
 > dsh-plugin-toolkit@0.19.0 benchmark
 > node scripts/benchmark-audit.mjs
 
-node:internal/modules/cjs/loader:1479
-  throw err;
-  ^
-
 Error: Cannot find module '/tmp/.../node_modules/dsh-plugin-toolkit/scripts/benchmark-audit.mjs'
-    at Module._resolveFilename (node:internal/modules/cjs/loader:1476:15)
-    ...
-  code: 'MODULE_NOT_FOUND',
-  requireStack: []
-}
-
-Node.js v24.15.0
+  code: 'MODULE_NOT_FOUND'
 $ echo $?
 1
 ```
 
-The missing path is `scripts/benchmark-audit.mjs` in the installed copy
-(`node_modules/dsh-plugin-toolkit/scripts/benchmark-audit.mjs`).
+The README measured the first eight entries of the 3 November install-failure
+list, but `docs/ecosystem-audit-2026-11-03.txt` was not shipped either, so even a
+script that packed would have had no sample to read.
 
-## Why it is missing
+## What ships now
 
-`package.json` ships `bin/`, `lib/`, `index.js`, `client.js`,
-`cordis.patch.yml`, `README.md`, `README.zh.md`, `LICENSE`, `CHANGELOG.md`,
-`docs/badge.svg` and `docs/card.png`. That list has no `scripts/` entry.
-`npm pack dsh-plugin-toolkit@0.19.0` confirms it: the tarball contains 34 files
-and none of them is under `scripts/`. `lib/benchmark.mjs` does ship, but the
-file `package.json` names in `scripts.benchmark` does not.
+`package.json` ships both files the command needs:
 
-## Verdict
+- `scripts/benchmark-audit.mjs`, the file `scripts.benchmark` names;
+- `docs/ecosystem-audit-2026-11-03.txt`, the list `lib/benchmark.mjs` reads.
 
-The defect reproduces: a fresh install of the published `0.19.0` tarball exits
-`1` with `MODULE_NOT_FOUND` when it runs the command the README cites. A
-packaging change has to ship the command (or the README has to cite one that
-ships), and a test has to pack, install and run it so the gap cannot return.
+`lib/benchmark.mjs` and the rest of `lib/` were already in the tarball. Running
+`npm run benchmark` in an installed copy now measures the same eight
+repositories the README names, with the same fixed 500 ms delay per API request.
+
+## Keeping it working
+
+`test/benchmark-tarball.test.mjs` packs this package, installs the tarball into a
+temp directory and runs the documented command there. The test asserts that the
+script and its sample are in the packed file list, so a future `files` edit that
+drops one of them fails before publication.

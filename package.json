@@ -24,7 +24,9 @@
     "LICENSE",
     "CHANGELOG.md",
     "docs/badge.svg",
-    "docs/card.png"
+    "docs/card.png",
+    "docs/ecosystem-audit-2026-11-03.txt",
+    "scripts/benchmark-audit.mjs"
   ],
   "engines": {
     "node": ">=18",
