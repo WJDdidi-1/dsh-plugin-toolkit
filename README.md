@@ -885,8 +885,9 @@ Honest list, so nobody plans around a feature that does not exist:
 ## Changelog
 
 [`CHANGELOG.md`](CHANGELOG.md) lists what changed in each release, including
-the `0.18.0` batch audit: `audit --remote --from`, `--patch-dir`, and one
-command over the 3 November install-failure list.
+the `0.19.0` batch audit: `--jobs` reads several repositories at once, a
+rate-limited read stops the batch instead of failing the rest of the list, and
+the measured throughput is reproducible with `npm run benchmark`.
 
 ## License
 

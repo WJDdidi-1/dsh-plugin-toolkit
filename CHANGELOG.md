@@ -1,4 +1,4 @@
-## Unreleased
+## 0.19.0
 
 - **A rate-limited batch audit stops and says so.** When GitHub answers `403`
   or `429` for any read, the audit stops starting new repositories and reports
