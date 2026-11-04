@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import path from 'node:path';
 import test from 'node:test';
 
 import { expandHome } from '../lib/remote.mjs';
@@ -6,13 +7,13 @@ import { expandHome } from '../lib/remote.mjs';
 const HOME = '/home/someone';
 
 test('a leading ~ expands to the home directory', () => {
-  assert.equal(expandHome('~/repair.patch', HOME), '/home/someone/repair.patch');
-  assert.equal(expandHome('~/a/b/c.patch', HOME), '/home/someone/a/b/c.patch');
+  assert.equal(expandHome('~/repair.patch', HOME), path.join(HOME, 'repair.patch'));
+  assert.equal(expandHome('~/a/b/c.patch', HOME), path.join(HOME, 'a/b/c.patch'));
 });
 
 test('a windows-style leading ~ backslash expands too, because cmd leaves it alone', () => {
-  assert.equal(expandHome('~\\repair.patch', HOME), '/home/someone/repair.patch');
-  assert.equal(expandHome('~\\patches\\x.patch', HOME), '/home/someone/patches/x.patch');
+  assert.equal(expandHome('~\\repair.patch', HOME), path.join(HOME, 'repair.patch'));
+  assert.equal(expandHome('~\\patches\\x.patch', HOME), path.join(HOME, 'patches/x.patch'));
 });
 
 test('a bare ~ is the home directory itself', () => {
@@ -28,13 +29,12 @@ test('paths without a leading tilde are left exactly as written', () => {
 });
 
 test('surrounding whitespace from a pasted path is dropped', () => {
-  assert.equal(expandHome('  ~/x.patch  ', HOME), '/home/someone/x.patch');
+  assert.equal(expandHome('  ~/x.patch  ', HOME), path.join(HOME, 'x.patch'));
 });
 
 test('a patch written to ~/ lands in the home directory, not in a literal ~ folder', async () => {
   const fs = await import('node:fs');
   const os = await import('node:os');
-  const path = await import('node:path');
   const { fixRemote } = await import('../lib/remote.mjs');
 
   const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-home-'));
