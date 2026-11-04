@@ -405,6 +405,40 @@ What it can see, and what it cannot:
 - Public repositories work anonymously, but GitHub allows 60 requests an hour.
   Export `GH_TOKEN` (or `GITHUB_TOKEN`) to audit more than one or two.
 
+To check a whole list in one pass, for a CI job or a repair sweep, ask for JSON:
+
+```sh
+$ dsh-plugin audit --remote V1ki/dsh-plugin-subscriptions,demo/plugin --json
+[
+  {
+    "target": "V1ki/dsh-plugin-subscriptions",
+    "version": "0.3.0",
+    "hostRange": ">=0.2.0",
+    "failures": [],
+    "notes": []
+  },
+  {
+    "target": "demo/plugin",
+    "version": "1.2.3",
+    "hostRange": null,
+    "failures": [
+      {
+        "check": "engines.dsh",
+        "message": "engines.dsh is missing, so a host that enforces the range rejects the install as \"incompatible with dsh\"; declare the range you support, e.g. \"engines\": { \"dsh\": \">=0.2.0\" }"
+      }
+    ],
+    "notes": []
+  }
+]
+```
+
+Every repository produces one object with `target`, `version`, `hostRange`,
+`failures` (`{ check, message }`) and `notes`, and the command exits `1` when any
+repository has a problem. A read GitHub refused (a `403`/`429` rate limit, a
+network error) is printed in `notes` and still exits `1`: a repository the tool
+could not read is never reported as clean. Packages that build before they pack
+keep their file-level checks in `notes` as before.
+
 ## What `doctor` checks
 
 | Check | Why it matters |
