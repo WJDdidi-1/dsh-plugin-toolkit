@@ -5,6 +5,12 @@
   of failing on `id: @me/my-panel`; an id like `123` stays a string rather than
   becoming a number. Ruby/Psych parses the generated patch for scoped,
   unscoped and numeric-like names, and `insert[0].id` is the exact name.
+- **`dsh-plugin verify` names a bundle patch the tarball would omit before
+  installing it.** `dsh.bundle.patch` is recognized whether it is written
+  `./cordis.patch.yml` or `cordis.patch.yml`, so a `files` list that leaves the
+  patch out makes `verify --no-mount` stop at `pack` and exit `1` with
+  `cordis.patch.yml` named, instead of spending an install on a plugin that
+  cannot load. A scaffold that ships its patch still exits `0`.
 
 ## 0.20.1
 
