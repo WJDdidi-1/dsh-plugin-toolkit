@@ -93,7 +93,7 @@ test('audit --remote --from exits 1 and names the failing repository', async (t)
   assert.match(output, /1 clean, 1 failing \(1 problem\), 0 unreadable/u);
 });
 
-test('audit --remote --from reports an unreadable repository as unreadable, never clean', async (t) => {
+test('audit --remote --from reports a rate-limited repository as rate-limited, never clean or unreadable', async (t) => {
   const list = listFile('demo/blocked\n');
   t.after(list.cleanup);
   const io = recorder();
@@ -103,9 +103,10 @@ test('audit --remote --from reports an unreadable repository as unreadable, neve
 
   assert.equal(code, 1);
   const output = io.lines.join('\n');
-  assert.match(output, /unreadable\s+demo\/blocked\s+— GitHub rate-limited/u);
+  assert.match(output, /rate-limited\s+demo\/blocked\s+— GitHub rate-limited/u);
   assert.doesNotMatch(output, /^\s*clean\s+demo\/blocked/mu);
-  assert.match(output, /0 clean, 0 failing \(0 problems\), 1 unreadable/u);
+  assert.doesNotMatch(output, /^\s*unreadable\s+demo\/blocked/mu);
+  assert.match(output, /0 clean, 0 failing \(0 problems\), 0 unreadable, 1 rate-limited/u);
 });
 
 test('audit --remote --from --json prints the existing finding array', async (t) => {
@@ -128,7 +129,8 @@ test('audit --remote --from --json prints the existing finding array', async (t)
     notes: [],
   });
   assert.equal(reports[1].failures.some((failure) => failure.check === 'engines.dsh'), true);
-  assert.equal(reports[2].unreadable, true);
+  assert.equal(reports[2].unreadable, undefined);
+  assert.equal(reports[2].rateLimited, true);
   assert.equal(reports[2].notes.some((note) => /rate-limited/u.test(note)), true);
 });
 
