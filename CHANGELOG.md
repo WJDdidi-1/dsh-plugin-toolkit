@@ -1,3 +1,14 @@
+## Unreleased
+
+- **`dsh-plugin audit --remote <owner/repo> --host <version>` says whether the
+  plugin will install on the DSH you run.** The line carries the range
+  `package.json` declares and one of `compatible`, `incompatible` or `unknown`
+  against the host version; `--json` findings add `host` and `compatibility`
+  beside `hostRange`. A missing or malformed range is `unknown`, and a range
+  that excludes the host is `incompatible`, fails the audit and exits `1`. The
+  same answer prints in the `--from` batch mode, and range matching follows npm
+  semver, including the pre-release rule behind the canary install failures.
+
 ## 0.19.0
 
 - **A rate-limited batch audit stops and says so.** When GitHub answers `403`
