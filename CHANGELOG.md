@@ -9,6 +9,14 @@
   `manual:` lines instead of being guessed. `--range` chooses the host range and
   `--dry-run` wins over `--write`. The existing `fix --engines` command is
   unchanged.
+- **`dsh-plugin audit --remote owner/repo,owner/repo --json` audits a list and
+  prints one machine-readable object per repository.** Each object carries
+  `target`, `version`, `hostRange`, `failures` (`{ check, message }`) and
+  `notes`; the command exits `1` as soon as any repository has a failure. A
+  rate-limited or otherwise unreadable request becomes a note and still exits
+  `1`, so a repository the tool could not read is never mistaken for a clean
+  one. `--remote` also accepts repeated flags, and without `--json` the same
+  findings print as the human lines `doctor --remote` already uses.
 
 ## 0.15.0
 
