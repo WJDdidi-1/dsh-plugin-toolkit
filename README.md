@@ -514,6 +514,19 @@ uses; `--range <range>` asks for a different one explicitly. `fix` changes only
 own still runs read-only, and its checks are unchanged; `fix` and `doctor --fix`
 change the manifest only when you pass `--write`.
 
+For a repository you have not cloned, `fix <owner>/<repo> --remote` fetches
+`package.json` through the GitHub API and prints the same `engines.dsh` diff.
+Add `--patch <file>` to save that diff instead: parent directories are created,
+the printed path is where it landed, and an existing file is left alone unless
+you pass `--force`. The repository itself is never written.
+
+```sh
+$ npx dsh-plugin-toolkit@latest fix V1ki/dsh-plugin-subscriptions --remote --patch repairs/host-range.patch
+dsh-plugin fix: would write engines.dsh ">=0.2.0" (was missing) in V1ki/dsh-plugin-subscriptions
+dsh-plugin fix: wrote the diff to /Users/you/repairs/host-range.patch
+    the repository itself was not modified; apply this diff in your checkout
+```
+
 ## When an install fails
 
 A plugin hub files failed installs back into the plugin's repository, and the
