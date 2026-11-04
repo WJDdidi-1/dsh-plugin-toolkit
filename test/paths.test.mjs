@@ -17,7 +17,7 @@ test('a windows-style leading ~ backslash expands too, because cmd leaves it alo
 });
 
 test('a bare ~ is the home directory itself', () => {
-  assert.equal(expandHome('~', HOME), HOME);
+  assert.equal(expandHome('~', HOME), path.join(HOME));
 });
 
 test('paths without a leading tilde are left exactly as written', () => {
@@ -38,8 +38,12 @@ test('a patch written to ~/ lands in the home directory, not in a literal ~ fold
   const { fixRemote } = await import('../lib/remote.mjs');
 
   const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-home-'));
-  const previous = process.env.HOME;
+  // Windows does not use HOME for the home directory; os.homedir() reads
+  // USERPROFILE there, so a test that only sets HOME would write to the real
+  // profile on the windows-latest runners.
+  const previous = { HOME: process.env.HOME, USERPROFILE: process.env.USERPROFILE };
   process.env.HOME = scratch;
+  process.env.USERPROFILE = scratch;
   try {
     const text = JSON.stringify({ name: 'p', version: '1.0.0' });
     // The GitHub contents API answers with the file base64-encoded.
@@ -59,10 +63,12 @@ test('a patch written to ~/ lands in the home directory, not in a literal ~ fold
     assert.equal(fs.existsSync(path.join(scratch, 'repair.patch')), true);
     assert.equal(fs.existsSync(path.join(process.cwd(), '~')), false);
   } finally {
-    if (previous === undefined) {
-      delete process.env.HOME;
-    } else {
-      process.env.HOME = previous;
+    for (const [name, value] of Object.entries(previous)) {
+      if (value === undefined) {
+        delete process.env[name];
+      } else {
+        process.env[name] = value;
+      }
     }
   }
 });
