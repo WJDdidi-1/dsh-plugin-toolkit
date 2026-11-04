@@ -405,10 +405,34 @@ What it can see, and what it cannot:
 - Public repositories work anonymously, but GitHub allows 60 requests an hour.
   Export `GH_TOKEN` (or `GITHUB_TOKEN`) to audit more than one or two.
 
-To check a whole list in one pass, for a CI job or a repair sweep, ask for JSON:
+To check a whole list in one pass, put one `owner/repo` per line in a file and
+pass it with `--from` (`-` reads standard input):
 
 ```sh
-$ dsh-plugin audit --remote V1ki/dsh-plugin-subscriptions,demo/plugin --json
+$ dsh-plugin audit --remote --from repos.txt
+```
+
+Each repository gets one line with its verdict — `clean`, `failing`, or
+`unreadable` — and the run ends with a counted summary:
+
+```text
+clean       demo/plugin  1.2.3 (host >=0.2.0)
+failing     demo/broken  — engines.dsh: engines.dsh is missing, so a host that enforces the range rejects the install as "incompatible with dsh"
+unreadable  demo/blocked — GitHub rate-limited this request (403) for package.json; set GH_TOKEN or GITHUB_TOKEN to raise the limit
+
+summary: 3 repositories — 1 clean, 1 failing (1 problem), 1 unreadable
+```
+
+The command exits `1` when any repository is failing or unreadable, and `0` only
+when every repository in the list is clean. `--from` also accepts the JSON
+evidence shape (an array, or an object with `rows`) that the old shell loop
+printed, so an existing audit file can be replayed without rewriting it.
+
+For a CI job or a repair sweep, add `--json`:
+
+```sh
+$ dsh-plugin audit --remote --from repos.txt --json
+```
 [
   {
     "target": "V1ki/dsh-plugin-subscriptions",
