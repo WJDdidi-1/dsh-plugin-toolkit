@@ -48,9 +48,10 @@ $ dsh plugin add dsh-plugin-toolkit
 
 [`init`](#start-from-a-plugin-that-already-passes) writes the files whose absence shows up as a failed first publish — `engines.dsh`, the patch file, a `files` list that ships the code, a client bundle, a test for it, and the CI that runs both. `doctor` then checks the same things without writing anything, and [`verify`](#prove-the-tarball-works-not-just-the-repository) checks the tarball instead of the working copy.
 
-If a plugin already exists and only lacks the host range, `doctor` names it and
-`npx dsh-plugin-toolkit@latest fix . --engines --write` writes the range after
-showing it.
+If a plugin already exists, `doctor --fix` turns the failing checks into a
+repair plan. It names the file and the edit for every problem, writes nothing
+until you add `--write`, and then runs the checks again. `fix --engines` is
+still there when the host range is the only thing you need to change.
 
 ```sh
 npx dsh-plugin-toolkit@latest init ./my-panel --name my-panel
@@ -419,9 +420,44 @@ What it can see, and what it cannot:
 
 Exit code is `0` when the plugin can be installed and `1` when it cannot, so it drops into CI unchanged.
 
+## Repair what `doctor` finds
+
+`doctor --fix` reads the same checks and prints one line per failed check: the
+file, and the edit it would make. It is a preview by default and writes nothing
+until you pass `--write`:
+
+```sh
+$ npx dsh-plugin-toolkit@latest doctor --fix ./my-panel
+dsh-plugin doctor --fix: 1 failed check(s) in /Users/you/my-panel
+  ✗ engines.dsh: package.json — would write engines.dsh ">=0.2.0" (was missing)
+nothing written; pass --write to apply
+dsh-plugin doctor --fix: 1 problem(s) remain in /Users/you/my-panel
+  ✗ engines.dsh: engines.dsh is missing, so the market index cannot state the host requirement
+
+$ npx dsh-plugin-toolkit@latest doctor --fix ./my-panel --write
+dsh-plugin doctor --fix: 1 failed check(s) in /Users/you/my-panel
+  ✗ engines.dsh: package.json — would write engines.dsh ">=0.2.0" (was missing)
+dsh-plugin doctor --fix: wrote engines.dsh ">=0.2.0" in package.json
+ok  my-panel@1.0.0 (host >=0.2.0)
+```
+
+The write is limited to the edits in the plan: a missing or non-range
+`engines.dsh` becomes `>=0.2.0`, the other `engines` entries are left in place,
+and a range that already passes is not touched. `--range <range>` chooses the
+value used when `engines.dsh` needs repair, and `--dry-run` wins if it is passed
+alongside `--write`.
+
+Checks that cannot be repaired without guessing — a missing patch file, a root
+export that points at the CLI, a README with no Requirements section — still
+appear in the plan with `manual:`, so the command never invents file contents.
+After writing, `doctor` runs again: the exit code is `0` only when no problem
+remains, and the remaining failures are printed with their usual messages. Run
+it per repository; a checkout is the only thing it edits, never a published
+package or the market index.
+
 ## Fix a missing host range
 
-`doctor` names a missing `engines.dsh`, but it never edits the manifest for you.
+`doctor` on its own names a missing `engines.dsh` but never edits the manifest.
 `fix --engines` prints the range it would write, and writes it only when you
 also pass `--write`:
 
@@ -440,9 +476,9 @@ A missing value, or one `doctor` calls "not a semver range", becomes `>=0.2.0` �
 same range `init` writes. A range that already passes the check is left alone,
 because `>=0.3.0` can be a deliberate statement about the host APIs the plugin
 uses; `--range <range>` asks for a different one explicitly. `fix` changes only
-`engines.dsh` and leaves the other `engines` entries in place. `doctor` itself
-still runs read-only, and its checks are unchanged; `fix` changes the manifest
-only when you pass `--write`.
+`engines.dsh` and leaves the other `engines` entries in place. `doctor` on its
+own still runs read-only, and its checks are unchanged; `fix` and `doctor --fix`
+change the manifest only when you pass `--write`.
 
 ## When an install fails
 

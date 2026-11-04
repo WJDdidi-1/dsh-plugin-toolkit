@@ -1,3 +1,15 @@
+## Unreleased
+
+- **`dsh-plugin doctor --fix <dir>` turns the failing checks into a repair
+  plan.** It prints one line per failed check naming the file and the edit it
+  would make, writes nothing unless `--write` is passed, applies exactly the
+  planned edits, and runs `doctor` again to report what remains. A missing or
+  non-range `engines.dsh` is the automatic edit; checks that need real file
+  contents (a patch file, a client bundle, a root export) stay visible as
+  `manual:` lines instead of being guessed. `--range` chooses the host range and
+  `--dry-run` wins over `--write`. The existing `fix --engines` command is
+  unchanged.
+
 ## 0.15.0
 
 - **`dsh-plugin fix <dir> --engines` writes the host range `doctor` asks for.**
