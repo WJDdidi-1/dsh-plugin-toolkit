@@ -514,18 +514,73 @@ uses; `--range <range>` asks for a different one explicitly. `fix` changes only
 own still runs read-only, and its checks are unchanged; `fix` and `doctor --fix`
 change the manifest only when you pass `--write`.
 
-For a repository you have not cloned, `fix <owner>/<repo> --remote` fetches
-`package.json` through the GitHub API and prints the same `engines.dsh` diff.
-Add `--patch <file>` to save that diff instead: parent directories are created,
-the printed path is where it landed, and an existing file is left alone unless
-you pass `--force`. The repository itself is never written.
+For a repository you have not cloned, see
+[Repair a repository you have not cloned](#repair-a-repository-you-have-not-cloned):
+`fix <owner>/<repo> --remote` fetches `package.json` through the GitHub API and
+prints the same `engines.dsh` diff, and `--patch <file>` saves it for a
+checkout.
+
+## Repair a repository you have not cloned
+
+Start from the repository name in the hub issue: `PrismLean/dsh-run-guard`, one
+of the repositories in the 3 November install-failure audit. You do not need a
+checkout to learn what is wrong. `doctor --remote` reads `package.json` and the
+files it points at through the GitHub API and prints the same verdict it would
+give a folder:
 
 ```sh
-$ npx dsh-plugin-toolkit@latest fix V1ki/dsh-plugin-subscriptions --remote --patch repairs/host-range.patch
-dsh-plugin fix: would write engines.dsh ">=0.2.0" (was missing) in V1ki/dsh-plugin-subscriptions
-dsh-plugin fix: wrote the diff to /Users/you/repairs/host-range.patch
-    the repository itself was not modified; apply this diff in your checkout
+$ npx dsh-plugin-toolkit@latest doctor --remote PrismLean/dsh-run-guard
+dsh-plugin doctor: 1 problem(s) in PrismLean/dsh-run-guard
+  ✗ engines.dsh: engines.dsh is missing, so a host that enforces the range rejects the install as "incompatible with dsh"; declare the range you support, e.g. "engines": { "dsh": ">=0.2.0" }
 ```
+
+That is still only a verdict. `fix <owner>/<repo> --remote` reads the same
+manifest and prints the edit as a unified diff against `package.json`; it sends
+only a GET to GitHub and writes nothing:
+
+```sh
+$ npx dsh-plugin-toolkit@latest fix PrismLean/dsh-run-guard --remote
+dsh-plugin fix: would write engines.dsh ">=0.2.0" (was missing) in PrismLean/dsh-run-guard
+--- a/package.json
++++ b/package.json
+@@ -53,5 +53,8 @@
+     "@deepseek-ai/schemastery": "~3.18.4",
+     "react": "^18.3.1",
+     "react-dom": "^18.3.1"
++  },
++  "engines": {
++    "dsh": ">=0.2.0"
+   }
+ }
+    remote repositories are read-only; nothing written; apply this diff in your checkout
+```
+
+To apply it, clone the repository, save that diff with `--patch`, and apply it
+in the checkout:
+
+```sh
+$ git clone https://github.com/PrismLean/dsh-run-guard
+$ cd dsh-run-guard
+$ npx dsh-plugin-toolkit@latest fix PrismLean/dsh-run-guard --remote --patch /tmp/dsh-run-guard-engines.patch
+$ git apply --check /tmp/dsh-run-guard-engines.patch
+$ git apply /tmp/dsh-run-guard-engines.patch
+```
+
+`--patch` creates parent directories and refuses to replace an existing file
+unless you pass `--force`; its output names the file, and the repository it read
+is still untouched. `git apply --check` is the dry run: it fails before changing
+anything if the manifest moved since the diff was printed. Commit the applied
+change as you would any other edit.
+
+Then run `npx dsh-plugin-toolkit@latest doctor .` in the checkout. A checkout
+also reads the README text, so it can name a follow-up the remote read could
+not see — for `PrismLean/dsh-run-guard`, the README still has no Requirements
+section. [Repair a failed
+install](https://github.com/WJDdidi-1/dsh-plugin-toolkit/blob/main/docs/repair.md#readme)
+has the smallest edit for each remaining line. Once the branch is pushed,
+`doctor --remote PrismLean/dsh-run-guard` no longer reports `engines.dsh`. If
+the diff does not apply because the file changed, run the remote fixer again —
+it always starts from the current `package.json`.
 
 ## When an install fails
 
