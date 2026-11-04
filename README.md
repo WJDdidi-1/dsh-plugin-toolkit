@@ -681,6 +681,12 @@ Honest list, so nobody plans around a feature that does not exist:
 - **`dev --host` is not covered by CI.** The unit tests use a synthetic event stream; the live path is exercised by hand against a running app, on macOS only.
 - **No Windows testing of the `dev` file watcher.** The Windows CI job runs the whole suite, but the watcher is only asserted against a temp directory, not a real profile.
 
+## Changelog
+
+[`CHANGELOG.md`](CHANGELOG.md) lists what changed in each release, including
+the `0.16.0` repair loop: `doctor --fix`, `audit --remote --json`, and the
+repair guide.
+
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).
