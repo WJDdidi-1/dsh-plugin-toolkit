@@ -419,21 +419,29 @@ at a time, the timing the command had before batching. The output — and the
 sequential run produced, so a diff between two runs compares repositories rather
 than scheduling.
 
-Each repository gets one line with its verdict — `clean`, `failing`, or
-`unreadable` — and the run ends with a counted summary:
+When GitHub answers `403` or `429`, the shared quota is gone, so the batch stops
+starting new repositories and marks every entry it could not read as
+`rate-limited` instead of `clean` or `unreadable`. If the response carries
+`x-ratelimit-reset` (or `retry-after`), the reset time is printed with the
+verdict, and the remaining entries are reported without another request.
+
+Each repository gets one line with its verdict — `clean`, `failing`,
+`unreadable`, or `rate-limited` — and the run ends with a counted summary:
 
 ```text
-clean       demo/plugin  1.2.3 (host >=0.2.0)
-failing     demo/broken  — engines.dsh: engines.dsh is missing, so a host that enforces the range rejects the install as "incompatible with dsh"
-unreadable  demo/blocked — GitHub rate-limited this request (403) for package.json; set GH_TOKEN or GITHUB_TOKEN to raise the limit
+clean         demo/plugin  1.2.3 (host >=0.2.0)
+failing       demo/broken  — engines.dsh: engines.dsh is missing, so a host that enforces the range rejects the install as "incompatible with dsh"
+rate-limited  demo/blocked — GitHub rate-limited this request (403) for package.json; set GH_TOKEN or GITHUB_TOKEN to raise the limit; the limit resets at 2026-11-04T20:00:00.000Z
+rate-limited  demo/next    — GitHub rate-limited the batch before this repository was read, so it was not requested; the limit resets at 2026-11-04T20:00:00.000Z
 
-summary: 3 repositories — 1 clean, 1 failing (1 problem), 1 unreadable
+summary: 4 repositories — 1 clean, 1 failing (1 problem), 0 unreadable, 2 rate-limited
 ```
 
-The command exits `1` when any repository is failing or unreadable, and `0` only
-when every repository in the list is clean. `--from` also accepts the JSON
-evidence shape (an array, or an object with `rows`) that the old shell loop
-printed, so an existing audit file can be replayed without rewriting it.
+The command exits `1` when any repository is failing, unreadable, or
+rate-limited, and `0` only when every repository in the list is clean. `--from`
+also accepts the JSON evidence shape (an array, or an object with `rows`) that
+the old shell loop printed, so an existing audit file can be replayed without
+rewriting it.
 
 For a CI job or a repair sweep, add `--json`:
 
@@ -465,9 +473,11 @@ $ dsh-plugin audit --remote --from repos.txt --json
 
 Every repository produces one object with `target`, `version`, `hostRange`,
 `failures` (`{ check, message }`) and `notes`, and the command exits `1` when any
-repository has a problem. A read GitHub refused (a `403`/`429` rate limit, a
-network error) is printed in `notes` and still exits `1`: a repository the tool
-could not read is never reported as clean. Packages that build before they pack
+repository has a problem. A rate-limited repository adds `rateLimited: true`
+and a `rateLimit` object with the HTTP `status` and, when GitHub sent one,
+`resetAt`; it is not marked `unreadable`. A network error is printed in `notes`
+and still exits `1`: a repository the tool could not read is never reported as
+clean. Packages that build before they pack
 keep their file-level checks in `notes` as before.
 
 When the list is a repair queue rather than a report, add `--patch-dir`:

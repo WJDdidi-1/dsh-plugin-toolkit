@@ -1,5 +1,12 @@
 ## Unreleased
 
+- **A rate-limited batch audit stops and says so.** When GitHub answers `403`
+  or `429` for any read, the audit stops starting new repositories and reports
+  every entry it could not read as `rate-limited`, never as `clean` or
+  `unreadable`. The reset time from `x-ratelimit-reset` (or `retry-after`) is
+  printed in the verdict, `--json` findings carry `rateLimited: true` with a
+  `rateLimit` object, and the summary counts them separately, so one exhausted
+  quota no longer spends the rest of the list on identical failures.
 - **`dsh-plugin audit --remote --from <file> --jobs <n>` reads several
   repositories at once.** The default is four, the hard ceiling is eight, and a
   value above the ceiling is capped rather than turned into a burst of GitHub

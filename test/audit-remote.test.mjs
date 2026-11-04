@@ -108,7 +108,7 @@ test('audit --remote --json exits 0 when every repository is clean', async () =>
   ]);
 });
 
-test('a rate-limited read is a note and an unreadable repository, never a false pass', async () => {
+test('a rate-limited read is a note and a rate-limited repository, never a false pass', async () => {
   const io = recorder();
   const code = await run(['audit', '--remote', 'demo/clean,demo/blocked', '--json'], io, {
     fetchImpl: github({ 'demo/clean': cleanFiles, 'demo/blocked': 'rate-limit' }),
@@ -118,6 +118,8 @@ test('a rate-limited read is a note and an unreadable repository, never a false 
   const reports = JSON.parse(io.lines.join('\n'));
   const blocked = reports.find((report) => report.target === 'demo/blocked');
   assert.deepEqual(blocked.failures, []);
+  assert.equal(blocked.unreadable, undefined);
+  assert.equal(blocked.rateLimited, true);
   assert.equal(blocked.notes.some((note) => /rate-limited/u.test(note)), true);
   assert.equal(blocked.notes.some((note) => /GH_TOKEN/u.test(note)), true);
 });
@@ -127,9 +129,12 @@ test('a read error becomes a note in the library report as well', async () => {
     fetchImpl: github({ 'demo/blocked': 'rate-limit' }),
     readErrors: 'note',
   });
-  assert.equal(report.unreadable, true);
+  assert.equal(report.rateLimited, true);
+  assert.equal(report.unreadable, false);
   assert.deepEqual(report.failures, []);
   const finding = remoteFinding(report);
+  assert.equal(finding.unreadable, undefined);
+  assert.equal(finding.rateLimited, true);
   assert.equal(finding.notes.some((note) => /rate-limited/u.test(note)), true);
 });
 

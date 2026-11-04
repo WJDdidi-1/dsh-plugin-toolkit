@@ -121,7 +121,7 @@ test('creates the patch directory and skips every repository with nothing to fix
   assert.match(io.lines.join('\n'), /0 patches written/u);
 });
 
-test('an unreadable repository gets no patch because there is nothing safe to repair', async (t) => {
+test('a rate-limited repository gets no patch because there is nothing safe to repair', async (t) => {
   const list = listFile(t, 'demo/blocked\n');
   const patchDir = path.join(workspace(t), 'blocked', 'patches');
   const { fetchImpl, calls } = github({ 'demo/blocked': 'rate-limit' });
@@ -131,7 +131,7 @@ test('an unreadable repository gets no patch because there is nothing safe to re
 
   assert.equal(code, 1);
   assert.deepEqual(fs.readdirSync(patchDir), []);
-  assert.match(io.lines.join('\n'), /unreadable\s+demo\/blocked/u);
+  assert.match(io.lines.join('\n'), /rate-limited\s+demo\/blocked/u);
   assert.deepEqual([...new Set(calls.map((call) => call.method))], ['GET']);
 });
 
