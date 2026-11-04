@@ -1,4 +1,4 @@
-## Unreleased
+## 0.16.0
 
 - **`dsh-plugin doctor --fix <dir>` turns the failing checks into a repair
   plan.** It prints one line per failed check naming the file and the edit it
