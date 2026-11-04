@@ -10,6 +10,13 @@
   unreadable instead of being counted as a pass, and the same `--from` accepts
   the JSON evidence shape (an array, or an object with `rows`) that the old
   shell loop printed.
+- **`dsh-plugin audit --remote --from <file> --patch-dir <dir>` writes the
+  repairs, one file per repository.** The directory is created even when there
+  is nothing to fix, each patch is named `owner__repo.patch`, and only a
+  repository with a failing `engines.dsh` gets a file; clean and unreadable
+  repositories leave none. The diff is the one `fix --remote --patch` would
+  write, it reuses the `package.json` the audit already read, and the remote is
+  still read-only. `--force` replaces an existing patch.
 
 ## 0.17.0
 
