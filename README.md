@@ -961,7 +961,10 @@ Honest list, so nobody plans around a feature that does not exist:
 ## Changelog
 
 [`CHANGELOG.md`](CHANGELOG.md) lists what changed in each release, including
-the `0.20.0` compatibility answer: `audit --remote --host` says whether a
+the `0.20.1` scaffold fix: `init --title` escapes the title in every generated
+JavaScript file, so an apostrophe or regular-expression character no longer
+leaves a scaffold that fails `node --check` or its own `npm test`. The `0.20.0`
+compatibility answer is there too: `audit --remote --host` says whether a
 plugin installs on the DSH you run, `fix --host` aims the repair at that host,
 and `npm run benchmark` works from the published tarball as well as from a
 checkout.
