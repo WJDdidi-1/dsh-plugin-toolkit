@@ -443,6 +443,35 @@ also accepts the JSON evidence shape (an array, or an object with `rows`) that
 the old shell loop printed, so an existing audit file can be replayed without
 rewriting it.
 
+### Measured throughput
+
+The measurement uses the first eight repositories from the 3 November
+install-failure list — `610la/dsh-notification-center`,
+`Anionex/dsh-vision-toolkit`, `ChongCyrus/Vibe-Mathematics`,
+`CrazyShout/dsh-ssh-remote`, `Ebony-Vinyl/dsh-our-free-model`,
+`FSMargoo/dsh-at-file`, `FylarOpen/dsh-fylar-office-editor` and
+`GraySilver/dsh-evolve-modes` — served from memory with a fixed 500 ms delay on
+every API request. That makes the number reproducible on any host: it measures
+the batch's scheduling, not GitHub's mood. Reproduce it with:
+
+```sh
+$ npm run benchmark
+```
+
+(`node scripts/benchmark-audit.mjs` runs the same harness without npm's banner.)
+It runs the same list twice: `--jobs 1`, which is the loop the command used
+before batching, and the default `--jobs 4`. Measured on this host:
+
+| run | wall clock | seconds per repository |
+| --- | --- | --- |
+| before (`--jobs 1`) | 8.03 s | 1.003 s |
+| after (default `--jobs 4`) | 2.01 s | 0.251 s |
+
+The after run keeps four reads in flight, so eight repositories finish in two
+waves and the per-repository cost falls from about 1.00 s to about 0.25 s. The
+test suite reads this table and fails if the after number no longer matches the
+default `--jobs` value, so changing the default cannot leave the claim behind.
+
 For a CI job or a repair sweep, add `--json`:
 
 ```sh

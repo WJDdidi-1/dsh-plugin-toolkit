@@ -14,6 +14,13 @@
   matches the sequential run; `--jobs 1` restores the old one-at-a-time timing.
   A non-numeric, zero or missing value is refused with exit `2` instead of
   quietly becoming the default.
+- **The README records the measured batch throughput.** The first eight
+  repositories from the 3 November install-failure list are replayed through a
+  fixed-latency harness, so the measurement is reproducible instead of
+  depending on GitHub's response time: 1.003 s per repository with `--jobs 1`
+  and 0.251 s with the default `--jobs 4`. `npm run benchmark` runs the same
+  list again, and a test reads the README table to keep it tied to the default
+  `--jobs` value.
 
 ## 0.18.1
 
