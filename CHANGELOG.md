@@ -1,3 +1,21 @@
+## 0.17.0
+
+- **`dsh-plugin fix <owner>/<repo> --remote` prints the `engines.dsh` repair
+  for a repository you have not cloned.** It reads `package.json` through the
+  GitHub API and shows the edit the local fixer would make as a unified diff;
+  the only GitHub request is a read-only GET, and nothing is written. The
+  target may come before or after `--remote`, and `--write` is refused because
+  the repository is remote.
+- **`dsh-plugin fix <owner>/<repo> --remote --patch <file>` saves that diff for
+  a checkout.** Parent directories are created, the printed path names where
+  it landed, and an existing file is left alone unless `--force` is passed.
+  `--dry-run` reports the path without writing it. The repository itself is
+  still never modified.
+- **The README documents the remote repair loop.** A new *Repair a repository
+  you have not cloned* section walks from `doctor --remote` through
+  `fix --remote`, `--patch`, `git apply --check` and `doctor .`; `docs/repair.md`
+  links the same flow.
+
 ## 0.16.0
 
 - **`dsh-plugin doctor --fix <dir>` turns the failing checks into a repair
