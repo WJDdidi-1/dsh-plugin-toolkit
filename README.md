@@ -475,6 +475,57 @@ repository whose `engines.dsh` check fails, with the same diff `fix --remote
 the tool cannot make automatically are skipped. The repository itself is still
 only read, and `--force` replaces a patch that is already there.
 
+### The 3 November list
+
+The install-failure audit that started this tool covers 67 repositories. Its
+list is checked in as
+[`docs/ecosystem-audit-2026-11-03.txt`](https://github.com/WJDdidi-1/dsh-plugin-toolkit/blob/main/docs/ecosystem-audit-2026-11-03.txt),
+one `owner/repo` per line. One command audits all of it and leaves the repairs
+in `/tmp/repairs`:
+
+```sh
+$ dsh-plugin audit --remote --from docs/ecosystem-audit-2026-11-03.txt --patch-dir /tmp/repairs
+```
+
+A real run. The rows in the middle are elided; the summary is exactly what the
+command printed:
+
+```text
+failing     610la/dsh-notification-center  — engines.dsh: engines.dsh is missing, so a host that enforces the range rejects the install as "incompatible with dsh"; declare the range you support, e.g. "engines": { "dsh": ">=0.2.0" }
+failing     Anionex/dsh-vision-toolkit  — engines.dsh: engines.dsh is missing, so a host that enforces the range rejects the install as "incompatible with dsh"; declare the range you support, e.g. "engines": { "dsh": ">=0.2.0" }
+...
+clean       HERO476/dsh-sidecard-ask  2.1.11 (host >=0.1.2-rc.1 <0.3.0)
+...
+summary: 67 repositories — 7 clean, 60 failing (60 problems), 0 unreadable
+58 patches written to /tmp/repairs
+```
+
+The exit code is `1` because 60 of the 67 still need an edit. The evidence file
+the list came from was written on 3 November with 6 clean and 59 missing
+`engines.dsh`; one repository has since added the field, which is why this run
+shows 7 clean and 58 missing. Two repositories no longer have a root
+`package.json`, so the tool reports that instead of guessing at a repair.
+
+Each patch file is named after the repository, so the one for
+`PrismLean/dsh-run-guard` is
+`/tmp/repairs/PrismLean__dsh-run-guard.patch`. To apply it, clone the
+repository and apply the file in the checkout:
+
+```sh
+$ git clone https://github.com/PrismLean/dsh-run-guard /tmp/dsh-run-guard
+$ cd /tmp/dsh-run-guard
+$ git apply --check /tmp/repairs/PrismLean__dsh-run-guard.patch
+$ git apply /tmp/repairs/PrismLean__dsh-run-guard.patch
+$ npx dsh-plugin-toolkit@latest doctor .
+```
+
+`git apply --check` is the dry run; it changes nothing and exits non-zero before
+writing if `package.json` moved since the audit. If that happens, run `fix
+<owner>/<repo> --remote --patch` to regenerate the diff from the current
+default branch. [Repair a repository you have not
+cloned](#repair-a-repository-you-have-not-cloned) below shows the same loop with
+the diff in the terminal.
+
 ## What `doctor` checks
 
 | Check | Why it matters |

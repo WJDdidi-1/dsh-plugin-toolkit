@@ -17,6 +17,11 @@
   repositories leave none. The diff is the one `fix --remote --patch` would
   write, it reuses the `package.json` the audit already read, and the remote is
   still read-only. `--force` replaces an existing patch.
+- **The README shows the batch audit on the 3 November install-failure list.**
+  The list itself is checked in at `docs/ecosystem-audit-2026-11-03.txt`; the
+  README runs one command over it, pastes the real per-repository output and
+  summary, and shows a maintainer how to clone one of the named repositories
+  and apply its generated patch with `git apply --check` and `git apply`.
 
 ## 0.17.0
 
