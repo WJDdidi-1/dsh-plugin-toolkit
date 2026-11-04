@@ -11,6 +11,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { run } from '../lib/cli.mjs';
 import { doctor } from '../lib/doctor.mjs';
 import { init } from '../lib/init.mjs';
 import { mountClient } from '../lib/testkit/index.mjs';
@@ -66,6 +67,30 @@ test('a title with an apostrophe or regex metacharacter still parses, in every g
 
   const panel = await mountClient({ file: path.join(dir, 'client.js') });
   assert.match(panel.text(), /Bob's \(panel\)\?/);
+  await panel.unmount();
+});
+
+test('init --title "Bob\'s panel" writes JavaScript that parses and a client that mounts', async () => {
+  const dir = path.join(scratch(), 'plugin');
+  const io = {
+    lines: [],
+    log(line) {
+      this.lines.push(String(line));
+    },
+    error(line) {
+      this.lines.push(String(line));
+    },
+  };
+  const code = await run(['init', dir, '--name', 'quoted-panel', '--title', "Bob's panel"], io);
+  assert.equal(code, 0, io.lines.join('\n'));
+
+  for (const relative of ['client.js', 'test/panel.test.mjs']) {
+    const checked = spawnSync(process.execPath, ['--check', path.join(dir, relative)], { encoding: 'utf8' });
+    assert.equal(checked.status, 0, `${relative} does not parse:\n${checked.stderr}`);
+  }
+
+  const panel = await mountClient({ file: path.join(dir, 'client.js') });
+  assert.match(panel.text(), /Bob's panel/);
   await panel.unmount();
 });
 
