@@ -1,0 +1,68 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+
+import { expandHome } from '../lib/remote.mjs';
+
+const HOME = '/home/someone';
+
+test('a leading ~ expands to the home directory', () => {
+  assert.equal(expandHome('~/repair.patch', HOME), '/home/someone/repair.patch');
+  assert.equal(expandHome('~/a/b/c.patch', HOME), '/home/someone/a/b/c.patch');
+});
+
+test('a windows-style leading ~ backslash expands too, because cmd leaves it alone', () => {
+  assert.equal(expandHome('~\\repair.patch', HOME), '/home/someone/repair.patch');
+  assert.equal(expandHome('~\\patches\\x.patch', HOME), '/home/someone/patches/x.patch');
+});
+
+test('a bare ~ is the home directory itself', () => {
+  assert.equal(expandHome('~', HOME), HOME);
+});
+
+test('paths without a leading tilde are left exactly as written', () => {
+  assert.equal(expandHome('/abs/x.patch', HOME), '/abs/x.patch');
+  assert.equal(expandHome('rel/x.patch', HOME), 'rel/x.patch');
+  assert.equal(expandHome('./~/x.patch', HOME), './~/x.patch');
+  assert.equal(expandHome('~someone/x.patch', HOME), '~someone/x.patch');
+  assert.equal(expandHome('', HOME), '');
+});
+
+test('surrounding whitespace from a pasted path is dropped', () => {
+  assert.equal(expandHome('  ~/x.patch  ', HOME), '/home/someone/x.patch');
+});
+
+test('a patch written to ~/ lands in the home directory, not in a literal ~ folder', async () => {
+  const fs = await import('node:fs');
+  const os = await import('node:os');
+  const path = await import('node:path');
+  const { fixRemote } = await import('../lib/remote.mjs');
+
+  const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-home-'));
+  const previous = process.env.HOME;
+  process.env.HOME = scratch;
+  try {
+    const text = JSON.stringify({ name: 'p', version: '1.0.0' });
+    // The GitHub contents API answers with the file base64-encoded.
+    const fakeFetch = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ content: Buffer.from(text, 'utf8').toString('base64'), encoding: 'base64' }),
+      text: async () => text,
+    });
+    const result = await fixRemote('owner/repo', {
+      fetchImpl: fakeFetch,
+      token: 'x',
+      patch: '~/repair.patch',
+      writePatch: true,
+    });
+    assert.equal(result.patchPath, path.join(scratch, 'repair.patch'));
+    assert.equal(fs.existsSync(path.join(scratch, 'repair.patch')), true);
+    assert.equal(fs.existsSync(path.join(process.cwd(), '~')), false);
+  } finally {
+    if (previous === undefined) {
+      delete process.env.HOME;
+    } else {
+      process.env.HOME = previous;
+    }
+  }
+});
