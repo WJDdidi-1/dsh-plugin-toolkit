@@ -412,6 +412,13 @@ pass it with `--from` (`-` reads standard input):
 $ dsh-plugin audit --remote --from repos.txt
 ```
 
+Repositories are read four at a time by default. `--jobs N` changes that width;
+values above `8` are capped at `8`, and `--jobs 1` walks the list one repository
+at a time, the timing the command had before batching. The output — and the
+`--json` array — still follows the input list, and every verdict is the one the
+sequential run produced, so a diff between two runs compares repositories rather
+than scheduling.
+
 Each repository gets one line with its verdict — `clean`, `failing`, or
 `unreadable` — and the run ends with a counted summary:
 

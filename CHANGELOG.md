@@ -1,3 +1,13 @@
+## Unreleased
+
+- **`dsh-plugin audit --remote --from <file> --jobs <n>` reads several
+  repositories at once.** The default is four, the hard ceiling is eight, and a
+  value above the ceiling is capped rather than turned into a burst of GitHub
+  requests. Output and `--json` findings keep the input order, and every verdict
+  matches the sequential run; `--jobs 1` restores the old one-at-a-time timing.
+  A non-numeric, zero or missing value is refused with exit `2` instead of
+  quietly becoming the default.
+
 ## 0.18.1
 
 - **A `~` at the start of `--patch`, `--patch-dir` or `--from` expands to your
