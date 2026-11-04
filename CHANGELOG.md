@@ -1,3 +1,14 @@
+## 0.18.1
+
+- **A `~` at the start of `--patch`, `--patch-dir` or `--from` expands to your
+  home directory.** The documented example is `--patch ~/repair.patch`, and on
+  Windows `cmd`/PowerShell leave the tilde alone, so the file was written to a
+  directory literally named `~` inside the current working directory. Both
+  `~/x` and the Windows spelling `~\x` now resolve to the same place, `~` on
+  its own is the home directory, and paths without a leading tilde are left
+  exactly as written. Found while auditing the batch commands on a Windows
+  shell; the tests cover both separator spellings.
+
 ## 0.18.0
 
 - **`dsh-plugin audit --remote --from <file>` audits the whole list at once.**
