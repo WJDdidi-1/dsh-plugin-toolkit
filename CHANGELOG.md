@@ -1,4 +1,4 @@
-## Unreleased
+## 0.16.0
 
 - **`dsh-plugin doctor --fix <dir>` turns the failing checks into a repair
   plan.** It prints one line per failed check naming the file and the edit it
@@ -17,6 +17,14 @@
   `1`, so a repository the tool could not read is never mistaken for a clean
   one. `--remote` also accepts repeated flags, and without `--json` the same
   findings print as the human lines `doctor --remote` already uses.
+- **`docs/repair.md` is a repair guide with one section per `doctor` check.** It
+  shows the exact line each check prints, what the check protects and the
+  smallest edit that clears it, and the README links it from *When an install
+  fails*. The loop starts with `doctor --fix . --write` for the automatic
+  `engines.dsh` edit and ends when `doctor` exits `0`.
+- **The README now says where a write can come from.** `doctor` on its own stays
+  read-only and its checks are unchanged; `fix` and `doctor --fix` change the
+  manifest only when `--write` is passed.
 
 ## 0.15.0
 
