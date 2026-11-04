@@ -25,6 +25,8 @@
 - **The README now says where a write can come from.** `doctor` on its own stays
   read-only and its checks are unchanged; `fix` and `doctor --fix` change the
   manifest only when `--write` is passed.
+- **Published as `dsh-plugin-toolkit@0.16.0`.** The release tag is
+  `plugin-v0.16.0`, and the registry serves that version.
 
 ## 0.15.0
 
