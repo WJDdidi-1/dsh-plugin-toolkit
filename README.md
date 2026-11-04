@@ -425,15 +425,34 @@ starting new repositories and marks every entry it could not read as
 `x-ratelimit-reset` (or `retry-after`), the reset time is printed with the
 verdict, and the remaining entries are reported without another request.
 
-### Will it install on the host I run?
+### Will this plugin install on my DSH?
 
-The compatibility reports all end with the same question. Add `--host
-<version>` to a remote audit and it answers that question for one repository:
+The seven compatibility reports all end with the same question. Add `--host
+<version>` to a remote audit and it answers that question for one repository.
+This is a real run against `L3n3L/dsh-resume`, a plugin whose declared range
+stops before DSH 0.2.0, checked against the `0.2.2-alpha.3` canary from the
+reports:
 
 ```sh
-$ dsh-plugin audit --remote demo/plugin --host 0.3.0
-clean  demo/plugin  1.2.3 (host >=0.2.0) [compatible with dsh 0.3.0; declares ">=0.2.0"]
+$ dsh-plugin audit --remote L3n3L/dsh-resume --host 0.2.2-alpha.3
+incompatible  L3n3L/dsh-resume  0.1.3 (host >=0.1.0-rc.6 <0.2.0-0) [incompatible with dsh 0.2.2-alpha.3; declares ">=0.1.0-rc.6 <0.2.0-0"]
+
+summary: 1 repository — 0 clean, 1 failing (1 problem), 0 unreadable, 0 rate-limited
 ```
+
+The verdict comes first: `incompatible` means the range in `package.json` does
+not accept the host, so the installer rejects the plugin before it unpacks it.
+This run exits `1`. The same answer is reproducible without a GitHub request —
+the manifest is checked in under `examples/compatibility-sample/`, and this
+command feeds it through the real CLI path:
+
+```sh
+$ node scripts/compatibility-sample.mjs
+```
+
+(`npm run compatibility` runs the same script.) The test suite runs that
+command and compares its output with the block above, so the sample cannot
+drift from the formatter or from the README.
 
 The line carries the range `package.json` declares and one of `compatible`,
 `incompatible`, or `unknown` against that host version. `unknown` is the honest
@@ -443,8 +462,15 @@ range that excludes the host is `incompatible`, counted as failing, and exits
 whole list:
 
 ```sh
-$ dsh-plugin audit --remote --from repos.txt --host 0.3.0
+$ dsh-plugin audit --remote --from repos.txt --host 0.2.2-alpha.3
 ```
+
+The compatibility flags are `--remote <owner/repo>` for one repository,
+`--from <file>` for a list (`-` reads standard input), `--host <version>` for
+the DSH version to compare against, and `--json` for the machine-readable
+finding. `--jobs <n>` sets the batch width, and `--patch-dir <dir>` writes the
+host-targeted repair for each repository that needs one. The help text lists
+the same flags; a test fails if this section names a flag the CLI does not have.
 
 `--host` still names the running app URL for a local `audit`; on `--remote` it
 is the DSH version to compare against. With `--json`, each finding gains

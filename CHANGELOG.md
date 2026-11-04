@@ -1,5 +1,13 @@
 ## Unreleased
 
+- **The README answers "will this plugin install on my DSH?" with a real
+  incompatible plugin and its real output.** The new section runs
+  `audit --remote L3n3L/dsh-resume --host 0.2.2-alpha.3`, shows the
+  `incompatible` verdict and the range that caused it, and points at
+  `scripts/compatibility-sample.mjs`, which replays the checked-in manifest
+  through the same CLI path without a GitHub request. A test compares that
+  output with the README and fails if the section names a flag the CLI does not
+  document.
 - **The tarball ships the throughput benchmark the README cites.**
   `scripts/benchmark-audit.mjs` and the 3 November list it reads are now in
   `files`, so `npm run benchmark` runs in an installed copy instead of exiting
