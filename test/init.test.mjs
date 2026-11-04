@@ -4,6 +4,7 @@
  * output instead of trusting the template.
  */
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -50,6 +51,21 @@ test('the scaffolded client bundle renders without a browser', async () => {
   assert.match(panel.text(), /My panel/);
   await panel.click('button');
   assert.match(panel.text(), /Clicks: 1/);
+  await panel.unmount();
+});
+
+test('a title with an apostrophe or regex metacharacter still parses, in every generated JavaScript file', async () => {
+  const dir = path.join(scratch(), 'plugin');
+  const title = "Bob's (panel)?";
+  assert.equal(init({ dir, name: 'quoted-panel', title }).ok, true);
+
+  for (const relative of ['client.js', 'test/panel.test.mjs']) {
+    const checked = spawnSync(process.execPath, ['--check', path.join(dir, relative)], { encoding: 'utf8' });
+    assert.equal(checked.status, 0, `${relative} does not parse:\n${checked.stderr}`);
+  }
+
+  const panel = await mountClient({ file: path.join(dir, 'client.js') });
+  assert.match(panel.text(), /Bob's \(panel\)\?/);
   await panel.unmount();
 });
 

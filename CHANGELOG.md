@@ -1,5 +1,10 @@
 ## 0.20.0
 
+- **`dsh-plugin init --title` escapes the title in every generated JavaScript
+  file.** An apostrophe, backslash, newline or regular-expression character no
+  longer breaks the scaffold: `init --title "Bob's panel"` writes a `client.js`
+  and `test/panel.test.mjs` that pass `node --check`, and the scaffold's own
+  `npm test` passes.
 - **The README answers "will this plugin install on my DSH?" with a real
   incompatible plugin and its real output.** The new section runs
   `audit --remote L3n3L/dsh-resume --host 0.2.2-alpha.3`, shows the
