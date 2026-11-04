@@ -425,6 +425,31 @@ starting new repositories and marks every entry it could not read as
 `x-ratelimit-reset` (or `retry-after`), the reset time is printed with the
 verdict, and the remaining entries are reported without another request.
 
+### Will it install on the host I run?
+
+The compatibility reports all end with the same question. Add `--host
+<version>` to a remote audit and it answers that question for one repository:
+
+```sh
+$ dsh-plugin audit --remote demo/plugin --host 0.3.0
+clean  demo/plugin  1.2.3 (host >=0.2.0) [compatible with dsh 0.3.0; declares ">=0.2.0"]
+```
+
+The line carries the range `package.json` declares and one of `compatible`,
+`incompatible`, or `unknown` against that host version. `unknown` is the honest
+answer for a missing or malformed range — there is nothing to compare — while a
+range that excludes the host is `incompatible`, counted as failing, and exits
+`1`. The same flag works in the batch mode, so one `--from` run answers the
+whole list:
+
+```sh
+$ dsh-plugin audit --remote --from repos.txt --host 0.3.0
+```
+
+`--host` still names the running app URL for a local `audit`; on `--remote` it
+is the DSH version to compare against. With `--json`, each finding gains
+`host` and `compatibility` beside `hostRange`.
+
 Each repository gets one line with its verdict — `clean`, `failing`,
 `unreadable`, or `rate-limited` — and the run ends with a counted summary:
 
@@ -502,7 +527,8 @@ $ dsh-plugin audit --remote --from repos.txt --json
 
 Every repository produces one object with `target`, `version`, `hostRange`,
 `failures` (`{ check, message }`) and `notes`, and the command exits `1` when any
-repository has a problem. A rate-limited repository adds `rateLimited: true`
+repository has a problem. With `--host <version>` each object also carries
+`host` and `compatibility`. A rate-limited repository adds `rateLimited: true`
 and a `rateLimit` object with the HTTP `status` and, when GitHub sent one,
 `resetAt`; it is not marked `unreadable`. A network error is printed in `notes`
 and still exits `1`: a repository the tool could not read is never reported as
