@@ -965,7 +965,10 @@ Honest list, so nobody plans around a feature that does not exist:
 ## Changelog
 
 [`CHANGELOG.md`](CHANGELOG.md) lists what changed in each release, including
-the `0.20.3` host-range check: `doctor` now uses the package's own semver
+the `0.20.4` fix: `verify` deletes its scratch install directory in a
+`finally`, so a passing run and one that stops at install or mount no longer
+leave a `dsh-plugin-verify-*` tree under `TMPDIR`. The `0.20.3` host-range
+check is recorded too: `doctor` now uses the package's own semver
 parser, so an `engines.dsh` value such as `>=banana` or a complete pin such as
 `0.2.0` fails with a clear "not a semver range" message while partial, wildcard
 and multi-comparator ranges still pass; `index`, `fix --engines` and
