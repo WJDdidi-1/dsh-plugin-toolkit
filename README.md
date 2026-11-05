@@ -965,7 +965,11 @@ Honest list, so nobody plans around a feature that does not exist:
 ## Changelog
 
 [`CHANGELOG.md`](CHANGELOG.md) lists what changed in each release, including
-the `0.20.4` fix: `verify` deletes its scratch install directory in a
+the `0.20.5` fixes: `doctor` reads a `package.json` saved with a UTF-8 BOM
+instead of failing with a bare `Unexpected token`, and `init --title` escapes a
+`/` in the generated `test/panel.test.mjs`, so a title like `Input/Output panel`
+leaves a scaffold that parses and passes its own `npm test`. The `0.20.4` fix
+is recorded too: `verify` deletes its scratch install directory in a
 `finally`, so a passing run and one that stops at install or mount no longer
 leave a `dsh-plugin-verify-*` tree under `TMPDIR`. The `0.20.3` host-range
 check is recorded too: `doctor` now uses the package's own semver
