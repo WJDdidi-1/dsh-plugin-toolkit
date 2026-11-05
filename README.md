@@ -965,8 +965,12 @@ Honest list, so nobody plans around a feature that does not exist:
 ## Changelog
 
 [`CHANGELOG.md`](CHANGELOG.md) lists what changed in each release, including
-the `0.20.6` fixes: `doctor` reads a `files` glob the way `npm pack` does, so a
-`"files": ["*.js"]` entry no longer hides a nested `exports["./client"]`, and
+the `0.20.7` fix: `release --budget` rejects a value that is not a positive
+number of seconds — `8m`, `0`, `-1` or a missing value — with exit `2` before
+any local or remote tag is created, instead of pushing the tag and then waiting.
+The `0.20.6` fixes are recorded too: `doctor` reads a `files` glob the way
+`npm pack` does, so a `"files": ["*.js"]` entry no longer hides a nested
+`exports["./client"]`, and
 `doctor --remote`/`audit --remote` apply the same files-list check instead of
 printing `clean`. The `0.20.5` fixes are recorded too: `doctor` reads a
 `package.json` saved with a UTF-8 BOM instead of failing with a bare
