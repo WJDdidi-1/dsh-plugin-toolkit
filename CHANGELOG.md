@@ -1,10 +1,13 @@
-## 0.20.3
+## 0.20.4
 
 - **`dsh-plugin verify` removes its scratch install directory.** The temporary
   directory used to pack and install the tarball is deleted in a `finally`, so a
   passing run and one that stops at install or mount no longer leave a
   `dsh-plugin-verify-*` tree under `TMPDIR`; repeated CI runs no longer fill the
   runner's disk.
+
+## 0.20.3
+
 - **`dsh-plugin doctor` reads `engines.dsh` with the package's own semver
   parser.** A malformed value such as `>=banana`, or a complete version pinned
   to one release such as `0.2.0`, is reported as "not a semver range" instead
