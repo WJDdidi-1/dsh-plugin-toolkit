@@ -1,3 +1,12 @@
+## 0.20.7
+
+- **`dsh-plugin release --budget` rejects a value that is not a positive
+  number of seconds.** `--budget 8m`, `--budget 0`, `--budget -1` and a
+  missing value now stop during flag parsing with `--budget needs a positive
+  number of seconds`, exit `2`, and create neither a local nor a remote tag,
+  instead of pushing the tag and then waiting on a nonsensical interval. A
+  positive value still reaches the registry wait.
+
 ## 0.20.6
 
 - **`dsh-plugin doctor` reads `files` globs the way `npm pack` does.** A
