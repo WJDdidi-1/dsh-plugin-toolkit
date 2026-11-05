@@ -961,8 +961,13 @@ Honest list, so nobody plans around a feature that does not exist:
 ## Changelog
 
 [`CHANGELOG.md`](CHANGELOG.md) lists what changed in each release, including
-the `0.20.2` packaging fixes: `init` quotes the package name in
-`cordis.patch.yml`, so a scoped name like `@me/my-panel` parses instead of
+the `0.20.3` host-range check: `doctor` now uses the package's own semver
+parser, so an `engines.dsh` value such as `>=banana` or a complete pin such as
+`0.2.0` fails with a clear "not a semver range" message while partial, wildcard
+and multi-comparator ranges still pass; `index`, `fix --engines` and
+`audit --remote` apply the same rule, so a bad range is caught before the tag.
+The `0.20.2` packaging fixes are recorded too: `init` quotes the package name
+in `cordis.patch.yml`, so a scoped name like `@me/my-panel` parses instead of
 failing on `id: @me/my-panel`, and `verify` recognizes the patch whether it is
 written with or without a leading `./`, so a tarball that omits it stops at
 `pack` and names `cordis.patch.yml` before installing a plugin that cannot
