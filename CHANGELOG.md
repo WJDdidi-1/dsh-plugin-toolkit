@@ -13,6 +13,10 @@
   entry. `audit --remote` keeps the parser's "not a semver range" message rather
   than calling every engine failure a missing field, and `fix --engines --range
   '>=banana' --write` refuses the value without touching `package.json`.
+- **The `audit --remote --from` summary counts failed checks instead of failing
+  repositories.** A repository that fails both `engines.dsh` and its client
+  declaration now prints `1 failing (2 problems)`, while a repository with one
+  failure still prints `(1 problem)`; the JSON finding shape is unchanged.
 
 ## 0.20.2
 

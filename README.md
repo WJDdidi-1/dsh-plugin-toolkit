@@ -488,6 +488,10 @@ rate-limited  demo/next    — GitHub rate-limited the batch before this reposit
 summary: 4 repositories — 1 clean, 1 failing (1 problem), 0 unreadable, 2 rate-limited
 ```
 
+The parenthesised count is the number of failed checks, not the number of failing
+repositories: one repository that fails both `engines.dsh` and its client
+declaration prints `1 failing (2 problems)`.
+
 The command exits `1` when any repository is failing, unreadable, or
 rate-limited, and `0` only when every repository in the list is clean. `--from`
 also accepts the JSON evidence shape (an array, or an object with `rows`) that

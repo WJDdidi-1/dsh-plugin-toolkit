@@ -34,6 +34,16 @@ const brokenFiles = {
   'package.json': JSON.stringify(manifest({ engines: undefined })),
 };
 
+const twoProblemFiles = {
+  ...cleanFiles,
+  'package.json': JSON.stringify(
+    manifest({
+      engines: undefined,
+      dsh: { bundle: { patch: 'cordis.patch.yml' }, client: { platform: 'web' } },
+    }),
+  ),
+};
+
 function github(repositories) {
   return async (url) => {
     const match = /^https:\/\/api\.github\.com\/repos\/([^/]+)\/([^/]+)\/contents\/([^?]+)/u.exec(url);
@@ -91,6 +101,21 @@ test('audit --remote --from exits 1 and names the failing repository', async (t)
   const output = io.lines.join('\n');
   assert.match(output, /failing\s+demo\/broken\s+— engines\.dsh:/u);
   assert.match(output, /1 clean, 1 failing \(1 problem\), 0 unreadable/u);
+});
+
+test('the summary counts failed checks rather than failing repositories', async (t) => {
+  const list = listFile('demo/two-problems\n');
+  t.after(list.cleanup);
+  const io = recorder();
+  const code = await run(['audit', '--remote', '--from', list.file], io, {
+    fetchImpl: github({ 'demo/two-problems': twoProblemFiles }),
+  });
+
+  assert.equal(code, 1);
+  const output = io.lines.join('\n');
+  assert.match(output, /failing\s+demo\/two-problems\s+— engines\.dsh:/u);
+  assert.match(output, /\(\+1 more\)/u);
+  assert.match(output, /summary: 1 repository — 0 clean, 1 failing \(2 problems\), 0 unreadable, 0 rate-limited/u);
 });
 
 test('audit --remote --from reports a rate-limited repository as rate-limited, never clean or unreadable', async (t) => {
