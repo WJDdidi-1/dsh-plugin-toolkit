@@ -1,3 +1,11 @@
+## Unreleased
+
+- **`dsh-plugin doctor` reads `files` globs the way `npm pack` does.** A
+  `"files": ["*.js"]` entry covers root-level JavaScript only, so a nested
+  `exports["./client"]` at `lib/client.js` now fails the files-list check with
+  that path named instead of passing `doctor` and disappearing from the tarball.
+  `lib/*.js`, `lib/*` and `lib/**` keep their npm meanings.
+
 ## 0.20.5
 
 - **`dsh-plugin doctor` reads a `package.json` saved with a UTF-8 BOM.**
