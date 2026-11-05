@@ -1,4 +1,4 @@
-## Unreleased
+## 0.20.6
 
 - **`dsh-plugin doctor` reads `files` globs the way `npm pack` does.** A
   `"files": ["*.js"]` entry covers root-level JavaScript only, so a nested
