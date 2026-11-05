@@ -67,3 +67,28 @@ test('doctor rejects a pinned or malformed engines.dsh, and accepts spans', () =
   assert.equal(checkHostRange({ engines: { dsh: '>=0.2.0' } }), null);
   assert.equal(checkHostRange({ engines: { dsh: '0.2.x' } }), null);
 });
+
+test('valid ranges keep their current verdict, including a two-sided span', () => {
+  for (const range of ['>=0.2.0', '>=0.3.0 <0.4.0']) {
+    assert.equal(hostRange({ engines: { dsh: range } }), range);
+    assert.equal(checkHostRange({ engines: { dsh: range } }), null);
+  }
+});
+
+test('a two-sided engines.dsh range keeps the good fixture doctor-clean', () => {
+  const dir = path.join(scratch(), 'plugin');
+  fs.cpSync(fixture('good'), dir, { recursive: true });
+
+  const manifestPath = path.join(dir, 'package.json');
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  manifest.engines.dsh = '>=0.3.0 <0.4.0';
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+
+  const readmePath = path.join(dir, 'README.md');
+  const readme = fs.readFileSync(readmePath, 'utf8').replace('>=0.2.0', '>=0.3.0 <0.4.0');
+  fs.writeFileSync(readmePath, readme);
+
+  const report = doctor(dir);
+  assert.deepEqual(report.failures, []);
+  assert.equal(report.notes.hostRange, '>=0.3.0 <0.4.0');
+});
