@@ -1,12 +1,21 @@
-## 0.20.2
+## 0.20.3
 
+- **`dsh-plugin doctor` reads `engines.dsh` with the package's own semver
+  parser.** A malformed value such as `>=banana`, or a complete version pinned
+  to one release such as `0.2.0`, is reported as "not a semver range" instead
+  of passing the check. Partial versions (`0.2`, `0.2.x`), wildcards and
+  multi-comparator ranges such as `>=0.3.0 <0.4.0` still name a span and keep
+  their previous verdict; the valid-range path is covered by a regression test.
 - **`dsh-plugin index` rejects a version whose `engines.dsh` is not a semver
-  range.** The market audit now applies `doctor`'s parser to every entry, so a
+  range.** The market audit now applies the same rule to every entry, so a
   malformed value such as `>=banana` and a pin such as `0.2.0` fail the command
   with exit `1` instead of printing `ok`; `buildEntry` refuses to create such an
   entry. `audit --remote` keeps the parser's "not a semver range" message rather
   than calling every engine failure a missing field, and `fix --engines --range
   '>=banana' --write` refuses the value without touching `package.json`.
+
+## 0.20.2
+
 - **`dsh-plugin init` writes a YAML-safe patch id.** A scoped package name such
   as `@me/my-panel` is quoted in `cordis.patch.yml`, so the file parses instead
   of failing on `id: @me/my-panel`; an id like `123` stays a string rather than
