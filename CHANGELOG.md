@@ -5,6 +5,10 @@
   `exports["./client"]` at `lib/client.js` now fails the files-list check with
   that path named instead of passing `doctor` and disappearing from the tarball.
   `lib/*.js`, `lib/*` and `lib/**` keep their npm meanings.
+- **The remote audit applies that same files-list check.** A repository whose
+  `"files": ["*.js"]` leaves its `exports["./client"]` out of the tarball now
+  produces a `files list` finding from `doctor --remote` and `audit --remote`,
+  and the audit exits 1 instead of printing `clean`.
 
 ## 0.20.5
 
