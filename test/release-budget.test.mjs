@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -9,6 +9,8 @@ import { fileURLToPath } from 'node:url';
 import { run } from '../lib/cli.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(here, '..');
+const CLI = path.join(ROOT, 'bin', 'dsh-plugin.mjs');
 const fixture = path.join(here, 'fixtures', 'good');
 
 function recorder() {
@@ -60,6 +62,28 @@ test('a missing --budget value is rejected too, instead of becoming NaN', async 
   assert.equal(code, 2, io.lines.join('\n'));
   assert.match(io.lines.join('\n'), /--budget needs a positive number of seconds/u);
   assert.deepEqual(tags(origin), []);
+});
+
+test('the CLI itself exits 2 and creates no tags for --budget 8m', () => {
+  // Spawn the real entry point instead of calling `run` in-process: a
+  // regression in bin/ or in a later refactor of the argument parser must not
+  // be able to turn the invalid budget back into a tag-and-poll release.
+  const { origin, repo } = releaseRepo();
+  const result = spawnSync(process.execPath, [CLI, 'release', repo, '--budget', '8m'], {
+    cwd: ROOT,
+    encoding: 'utf8',
+    // 0.19.0 pushed the tag and then waited forever, so a bounded run is what
+    // makes that regression fail quickly instead of hanging the suite.
+    timeout: 30_000,
+  });
+  assert.equal(
+    result.status,
+    2,
+    `CLI did not reject the budget before tagging (status ${result.status}, signal ${result.signal}, error ${result.error?.message ?? 'none'}):\n${result.stdout}\n${result.stderr}`,
+  );
+  assert.match(result.stderr, /--budget needs a positive number of seconds, got "8m"/u);
+  assert.deepEqual(tags(origin), []);
+  assert.deepEqual(tags(repo), []);
 });
 
 test('a positive --budget still reaches the registry wait', async () => {
