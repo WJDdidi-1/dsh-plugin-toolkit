@@ -5,7 +5,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { doctor, hostRange } from '../lib/doctor.mjs';
+import { checkHostRange, doctor, hostRange } from '../lib/doctor.mjs';
 import { init } from '../lib/init.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -59,4 +59,11 @@ test('a plugin without a bin has no root export problem', async () => {
   const dir = path.join(scratch(), 'plugin');
   init({ dir, name: 'plain-plugin' });
   assert.equal(doctor(dir).failures.some((entry) => entry.check === 'root export'), false);
+});
+
+test('doctor rejects a pinned or malformed engines.dsh, and accepts spans', () => {
+  assert.match(checkHostRange({ engines: { dsh: '>=banana' } }), /not a semver range/u);
+  assert.match(checkHostRange({ engines: { dsh: '0.2.0' } }), /not a semver range/u);
+  assert.equal(checkHostRange({ engines: { dsh: '>=0.2.0' } }), null);
+  assert.equal(checkHostRange({ engines: { dsh: '0.2.x' } }), null);
 });
