@@ -5,7 +5,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { checkHostRange, doctor, hostRange } from '../lib/doctor.mjs';
+import { checkHostRange, doctor, hostRange, rootEntry } from '../lib/doctor.mjs';
 import { init } from '../lib/init.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -86,6 +86,30 @@ test('a plugin without a bin has no root export problem', async () => {
   const dir = path.join(scratch(), 'plugin');
   init({ dir, name: 'plain-plugin' });
   assert.equal(doctor(dir).failures.some((entry) => entry.check === 'root export'), false);
+});
+
+test('the root export is resolved from a conditions object, not treated as absent', () => {
+  assert.equal(rootEntry({ exports: { '.': { import: './cli.mjs' } } }), 'cli.mjs');
+  assert.equal(rootEntry({ exports: { '.': { default: './index.js' } } }), 'index.js');
+  assert.equal(rootEntry({ exports: { '.': { require: './index.cjs' } } }), 'index.cjs');
+  assert.equal(rootEntry({ exports: { '.': { node: { import: './node.mjs' } } } }), 'node.mjs');
+  assert.equal(rootEntry({ exports: './shorthand.js' }), 'shorthand.js');
+  // The fallback still applies when there is no root export at all.
+  assert.equal(rootEntry({ main: 'main.js' }), 'main.js');
+  assert.equal(rootEntry({ exports: { './client': './client.js' } }), null);
+});
+
+test('a conditions-object root export that resolves to the CLI is refused and names the target', () => {
+  const report = doctor(fixture('root-export-conditions-cli'));
+  const failure = report.failures.find((entry) => entry.check === 'root export');
+  assert.ok(failure, JSON.stringify(report.failures));
+  assert.match(failure.message, /cli\.mjs/);
+  assert.match(failure.message, /does not export apply/);
+});
+
+test('a string root export that names a module exporting apply passes', () => {
+  const report = doctor(fixture('root-export-string-apply'));
+  assert.deepEqual(report.failures, []);
 });
 
 test('doctor rejects a pinned or malformed engines.dsh, and accepts spans', () => {

@@ -294,10 +294,11 @@ build; run it before `doctor`, or point both fields at a committed file. If only
 
 **What it means.** The loader starts a plugin by importing the bare package name
 and calling its `apply`. That module comes from `exports["."]` when it is a
-string, otherwise from `main`. If it is the CLI instead of the plugin half, the
-CLI runs or exports nothing and the row mounts nothing. If the module exists but
-does not export `apply`, the loader imports the package and still mounts
-nothing.
+string or a conditions object that resolves to one (for example
+`{ "import": "./index.js" }` or `{ "default": "./index.js" }`), otherwise from
+`main`. If it is the CLI instead of the plugin half, the CLI runs or exports
+nothing and the row mounts nothing. If the module exists but does not export
+`apply`, the loader imports the package and still mounts nothing.
 
 **What you see.**
 

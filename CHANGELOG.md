@@ -1,5 +1,11 @@
 ## 0.20.9
 
+- **`dsh-plugin doctor` and `verify --no-mount` resolve a root export written as
+  a conditions object.** `exports["."]` can be a string or a conditions object
+  such as `{ "import": "./cli.mjs" }`; the loader still imports that target. It
+  used to be treated as "no root export", so a plugin whose conditions object
+  resolved to a CLI with no `apply` passed both checks. The failure now names
+  the resolved file, and a string root that exports `apply` still passes.
 - **`dsh-plugin explain --log` covers the Windows spelling of `~` and keeps a
   missing log honest.** `~\.dsh\logs\install.log` expands the same way as
   `~/.dsh/logs/install.log`, so the documented command works in PowerShell and
