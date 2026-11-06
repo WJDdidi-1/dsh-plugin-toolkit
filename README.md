@@ -982,7 +982,12 @@ Honest list, so nobody plans around a feature that does not exist:
 ## Changelog
 
 [`CHANGELOG.md`](CHANGELOG.md) lists what changed in each release, including
-the `0.20.8` fixes: `release` resumes when `plugin-v<version>` already points at
+the `0.20.9` fix: `explain --log` expands the Windows spelling
+`~\.dsh\logs\install.log` exactly like `~/.dsh/logs/install.log`, so the
+documented command works in PowerShell and `cmd`, and a log that cannot be read
+exits `2` naming the resolved absolute path it tried instead of a directory
+literally named `~`. The `0.20.8` fixes are recorded too: `release` resumes when
+`plugin-v<version>` already points at
 HEAD — reusing the tag and continuing to the registry wait instead of failing —
 and refuses a tag at another commit, printing the tag, the commit it points at,
 HEAD and the exact `git tag -d` / `git push --delete` recovery commands. A
