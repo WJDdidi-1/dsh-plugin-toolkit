@@ -1,11 +1,15 @@
-## 0.20.9
+## 0.20.10
 
 - **`expectSnapshot()` writes the baseline when `UPDATE_SNAPSHOTS=1`.** The
   documented rerun now writes the normalised HTML and returns
   `{ status: "written" }` instead of failing with the same missing-baseline
   error. Without the variable, a missing or changed baseline still fails, so a
   snapshot is never written as a side effect of an ordinary test run.
-  `panel.snapshot()` shares the same contract.
+  `panel.snapshot()` shares the same contract and names the same flag when the
+  baseline is missing.
+
+## 0.20.9
+
 - **`dsh-plugin doctor` and `verify --no-mount` resolve a root export written as
   a conditions object.** `exports["."]` can be a string or a conditions object
   such as `{ "import": "./cli.mjs" }`; the loader still imports that target. It
