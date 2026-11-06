@@ -977,8 +977,14 @@ Honest list, so nobody plans around a feature that does not exist:
 ## Changelog
 
 [`CHANGELOG.md`](CHANGELOG.md) lists what changed in each release, including
-the `0.20.7` fix: `release --budget` rejects a value that is not a positive
-number of seconds — `8m`, `0`, `-1` or a missing value — with exit `2` before
+the `0.20.8` fixes: `release` resumes when `plugin-v<version>` already points at
+HEAD — reusing the tag and continuing to the registry wait instead of failing —
+and refuses a tag at another commit, printing the tag, the commit it points at,
+HEAD and the exact `git tag -d` / `git push --delete` recovery commands. A
+resume does not recreate the tag, so an index entry left by the aborted run does
+not block it. The `0.20.7` fix is recorded too: `release --budget` rejects a
+value that is not a positive number of seconds — `8m`, `0`, `-1` or a missing
+value — with exit `2` before
 any local or remote tag is created, instead of pushing the tag and then waiting.
 The `0.20.6` fixes are recorded too: `doctor` reads a `files` glob the way
 `npm pack` does, so a `"files": ["*.js"]` entry no longer hides a nested
