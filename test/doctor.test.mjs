@@ -99,12 +99,19 @@ test('the root export is resolved from a conditions object, not treated as absen
   assert.equal(rootEntry({ exports: { './client': './client.js' } }), null);
 });
 
-test('a conditions-object root export that resolves to the CLI is refused and names the target', () => {
-  const report = doctor(fixture('root-export-conditions-cli'));
-  const failure = report.failures.find((entry) => entry.check === 'root export');
-  assert.ok(failure, JSON.stringify(report.failures));
-  assert.match(failure.message, /cli\.mjs/);
-  assert.match(failure.message, /does not export apply/);
+test('a conditions-object root export is refused for import, default and require and names the target', () => {
+  const fixtures = [
+    ['import', 'root-export-conditions-cli'],
+    ['default', 'root-export-conditions-default-cli'],
+    ['require', 'root-export-conditions-require-cli'],
+  ];
+  for (const [condition, name] of fixtures) {
+    const report = doctor(fixture(name));
+    const failure = report.failures.find((entry) => entry.check === 'root export');
+    assert.ok(failure, `${condition}: ${JSON.stringify(report.failures)}`);
+    assert.match(failure.message, /cli\.mjs/, condition);
+    assert.match(failure.message, /does not export apply/, condition);
+  }
 });
 
 test('a string root export that names a module exporting apply passes', () => {

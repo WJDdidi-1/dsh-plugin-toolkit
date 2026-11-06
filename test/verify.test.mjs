@@ -285,21 +285,29 @@ test('the scaffold with the patch in files still exits 0 with --no-mount', async
   assert.match(output, /^ok  packed \d+ file\(s\)/m);
 });
 
-test('doctor and verify --no-mount both refuse a conditions-object root that resolves to the CLI', async () => {
-  const dir = path.join(root, 'test', 'fixtures', 'root-export-conditions-cli');
+const conditionalRootFixtures = [
+  ['import', 'root-export-conditions-cli'],
+  ['default', 'root-export-conditions-default-cli'],
+  ['require', 'root-export-conditions-require-cli'],
+];
 
-  const doctorIo = recorder();
-  assert.equal(await run(['doctor', dir], doctorIo), 1, doctorIo.lines.join('\n'));
-  const doctorOutput = doctorIo.lines.join('\n');
-  assert.match(doctorOutput, /root export: the root export cli\.mjs does not export apply/);
+for (const [condition, fixture] of conditionalRootFixtures) {
+  test(`doctor and verify --no-mount both refuse the ${condition} conditions-object root that resolves to the CLI`, async () => {
+    const dir = path.join(root, 'test', 'fixtures', fixture);
 
-  const verifyIo = recorder();
-  const code = await run(['verify', dir, '--no-mount'], verifyIo);
-  const verifyOutput = verifyIo.lines.join('\n');
-  assert.equal(code, 1, verifyOutput);
-  assert.match(verifyOutput, /stopped at doctor/);
-  assert.match(verifyOutput, /root export: the root export cli\.mjs does not export apply/);
-});
+    const doctorIo = recorder();
+    assert.equal(await run(['doctor', dir], doctorIo), 1, doctorIo.lines.join('\n'));
+    const doctorOutput = doctorIo.lines.join('\n');
+    assert.match(doctorOutput, /root export: the root export cli\.mjs does not export apply/);
+
+    const verifyIo = recorder();
+    const code = await run(['verify', dir, '--no-mount'], verifyIo);
+    const verifyOutput = verifyIo.lines.join('\n');
+    assert.equal(code, 1, verifyOutput);
+    assert.match(verifyOutput, /stopped at doctor/);
+    assert.match(verifyOutput, /root export: the root export cli\.mjs does not export apply/);
+  });
+}
 
 test('doctor and verify --no-mount both accept a string root export that names apply', async () => {
   const dir = path.join(root, 'test', 'fixtures', 'root-export-string-apply');
