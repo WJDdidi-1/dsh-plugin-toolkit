@@ -903,7 +903,7 @@ The install reports success and nothing shows up. In this order:
 `release` runs the sequence in the order that fails cheapest first:
 
 1. Preflight (`doctor`) — stop before tagging anything.
-2. Refuse to run on a dirty tree. If the tag already exists and points at the current commit, reuse it and resume; if it points somewhere else, stop.
+2. Refuse to run on a dirty tree. If the tag already exists and points at the current commit, reuse it and resume; if it points somewhere else, stop with the tag's commit and HEAD, and print the `git tag -d` / `git push --delete` recovery.
 3. Create and push the tag, which starts the plugin's release workflow.
 4. Poll the registry until it actually serves that version, reporting each wait.
 5. Write the index entry with the publish time **the registry reports**, not the local clock. It waits for `time[version]` specifically: the abbreviated registry document has no `time` field, and an entry with a null timestamp is rejected by the market checker.
@@ -922,6 +922,18 @@ merged
 ```
 
 Without `--pr` it prints the `git add` / `gh pr create` commands instead of running them; `--dry-run` prints the whole sequence before anything happens. A re-run after a failure is safe: when the tag already points at HEAD it is reused rather than recreated, the release continues with the registry wait, and the same version with the same publish time is a no-op.
+
+If that tag points at another commit, the release does not move it. It exits `1`
+and names the tag, the commit it points at, HEAD, and the recovery:
+
+```
+dsh-plugin release stopped at tag
+  ✗ tag: plugin-v0.4.0 already exists and does not point at HEAD: tag plugin-v0.4.0 is at <tag-sha>, HEAD is <head-sha>. Delete the stale tag with `git tag -d plugin-v0.4.0` and `git push --delete origin plugin-v0.4.0`, then re-run release.
+```
+
+Run those two commands when the old tag really was a mistake, then release
+again. A tag at HEAD needs no separate `--resume`: it takes the resume path
+automatically.
 
 ### When nothing publishes for you
 

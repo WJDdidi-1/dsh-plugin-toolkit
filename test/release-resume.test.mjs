@@ -7,6 +7,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { release } from '../lib/release.mjs';
+import { run } from '../lib/cli.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fixture = path.join(here, 'fixtures', 'good');
@@ -100,13 +101,16 @@ test('a second release resumes when the existing tag points at HEAD', async () =
   assert.equal(tagHash(origin, tag), remoteTag);
 });
 
-test('a tag that points at an older commit still stops the release', async () => {
+test('a tag that points at an older commit still stops the release and names the recovery', async () => {
   const { dir, origin, manifest, version } = releaseRepo();
   const tag = `plugin-v${version}`;
   git(dir, ['tag', tag]);
+  const taggedAt = tagHash(dir, tag);
   fs.writeFileSync(path.join(dir, 'after-tag.txt'), 'new commit\n');
   git(dir, ['add', '.']);
   git(dir, ['commit', '-q', '-m', 'after the tag']);
+  const currentHead = git(dir, ['rev-parse', 'HEAD']);
+  assert.notEqual(taggedAt, currentHead);
 
   let requests = 0;
   const result = await release({
@@ -120,8 +124,44 @@ test('a tag that points at an older commit still stops the release', async () =>
 
   assert.equal(result.ok, false);
   assert.equal(result.stage, 'tag');
-  assert.match(result.failures[0].message, /already exists and does not point at HEAD/u);
+  const message = result.failures[0].message;
+  assert.match(message, /already exists and does not point at HEAD/u);
+  // The tag and the commit it points at are named, not just "a tag exists".
+  assert.ok(message.includes(tag), message);
+  assert.ok(message.includes(taggedAt), message);
+  assert.ok(message.includes(currentHead), message);
+  // The recovery is copy-pasteable: remove the local and the remote tag, then
+  // rerun. A tag at HEAD takes the resume path instead.
+  assert.ok(message.includes(`git tag -d ${tag}`), message);
+  assert.ok(message.includes(`git push --delete origin ${tag}`), message);
+  assert.ok(message.includes('re-run release'), message);
   assert.equal(requests, 0);
   assert.deepEqual(readVersions(dir, manifest.name), []);
+  assert.deepEqual(tags(origin), []);
+});
+
+test('the CLI exits 1 for a tag at another commit and prints the recovery', async () => {
+  const { dir, origin, version } = releaseRepo();
+  const tag = `plugin-v${version}`;
+  git(dir, ['tag', tag]);
+  const taggedAt = tagHash(dir, tag);
+  fs.writeFileSync(path.join(dir, 'after-tag.txt'), 'new commit\n');
+  git(dir, ['add', '.']);
+  git(dir, ['commit', '-q', '-m', 'after the tag']);
+
+  const lines = [];
+  const io = {
+    log: (line) => lines.push(String(line)),
+    error: (line) => lines.push(String(line)),
+  };
+  const code = await run(['release', dir], io);
+
+  assert.equal(code, 1);
+  const output = lines.join('\n');
+  assert.match(output, /dsh-plugin release stopped at tag/u);
+  assert.ok(output.includes(tag), output);
+  assert.ok(output.includes(taggedAt), output);
+  assert.ok(output.includes(`git tag -d ${tag}`), output);
+  assert.ok(output.includes(`git push --delete origin ${tag}`), output);
   assert.deepEqual(tags(origin), []);
 });

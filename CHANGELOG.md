@@ -1,3 +1,11 @@
+## Unreleased
+
+- **`dsh-plugin release` refuses a tag at another commit and prints the
+  recovery.** When `plugin-v<version>` exists but points somewhere other than
+  HEAD, the release exits `1` with the tag, the commit it points at, HEAD, and
+  the exact `git tag -d` and `git push --delete` commands that remove the stale
+  tag before a re-run. A tag at HEAD still resumes without moving it.
+
 ## 0.20.7
 
 - **`dsh-plugin release --budget` rejects a value that is not a positive
