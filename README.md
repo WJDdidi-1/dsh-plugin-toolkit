@@ -458,8 +458,11 @@ The line carries the range `package.json` declares and one of `compatible`,
 `incompatible`, or `unknown` against that host version. `unknown` is the honest
 answer for a missing or malformed range — there is nothing to compare — while a
 range that excludes the host is `incompatible`, counted as failing, and exits
-`1`. The same flag works in the batch mode, so one `--from` run answers the
-whole list:
+`1`. npm's pre-release rule is part of the answer: `>=0.2.0` does not accept
+`0.2.2-alpha.3`, because a range only opts into a pre-release when it names one
+of the same `major.minor.patch`. A canary host can therefore be `incompatible`
+with a range that will accept the final release. The same flag works in the
+batch mode, so one `--from` run answers the whole list:
 
 ```sh
 $ dsh-plugin audit --remote --from repos.txt --host 0.2.2-alpha.3
