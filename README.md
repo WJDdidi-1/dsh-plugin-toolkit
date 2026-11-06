@@ -984,7 +984,11 @@ Honest list, so nobody plans around a feature that does not exist:
 ## Changelog
 
 [`CHANGELOG.md`](CHANGELOG.md) lists what changed in each release, including
-the `0.20.9` fix: `explain --log` expands the Windows spelling
+the `0.20.10` fix: `expectSnapshot()` and `panel.snapshot()` honor the
+documented `UPDATE_SNAPSHOTS=1` rerun by writing the normalised HTML and
+returning `{ status: "written" }`, while an ordinary run still fails a missing
+or changed baseline rather than writing one as a side effect. The `0.20.9` fix
+is recorded too: `explain --log` expands the Windows spelling
 `~\.dsh\logs\install.log` exactly like `~/.dsh/logs/install.log`, so the
 documented command works in PowerShell and `cmd`, and a log that cannot be read
 exits `2` naming the resolved absolute path it tried instead of a directory
