@@ -990,9 +990,13 @@ merged
 
 | Code | Meaning |
 | --- | --- |
-| 0 | Done, or nothing to complain about |
+| 0 | Done, or nothing to complain about — including `fix --remote` when `engines.dsh` is already a valid range |
 | 1 | A check failed, an installed plugin was not loaded by the running app, or the release stopped (the failing stage is named) |
-| 2 | Unknown command |
+| 2 | Unknown command, invalid usage, or a remote request that could not be completed |
+
+`fix <owner>/<repo> --remote` exits `0` both when it prints a diff for a missing
+`engines.dsh` and when the manifest already declares a range that clears the
+check; the second case prints `ok ... nothing to apply` and writes no diff.
 
 ## What is not here yet
 
