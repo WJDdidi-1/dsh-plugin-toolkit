@@ -192,7 +192,7 @@ expectSnapshot(panel.html(), '__snapshots__', 'panel');   // throws with the ele
 await panel.unmount();
 ```
 
-First run writes nothing: it tells you to re-run with `UPDATE_SNAPSHOTS=1`, so a baseline is always a decision, never a side effect.
+First run writes nothing: it tells you to re-run with `UPDATE_SNAPSHOTS=1`, so a baseline is always a decision, never a side effect. That rerun writes the normalised HTML and returns `{ status: 'written' }`; later runs return `same` or fail with the element that moved.
 
 ### Check what assistive tech sees
 

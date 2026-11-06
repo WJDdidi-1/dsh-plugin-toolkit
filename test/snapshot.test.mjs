@@ -21,6 +21,25 @@ test('a matching baseline passes, and a changed one says which element moved', (
   );
 });
 
+test('UPDATE_SNAPSHOTS=1 writes the normalised HTML and reports written', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'snap-'));
+  const previous = process.env.UPDATE_SNAPSHOTS;
+  process.env.UPDATE_SNAPSHOTS = '1';
+  try {
+    const created = expectSnapshot('<div  class="b  a">  hello  </div>', dir, 'panel');
+    assert.equal(created.status, 'written');
+    assert.equal(fs.readFileSync(path.join(dir, 'panel.html'), 'utf8'), '<div class="a b"> hello </div>\n');
+    assert.equal(expectSnapshot('<div class="a b"> hello </div>', dir, 'panel').status, 'same');
+
+    const updated = expectSnapshot('<div class="a b">goodbye</div>', dir, 'panel');
+    assert.equal(updated.status, 'written');
+    assert.equal(fs.readFileSync(path.join(dir, 'panel.html'), 'utf8'), '<div class="a b">goodbye</div>\n');
+  } finally {
+    if (previous === undefined) delete process.env.UPDATE_SNAPSHOTS;
+    else process.env.UPDATE_SNAPSHOTS = previous;
+  }
+});
+
 test('class order and outer whitespace do not count as a change', () => {
   assert.equal(normalize('<div  class="b  a">  hi  </div>'), '<div class="a b"> hi </div>');
 });
