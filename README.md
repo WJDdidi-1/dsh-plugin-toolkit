@@ -579,9 +579,12 @@ $ dsh-plugin audit --remote --from repos.txt --patch-dir repairs/
 
 It creates the directory and writes one `owner__repo.patch` for every
 repository whose `engines.dsh` check fails, with the same diff `fix --remote
---patch` produces. Repositories that are clean, unreadable, or need a repair
-the tool cannot make automatically are skipped. The repository itself is still
-only read, and `--force` replaces a patch that is already there.
+--patch` produces. With `--host <version>`, the repair is aimed at that host, so
+a repository whose valid range merely excludes the host is repaired too; a
+repository that already accepts the host is skipped even when it is in the same
+batch. Repositories that are clean, unreadable, or need a repair the tool cannot
+make automatically are skipped. The repository itself is still only read, and
+`--force` replaces a patch that is already there.
 
 ### The 3 November list
 
