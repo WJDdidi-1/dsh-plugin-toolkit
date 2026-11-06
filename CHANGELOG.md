@@ -1,5 +1,10 @@
 ## 0.20.8
 
+- **`dsh-plugin explain --log` covers the Windows spelling of `~` and keeps a
+  missing log honest.** `~\.dsh\logs\install.log` expands the same way as
+  `~/.dsh/logs/install.log`, so the documented command works in PowerShell and
+  `cmd`; a log that cannot be read still exits `2` with the resolved absolute
+  path it tried, never a directory literally named `~`.
 - **`dsh-plugin release` resumes when the tag already points at HEAD.** A
   publish that stopped after the tag was pushed — at the registry wait, or at a
   later failure — can be re-run: the existing `plugin-v<version>` tag is reused
