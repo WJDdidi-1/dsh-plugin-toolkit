@@ -22,6 +22,18 @@ parent directories and refuses to replace an existing file unless `--force` is
 passed. For every other check, clone the repository and run the commands here
 against the checkout.
 
+To triage a list of repositories before cloning any of them, pass `--host` to
+the remote audit. It compares each declared `engines.dsh` with the DSH version
+you run and prints `compatible`, `incompatible`, or `unknown` (no usable range)
+for every entry:
+
+```sh
+npx dsh-plugin-toolkit@latest audit --remote --from repos.txt --host 0.2.2-alpha.3
+```
+
+npm's pre-release rule still applies, so `>=0.2.0` does not accept
+`0.2.2-alpha.3` unless the range names a pre-release of that same version.
+
 ## The loop
 
 1. Run the automatic repair, and let it re-check:
