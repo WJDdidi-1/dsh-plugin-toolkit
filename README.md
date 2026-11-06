@@ -903,7 +903,7 @@ The install reports success and nothing shows up. In this order:
 `release` runs the sequence in the order that fails cheapest first:
 
 1. Preflight (`doctor`) — stop before tagging anything.
-2. Refuse to run on a dirty tree, or if the tag already exists.
+2. Refuse to run on a dirty tree. If the tag already exists and points at the current commit, reuse it and resume; if it points somewhere else, stop.
 3. Create and push the tag, which starts the plugin's release workflow.
 4. Poll the registry until it actually serves that version, reporting each wait.
 5. Write the index entry with the publish time **the registry reports**, not the local clock. It waits for `time[version]` specifically: the abbreviated registry document has no `time` field, and an entry with a null timestamp is rejected by the market checker.
@@ -921,7 +921,7 @@ checks settled after 1s (1 look(s))
 merged
 ```
 
-Without `--pr` it prints the `git add` / `gh pr create` commands instead of running them; `--dry-run` prints the whole sequence before anything happens. A re-run after a failure is safe: the same version with the same publish time is a no-op.
+Without `--pr` it prints the `git add` / `gh pr create` commands instead of running them; `--dry-run` prints the whole sequence before anything happens. A re-run after a failure is safe: when the tag already points at HEAD it is reused rather than recreated, the release continues with the registry wait, and the same version with the same publish time is a no-op.
 
 ### When nothing publishes for you
 
