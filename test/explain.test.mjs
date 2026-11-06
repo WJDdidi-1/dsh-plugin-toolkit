@@ -133,3 +133,46 @@ test('explain --log exits 2 and names a log file it cannot read', async () => {
   assert.match(text, /cannot read log/);
   assert.ok(text.includes(missing), 'the failure names the path it tried to read');
 });
+
+test('explain --log expands a leading ~ like the other path flags', async () => {
+  const fs = await import('node:fs');
+  const os = await import('node:os');
+  const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-explain-home-'));
+  const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-explain-cwd-'));
+  const logDir = path.join(scratch, '.dsh', 'logs');
+  fs.mkdirSync(logDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(logDir, 'install.log'),
+    'dsh: plugin install failed for p@1.0.0\ndsh: installation rejected: incompatible with dsh 0.2.1\n',
+  );
+  // Windows reads USERPROFILE rather than HOME in os.homedir(); set both so
+  // the expansion points at the scratch directory on every runner.
+  const previous = {
+    HOME: process.env.HOME,
+    USERPROFILE: process.env.USERPROFILE,
+    cwd: process.cwd(),
+  };
+  process.env.HOME = scratch;
+  process.env.USERPROFILE = scratch;
+  process.chdir(elsewhere);
+  try {
+    const io = recorder();
+    const code = await run(['explain', '--log', '~/.dsh/logs/install.log'], io);
+    assert.equal(code, 0);
+    const text = io.lines.join('\n');
+    assert.match(text, /1 known cause/);
+    assert.match(text, /engines\.dsh is missing/);
+    assert.equal(fs.existsSync(path.join(elsewhere, '~')), false);
+  } finally {
+    process.chdir(previous.cwd);
+    for (const name of ['HOME', 'USERPROFILE']) {
+      if (previous[name] === undefined) {
+        delete process.env[name];
+      } else {
+        process.env[name] = previous[name];
+      }
+    }
+    fs.rmSync(scratch, { recursive: true, force: true });
+    fs.rmSync(elsewhere, { recursive: true, force: true });
+  }
+});
