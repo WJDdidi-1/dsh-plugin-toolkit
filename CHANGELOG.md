@@ -11,6 +11,10 @@
   and a network or HTTP read failure still exit `2`; and the command writes no
   local file unless `--patch` asks for one. Regression tests pin those paths
   beside the already-correct no-op.
+- **The remote repair exit codes are covered at the process boundary.** `npm
+  test` now spawns the real CLI for a remote manifest that is missing
+  `engines.dsh` and one that already declares a valid range, asserting exit
+  `0` for both. The README Exit codes table states the same contract.
 - **A malformed `package.json` in an ordinary dependency still stays out of
   `audit`.** The unreadable-manifest exception only applies when the package
   name is in `dsh.profile.bundles`; a package that is neither declared there nor
