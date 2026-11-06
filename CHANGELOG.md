@@ -1,3 +1,19 @@
+## 0.20.11
+
+- **`audit --remote --from` carries the `--host` answer through the whole
+  batch.** Each repository is compared with the host you name even when
+  `--jobs` runs several audits at once, so the printed verdict and the `--json`
+  row carry the same `host` and `compatibility` fields, in input order,
+  whatever order the responses arrive in. With `--patch-dir`, a host-targeted
+  repair is written for a valid range that excludes the host, while a
+  repository that already accepts it is skipped.
+- **The batch host mode is documented where the batch commands are.** `--help`
+  shows the `audit --remote --from <file> --host <version>` form, and the
+  README and repair guide explain that npm's pre-release rule applies — for
+  example, `>=0.2.0` does not accept `0.2.2-alpha.3` unless the range names a
+  pre-release of that same version. The semver edge cases are pinned by
+  regression tests.
+
 ## 0.20.10
 
 - **`expectSnapshot()` writes the baseline when `UPDATE_SNAPSHOTS=1`.** The
