@@ -1,4 +1,4 @@
-## Unreleased
+## 0.20.12
 
 - **`dsh-plugin fix <owner>/<repo> --remote` treats an already-correct range as
   success.** When `package.json` already declares an `engines.dsh` range that
