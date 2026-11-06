@@ -317,7 +317,10 @@ If its name is still in `dsh.profile.bundles`, `audit` reports a `manifest`
 failure naming the unreadable `package.json` and exits `1` instead of treating
 the folder as an ordinary dependency. A truncated manifest from an interrupted
 install therefore cannot make the plugin disappear from the report, and a valid
-sibling plugin is still listed on the same run.
+sibling plugin is still listed on the same run. The exception stays narrow: a
+damaged `package.json` in a package that is neither in `dsh.profile.bundles` nor
+readable enough to expose a `dsh` field is still an ordinary dependency and is
+skipped, so one broken transitive install does not fail every audit.
 
 ## Edit a plugin that is already installed
 
