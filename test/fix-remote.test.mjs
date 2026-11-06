@@ -70,16 +70,32 @@ test('a missing range prints a unified diff and exits 0 without writing anything
   assert.match(calls[0].url, /\/contents\/package\.json$/u);
 });
 
-test('an existing valid range prints no diff, says nothing to apply, and exits 1', async () => {
+test('the default range already in package.json prints no diff and exits 0', async () => {
+  const raw = `${JSON.stringify(manifest({ dsh: '>=0.2.0' }), null, 2)}\n`;
+  const { fetchImpl, calls } = github(raw);
+  const io = recorder();
+
+  const code = await run(['fix', 'demo/plugin', '--remote'], io, { fetchImpl });
+
+  assert.equal(code, 0);
+  const output = text(io);
+  assert.match(output, /ok {2}engines\.dsh is already ">=0\.2\.0"; nothing to apply/u);
+  assert.doesNotMatch(output, /^--- a\//mu);
+  assert.doesNotMatch(output, /^\+\+\+ b\//mu);
+  assert.doesNotMatch(output, /^@@/mu);
+  assert.equal(calls.length, 1);
+});
+
+test('any existing valid range is a no-op success, like the local fixer', async () => {
   const raw = `${JSON.stringify(manifest({ dsh: '>=0.3.0' }), null, 2)}\n`;
   const { fetchImpl, calls } = github(raw);
   const io = recorder();
 
   const code = await run(['fix', 'demo/plugin', '--remote'], io, { fetchImpl });
 
-  assert.equal(code, 1);
+  assert.equal(code, 0);
   const output = text(io);
-  assert.match(output, /nothing to apply/u);
+  assert.match(output, /ok {2}engines\.dsh is already ">=0\.3\.0"; nothing to apply/u);
   assert.doesNotMatch(output, /^--- a\//mu);
   assert.doesNotMatch(output, /^\+\+\+ b\//mu);
   assert.doesNotMatch(output, /^@@/mu);

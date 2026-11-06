@@ -783,6 +783,11 @@ dsh-plugin fix: would write engines.dsh ">=0.2.0" (was missing) in PrismLean/dsh
     remote repositories are read-only; nothing written; apply this diff in your checkout
 ```
 
+When `package.json` already declares a range that clears the check, there is
+nothing to apply: the command prints `ok engines.dsh is already "<range>";
+nothing to apply` and exits `0`, the same no-op as `fix --engines` on a
+checkout. No diff and no patch file is written.
+
 To apply it, clone the repository, save that diff with `--patch`, and apply it
 in the checkout:
 
