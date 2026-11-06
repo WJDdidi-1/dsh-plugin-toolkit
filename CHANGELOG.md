@@ -6,6 +6,11 @@
   "<range>"; nothing to apply` but now exits `0` instead of `1`, matching the
   local `fix --engines` no-op and the documented exit-code contract. No diff or
   patch file is written.
+- **The remote repair keeps its diff and error paths.** A manifest with no
+  `engines.dsh` still prints the unified diff and exits `0`; an invalid target
+  and a network or HTTP read failure still exit `2`; and the command writes no
+  local file unless `--patch` asks for one. Regression tests pin those paths
+  beside the already-correct no-op.
 - **A malformed `package.json` in an ordinary dependency still stays out of
   `audit`.** The unreadable-manifest exception only applies when the package
   name is in `dsh.profile.bundles`; a package that is neither declared there nor
