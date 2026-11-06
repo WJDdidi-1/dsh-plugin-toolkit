@@ -49,6 +49,10 @@ the check to start with:
 npx dsh-plugin-toolkit@latest explain --log ~/.dsh/logs/install.log ./my-panel
 ```
 
+On Windows the same command accepts `~\.dsh\logs\install.log`, because `cmd`
+and PowerShell leave the tilde alone. A missing log exits `2` and names the
+resolved absolute path it tried to read, never a literal `~` directory.
+
 | Check | What it protects |
 | --- | --- |
 | [`version`](#version) | The tag and the registry version both come from this field |

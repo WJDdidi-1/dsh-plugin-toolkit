@@ -844,6 +844,11 @@ $ npx dsh-plugin-toolkit explain "plugin install failed" ./my-panel
 The same checkout argument works after the log:
 `dsh-plugin explain --log ~/.dsh/logs/install.log ./my-panel`.
 
+On Windows, `cmd` and PowerShell leave the tilde alone:
+`--log ~\.dsh\logs\install.log` expands exactly like
+`--log ~/.dsh/logs/install.log`. A log that cannot be read exits `2` and names
+the resolved absolute path it tried, never a directory literally named `~`.
+
 Text it does not recognise exits `2` instead of guessing: a wrong diagnosis
 sends you editing the wrong file. A log with no known cause also exits `2` and
 lists the causes it looked for.
