@@ -92,3 +92,38 @@ test('--home is a flag the parser knows, and it takes the value after it', async
   assert.equal(typeof code, 'number');
   assert.doesNotMatch(io.lines.join('\n'), /args is not defined/u);
 });
+
+test('audit --home reports a truncated package.json listed in dsh.profile.bundles and exits 1', async () => {
+  // Reproduce an interrupted install beside a healthy sibling. The broken
+  // manifest cannot parse, so dsh.profile.bundles is the only evidence that
+  // the folder was meant to be a plugin; omitting it would make the audit
+  // pass and hide the real reason the plugin is not in the app.
+  const home = scratch();
+  const profileDir = path.join(home, 'profiles', 'desktop');
+  const modulesDir = path.join(profileDir, 'node_modules');
+  fs.mkdirSync(modulesDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(profileDir, 'package.json'),
+    JSON.stringify(
+      { name: 'dsh-profile-desktop', private: true, dsh: { profile: { bundles: ['broken-plugin'] } } },
+      null,
+      2,
+    ),
+  );
+  fs.cpSync(fixture('good'), path.join(modulesDir, 'demo-plugin'), { recursive: true });
+  const brokenDir = path.join(modulesDir, 'broken-plugin');
+  fs.mkdirSync(brokenDir, { recursive: true });
+  fs.writeFileSync(path.join(brokenDir, 'package.json'), '{"name": "broken-plugin"');
+
+  const io = recorder();
+  const code = await run(['audit', '--home', home, '--timeout', '50'], io);
+  assert.equal(code, 1);
+  const output = io.lines.join('\n');
+  const unreadableRows = output
+    .split('\n')
+    .filter((line) => /^broken-plugin\s+\?\s+unreadable\b/u.test(line));
+  assert.equal(unreadableRows.length, 1, 'the truncated plugin must produce exactly one unreadable row');
+  assert.match(unreadableRows[0], /package\.json/u);
+  assert.match(output, /not valid JSON/u);
+  assert.match(output, /^demo-plugin\b/mu, 'the healthy sibling must still be listed');
+});
