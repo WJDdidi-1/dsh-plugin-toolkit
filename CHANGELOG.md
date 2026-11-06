@@ -1,5 +1,11 @@
 ## Unreleased
 
+- **`dsh-plugin fix <owner>/<repo> --remote` treats an already-correct range as
+  success.** When `package.json` already declares an `engines.dsh` range that
+  clears the check, the command still prints `ok engines.dsh is already
+  "<range>"; nothing to apply` but now exits `0` instead of `1`, matching the
+  local `fix --engines` no-op and the documented exit-code contract. No diff or
+  patch file is written.
 - **A malformed `package.json` in an ordinary dependency still stays out of
   `audit`.** The unreadable-manifest exception only applies when the package
   name is in `dsh.profile.bundles`; a package that is neither declared there nor

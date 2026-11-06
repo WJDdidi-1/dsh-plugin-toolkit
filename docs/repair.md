@@ -19,8 +19,10 @@ cloned, but it cannot edit anything. For a missing host range, `fix owner/repo
 --remote --patch repair.patch` saves the `engines.dsh` diff without a checkout;
 apply it after cloning (or paste it into a pull request). The command creates
 parent directories and refuses to replace an existing file unless `--force` is
-passed. For every other check, clone the repository and run the commands here
-against the checkout.
+passed. A manifest whose range already clears the check is a success: the
+command prints `ok engines.dsh is already ...; nothing to apply` and exits `0`
+without writing a diff or patch file. For every other check, clone the
+repository and run the commands here against the checkout.
 
 To triage a list of repositories before cloning any of them, pass `--host` to
 the remote audit. It compares each declared `engines.dsh` with the DSH version
