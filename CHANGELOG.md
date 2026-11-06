@@ -6,6 +6,11 @@
   used to be treated as "no root export", so a plugin whose conditions object
   resolved to a CLI with no `apply` passed both checks. The failure now names
   the resolved file, and a string root that exports `apply` still passes.
+- **`verify --no-mount` no longer claims it imported a host half when it
+  skipped one.** A bundle that only inserts a subpath patch needs no root
+  module, so there is nothing for the loader to import. The success line used
+  to say "installed the tarball and imported its host half" anyway; it now says
+  the host import was skipped, so the line matches the check that actually ran.
 - **`dsh-plugin explain --log` covers the Windows spelling of `~` and keeps a
   missing log honest.** `~\.dsh\logs\install.log` expands the same way as
   `~/.dsh/logs/install.log`, so the documented command works in PowerShell and

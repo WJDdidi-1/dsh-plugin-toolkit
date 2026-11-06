@@ -863,7 +863,7 @@ ok  packed 5 file(s), installed the tarball, mounted the panel
     My panel This panel came from dsh-plugin init. Clicks: 0
 ```
 
-It packs, installs that tarball into a throwaway directory, then mounts the bundle **from the installed copy**. When the `files` list drops the panel:
+It packs, installs that tarball into a throwaway directory, then mounts the bundle **from the installed copy**. A bundle that only inserts a subpath patch needs no root module; in that case there is nothing to import, and the success line says it skipped the host import instead of claiming one ran. When the `files` list drops the panel:
 
 ```sh
 $ npx dsh-plugin-toolkit verify .
