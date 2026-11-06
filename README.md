@@ -888,7 +888,9 @@ The install reports success and nothing shows up. In this order:
    node -e "import('my-plugin').then((m) => console.log(typeof m.apply))"
    ```
    `function` is what the loader needs. `undefined` means `exports["."]` points
-   at the CLI — `0.8.0` of this tool shipped exactly that.
+   at the CLI — `0.8.0` of this tool shipped exactly that. A root written as a
+   conditions object (`{ "import": "./index.js" }`) is resolved before the
+   check, and `main` is only the fallback when no root export exists.
 3. **Does the tarball ship the panel?** `dsh-plugin verify .` installs what users
    get and mounts it. `doctor` cannot see this.
 4. **Is the patch row shaped right?** `cordis.patch.yml` needs one `- insert:`

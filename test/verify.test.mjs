@@ -259,3 +259,32 @@ test('the scaffold with the patch in files still exits 0 with --no-mount', async
   assert.equal(code, 0, output);
   assert.match(output, /^ok  packed \d+ file\(s\)/m);
 });
+
+test('doctor and verify --no-mount both refuse a conditions-object root that resolves to the CLI', async () => {
+  const dir = path.join(root, 'test', 'fixtures', 'root-export-conditions-cli');
+
+  const doctorIo = recorder();
+  assert.equal(await run(['doctor', dir], doctorIo), 1, doctorIo.lines.join('\n'));
+  const doctorOutput = doctorIo.lines.join('\n');
+  assert.match(doctorOutput, /root export: the root export cli\.mjs does not export apply/);
+
+  const verifyIo = recorder();
+  const code = await run(['verify', dir, '--no-mount'], verifyIo);
+  const verifyOutput = verifyIo.lines.join('\n');
+  assert.equal(code, 1, verifyOutput);
+  assert.match(verifyOutput, /stopped at doctor/);
+  assert.match(verifyOutput, /root export: the root export cli\.mjs does not export apply/);
+});
+
+test('doctor and verify --no-mount both accept a string root export that names apply', async () => {
+  const dir = path.join(root, 'test', 'fixtures', 'root-export-string-apply');
+
+  const doctorIo = recorder();
+  assert.equal(await run(['doctor', dir], doctorIo), 0, doctorIo.lines.join('\n'));
+
+  const verifyIo = recorder();
+  const code = await run(['verify', dir, '--no-mount'], verifyIo);
+  const output = verifyIo.lines.join('\n');
+  assert.equal(code, 0, output);
+  assert.match(output, /^ok  packed \d+ file\(s\)/m);
+});
