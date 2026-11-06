@@ -69,6 +69,34 @@ test('only packages that declare a dsh field count as plugins', () => {
   assert.deepEqual(found, ['@scope/demo', 'demo-plugin']);
 });
 
+test('a declared plugin with a truncated package.json is reported, not silently skipped', async () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'audit-home-'));
+  writeProfile(home, 'desktop', ['broken-plugin']);
+  writePlugin(home, 'valid-plugin', goodManifest('valid-plugin'), goodFiles);
+  const brokenDir = path.join(home, 'profiles', 'desktop', 'node_modules', 'broken-plugin');
+  fs.mkdirSync(brokenDir, { recursive: true });
+  // An interrupted install leaves a manifest that cannot be parsed, so the
+  // package's own dsh field is unavailable. The profile list is the only
+  // evidence that this folder was meant to be a plugin.
+  fs.writeFileSync(path.join(brokenDir, 'package.json'), '{"name": "broken-plugin"');
+
+  const lines = [];
+  const result = await audit({ home, io: { log: (line) => lines.push(line) } });
+  assert.equal(result.ok, false);
+  assert.deepEqual(
+    result.plugins.map((plugin) => plugin.name).sort(),
+    ['broken-plugin', 'valid-plugin'],
+  );
+  const broken = result.plugins.find((plugin) => plugin.name === 'broken-plugin');
+  assert.equal(broken.unreadable, true);
+  assert.deepEqual(broken.failures.map((failure) => failure.check), ['manifest']);
+  const text = lines.join('\n');
+  assert.match(text, /^broken-plugin\s+\?\s+unreadable\b/mu);
+  assert.match(text, /broken-plugin[\s\S]*package\.json/u, 'the row must name the unreadable package.json');
+  assert.match(text, /not valid JSON|unreadable/u);
+  assert.match(text, /^valid-plugin\b/mu, 'the valid sibling must still be listed');
+});
+
 test('audit names the plugin with problems and keeps the healthy one quiet', async () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'audit-home-'));
   writePlugin(home, 'demo-plugin', goodManifest('demo-plugin'), goodFiles);

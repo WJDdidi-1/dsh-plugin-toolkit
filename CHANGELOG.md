@@ -1,3 +1,13 @@
+## Unreleased
+
+- **A declared plugin with an unreadable `package.json` no longer disappears
+  from `audit`.** When an interrupted install leaves a truncated manifest, the
+  `dsh` field that marks the package as a plugin cannot be read. If the package
+  name is still listed in `dsh.profile.bundles`, `audit` now reports a
+  `manifest` failure naming the unreadable `package.json` and exits `1` instead
+  of skipping the folder as an ordinary dependency. Valid sibling plugins on the
+  same run are still listed.
+
 ## 0.20.11
 
 - **`audit --remote --from` carries the `--host` answer through the whole

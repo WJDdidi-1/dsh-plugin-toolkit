@@ -311,6 +311,14 @@ Without `--host` the loaded column is `?`, because guessing would be worse than
 saying nothing. Only packages that declare a `dsh` field are audited — the rest of
 `node_modules` is ordinary dependencies, and auditing those is noise.
 
+An installed package whose `package.json` cannot be read is the exception: the
+`dsh` field that would mark it as a plugin is in the file that failed to parse.
+If its name is still in `dsh.profile.bundles`, `audit` reports a `manifest`
+failure naming the unreadable `package.json` and exits `1` instead of treating
+the folder as an ordinary dependency. A truncated manifest from an interrupted
+install therefore cannot make the plugin disappear from the report, and a valid
+sibling plugin is still listed on the same run.
+
 ## Edit a plugin that is already installed
 
 The host already swaps a rebuilt bundle without a page reload: it watches each plugin's entry artifact and reports a `rebuilt` frame on `/plugins/events`. `dev` puts the new file where the host is looking, then **proves** the frame arrived instead of asking you to check by eye.
