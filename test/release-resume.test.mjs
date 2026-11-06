@@ -101,6 +101,68 @@ test('a second release resumes when the existing tag points at HEAD', async () =
   assert.equal(tagHash(origin, tag), remoteTag);
 });
 
+test('the CLI finishes the release after the first run stopped at the registry', async () => {
+  const { dir, origin, manifest, version } = releaseRepo();
+  const tag = `plugin-v${version}`;
+  const timestamp = '2026-11-05T12:00:00.000Z';
+
+  // First run: the CLI tags and pushes, then the registry has no package. This
+  // is the state the shipped 0.19.0 left behind: `plugin-v1.0.0` is public and
+  // the index has no entry.
+  const firstLines = [];
+  const originalFetch = globalThis.fetch;
+  let firstCode;
+  try {
+    globalThis.fetch = registryMiss;
+    firstCode = await run(['release', dir], {
+      log: (line) => firstLines.push(String(line)),
+      error: (line) => firstLines.push(String(line)),
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  assert.equal(firstCode, 1, firstLines.join('\n'));
+  const firstOutput = firstLines.join('\n');
+  assert.match(firstOutput, /dsh-plugin release stopped at registry/u);
+  assert.match(firstOutput, /has no package named demo-plugin/u);
+  assert.deepEqual(tags(dir), [tag]);
+  assert.deepEqual(tags(origin), [tag]);
+  assert.deepEqual(readVersions(dir, manifest.name), []);
+
+  const localTag = tagHash(dir, tag);
+  const remoteTag = tagHash(origin, tag);
+
+  // Second run: npm now serves the version. The pre-existing tag must be
+  // reused rather than treated as a reason to stop, and the index entry must
+  // be written from the registry's publish time.
+  const secondLines = [];
+  let secondCode;
+  try {
+    globalThis.fetch = registryHit(version, timestamp);
+    secondCode = await run(['release', dir], {
+      log: (line) => secondLines.push(String(line)),
+      error: (line) => secondLines.push(String(line)),
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  assert.equal(secondCode, 0, secondLines.join('\n'));
+  const secondOutput = secondLines.join('\n');
+  assert.ok(secondOutput.includes(`tagged ${tag}, npm served ${manifest.name}@${version}`), secondOutput);
+  assert.ok(secondOutput.includes(`updated ${path.join(dir, 'market/index.json')}`), secondOutput);
+
+  const versions = readVersions(dir, manifest.name);
+  assert.equal(versions.filter((entry) => entry.version === version).length, 1);
+  assert.equal(versions[0].version, version);
+  assert.equal(versions[0].publishTimestamp, Math.floor(Date.parse(timestamp) / 1000));
+  assert.deepEqual(tags(dir), [tag]);
+  assert.deepEqual(tags(origin), [tag]);
+  assert.equal(tagHash(dir, tag), localTag);
+  assert.equal(tagHash(origin, tag), remoteTag);
+});
+
 test('a tag that points at an older commit still stops the release and names the recovery', async () => {
   const { dir, origin, manifest, version } = releaseRepo();
   const tag = `plugin-v${version}`;
