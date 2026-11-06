@@ -1,5 +1,10 @@
 ## Unreleased
 
+- **A malformed `package.json` in an ordinary dependency still stays out of
+  `audit`.** The unreadable-manifest exception only applies when the package
+  name is in `dsh.profile.bundles`; a package that is neither declared there nor
+  readable enough to expose its `dsh` field is skipped as before, so a broken
+  transitive install does not turn every audit red.
 - **A declared plugin with an unreadable `package.json` no longer disappears
   from `audit`.** When an interrupted install leaves a truncated manifest, the
   `dsh` field that marks the package as a plugin cannot be read. If the package

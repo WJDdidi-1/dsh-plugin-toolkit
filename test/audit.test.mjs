@@ -97,6 +97,27 @@ test('a declared plugin with a truncated package.json is reported, not silently 
   assert.match(text, /^valid-plugin\b/mu, 'the valid sibling must still be listed');
 });
 
+test('a malformed package.json in an undeclared dependency is still skipped', async () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'audit-home-'));
+  writeProfile(home, 'desktop', ['valid-plugin']);
+  writePlugin(home, 'valid-plugin', goodManifest('valid-plugin'), goodFiles);
+  const ordinaryDir = path.join(home, 'profiles', 'desktop', 'node_modules', 'ordinary-dependency');
+  fs.mkdirSync(ordinaryDir, { recursive: true });
+  // The profile never names this package and its dsh field cannot be read, so
+  // there is no evidence that it was installed as a plugin. A broken transitive
+  // dependency must not make every profile fail its audit.
+  fs.writeFileSync(path.join(ordinaryDir, 'package.json'), '{"name": "ordinary-dependency"');
+
+  const found = listInstalled({ home }).map((entry) => entry.manifest.name);
+  assert.deepEqual(found, ['valid-plugin']);
+
+  const lines = [];
+  const result = await audit({ home, io: { log: (line) => lines.push(line) } });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.plugins.map((plugin) => plugin.name), ['valid-plugin']);
+  assert.doesNotMatch(lines.join('\n'), /ordinary-dependency/u);
+});
+
 test('audit names the plugin with problems and keeps the healthy one quiet', async () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'audit-home-'));
   writePlugin(home, 'demo-plugin', goodManifest('demo-plugin'), goodFiles);
