@@ -505,7 +505,10 @@ summary: 4 repositories — 1 clean, 1 failing (1 problem), 0 unreadable, 2 rate
 
 The parenthesised count is the number of failed checks, not the number of failing
 repositories: one repository that fails both `engines.dsh` and its client
-declaration prints `1 failing (2 problems)`.
+declaration prints `1 failing (2 problems)`. A repository whose `package.json`
+has an empty `dsh` field and no `dsh.bundle.patch` is `failing` here too: the
+batch runs the same `dsh field` check as `doctor`, and the `--json` finding
+carries that failure even though no patch path was declared to check.
 
 The command exits `1` when any repository is failing, unreadable, or
 rate-limited, and `0` only when every repository in the list is clean. `--from`
