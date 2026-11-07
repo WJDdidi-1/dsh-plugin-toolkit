@@ -69,6 +69,7 @@ resolved absolute path it tried to read, never a literal `~` directory.
 
 | Check | What it protects |
 | --- | --- |
+| [`name`](#name) | npm publishes and installs by this field; a malformed one fails at publish or `npm pack` |
 | [`version`](#version) | The tag and the registry version both come from this field |
 | [`engines.dsh`](#enginesdsh) | The market index cannot state which host the plugin supports |
 | [`patch file`](#patch-file) | The host has no patch to apply |
@@ -76,6 +77,37 @@ resolved absolute path it tried to read, never a literal `~` directory.
 | [`client entry`](#client-entry) | The declared bundle file is not in the checkout or the tarball |
 | [`root export`](#root-export) | The loader imports the package and finds no `apply` |
 | [`files list`](#files-list) | The published tarball is missing code `package.json` points at |
+
+## name
+
+**What it means.** npm publishes and installs by `package.json`'s `name`, and the
+loader imports that bare name. A missing, empty or malformed name can pass every
+file check and then fail at publish or `npm pack`, so `doctor` checks it before
+anything is packed.
+
+**What you see.**
+
+```text
+  ✗ name: package.json has no "name", so npm cannot publish or install the package
+  ✗ name: package.json has an empty "name", so npm cannot publish or install the package
+  ✗ name: package.json "name" "My Plugin!" is not a valid npm package name; use lower-case letters, digits, dots, hyphens or underscores, for example my-plugin or @me/my-plugin
+```
+
+`doctor --remote` and `audit --remote` run this same manifest check against the
+`package.json` GitHub serves, so the repository does not need a clone.
+
+**Smallest fix.** Use a valid npm package name: lower-case letters, digits,
+dots, hyphens or underscores, optionally scoped with `@scope/`.
+
+```json
+{
+  "name": "my-plugin"
+}
+```
+
+Uppercase letters, spaces and characters such as `!` are refused. If this is an
+existing package, keep the name it was published under; changing it creates a
+different package.
 
 ## version
 

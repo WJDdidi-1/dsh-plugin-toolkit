@@ -7,6 +7,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { run } from '../lib/cli.mjs';
+import { init } from '../lib/init.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..');
@@ -51,6 +52,35 @@ test('doctor exits 0 for a manifest that starts with a UTF-8 BOM', () => {
   });
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /ok {2}demo-plugin@1\.2\.3/);
+});
+
+test('doctor rejects each bad package name with a name failure and accepts init output', () => {
+  const dirs = [];
+  for (const name of [undefined, '', 'My Plugin!']) {
+    const dir = path.join(scratch(), 'plugin');
+    fs.cpSync(fixture('good'), dir, { recursive: true });
+    const manifestPath = path.join(dir, 'package.json');
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    if (name === undefined) delete manifest.name;
+    else manifest.name = name;
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+    dirs.push(dir);
+  }
+
+  for (const dir of dirs) {
+    const result = spawnSync(process.execPath, [path.join(ROOT, 'bin', 'dsh-plugin.mjs'), 'doctor', dir], {
+      encoding: 'utf8',
+    });
+    assert.equal(result.status, 1, result.stderr);
+    assert.match(result.stderr, /✗ name:/u);
+  }
+
+  const scaffold = path.join(scratch(), 'plugin');
+  assert.equal(init({ dir: scaffold, name: 'name-check', title: 'Name check' }).ok, true);
+  const control = spawnSync(process.execPath, [path.join(ROOT, 'bin', 'dsh-plugin.mjs'), 'doctor', scaffold], {
+    encoding: 'utf8',
+  });
+  assert.equal(control.status, 0, control.stderr);
 });
 
 test('doctor names a broken manifest instead of printing a bare parse error', () => {

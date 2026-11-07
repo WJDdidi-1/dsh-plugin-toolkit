@@ -659,6 +659,7 @@ the diff in the terminal.
 
 | Check | Why it matters |
 | --- | --- |
+| `name` | npm publishes and installs by this field; a missing, empty or non-npm name would otherwise pass `doctor` and fail later at publish or `npm pack` |
 | `version` | The tag is built from it; a malformed version produces a tag nobody can install |
 | `engines.dsh` | The market index copies this into every version entry. Missing it, or a value that is not a semver range (including a pinned version such as `0.2.0`), fails the index PR |
 | `readme` | A `Requirements` section that states the declared range, so an install failure is predictable |
@@ -668,7 +669,7 @@ the diff in the terminal.
 | `files list` | Every path `package.json` points at (`exports`, patch, client) must be covered by `files` |
 | `root export` | The loader imports the bare package name; if that module is the CLI (or exports no `apply`), the row mounts nothing while the install reports success |
 
-Exit code is `0` when the plugin can be installed and `1` when it cannot, so it drops into CI unchanged.
+Exit code is `0` when the plugin can be installed and `1` when it cannot, so it drops into CI unchanged. `doctor --remote` and `audit --remote` run the manifest-only checks (`name`, `version`, `engines.dsh`, `dsh field`, `files list`) against the `package.json` GitHub serves, so a bad package name is reported before a clone or install.
 
 ## Repair what `doctor` finds
 

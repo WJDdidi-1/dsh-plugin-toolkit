@@ -1,5 +1,13 @@
 ## 0.20.12
 
+- **`dsh-plugin doctor` checks the package name before it packs anything.** A
+  `package.json` whose `name` is missing, empty, or not a valid npm package name
+  (for example `My Plugin!`) used to print `ok` and exit `0`, while
+  `verify --no-mount` failed later at `npm pack`. The manifest preflight now
+  reports a `name:` failure and exits `1`, and the same check reaches
+  `doctor --remote` and `audit --remote` through the shared manifest check.
+  `init` uses the same validator, so a scaffold's name and the check that blesses
+  it stay in step.
 - **`doctor --remote` runs the same `dsh` field check as local `doctor`.** A
   repository whose `package.json` has `dsh: {}` and no `dsh.bundle.patch` used
   to print `ok` and exit `0`, because the remote file checks only looked for a
