@@ -460,6 +460,10 @@ prints has an answer.
 states the same host range the manifest declares. It is how a reader learns
 which host the plugin needs before installing it.
 
+`doctor --remote` and `audit --remote` run this same README check against the
+text GitHub serves, so a published repository with no Requirements heading
+fails without a clone.
+
 **What you see.**
 
 ```text

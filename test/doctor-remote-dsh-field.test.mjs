@@ -33,7 +33,7 @@ function manifest(extra = {}) {
 const support = {
   'index.js': 'export function apply() {}\n',
   'cordis.patch.yml': '- insert: []\n',
-  'README.md': '# demo\n\nRequires dsh >=0.2.0.\n',
+  'README.md': '# demo\n\n## Requirements\n\nRequires dsh >=0.2.0.\n',
 };
 
 function preload(t) {

@@ -669,7 +669,7 @@ the diff in the terminal.
 | `files list` | Every path `package.json` points at (`exports`, patch, client) must be covered by `files` |
 | `root export` | The loader imports the bare package name; if that module is the CLI (or exports no `apply`), the row mounts nothing while the install reports success |
 
-Exit code is `0` when the plugin can be installed and `1` when it cannot, so it drops into CI unchanged. `doctor --remote` and `audit --remote` run the manifest-only checks (`name`, `version`, `engines.dsh`, `dsh field`, `files list`) against the `package.json` GitHub serves, so a bad package name is reported before a clone or install. The `name` check is pinned at the process boundary: `npm test` expects the shipped CLI to reject a missing, empty and malformed name (`accepted=0/3`) and to accept a valid plain or scoped control.
+Exit code is `0` when the plugin can be installed and `1` when it cannot, so it drops into CI unchanged. `doctor --remote` and `audit --remote` run the same manifest and README checks (`name`, `version`, `engines.dsh`, `dsh field`, `files list`, `readme`) against the `package.json` and README GitHub serves, then check the files the manifest points at, so a bad package name or a README with no Requirements heading is reported before a clone or install. The `name` check is pinned at the process boundary: `npm test` expects the shipped CLI to reject a missing, empty and malformed name (`accepted=0/3`) and to accept a valid plain or scoped control.
 
 ## Repair what `doctor` finds
 
@@ -755,9 +755,9 @@ checkout.
 
 Start from the repository name in the hub issue: `PrismLean/dsh-run-guard`, one
 of the repositories in the 3 November install-failure audit. You do not need a
-checkout to learn what is wrong. `doctor --remote` reads `package.json` and the
-files it points at through the GitHub API and prints the same verdict it would
-give a folder:
+checkout to learn what is wrong. `doctor --remote` reads `package.json`, the
+README and the files the manifest points at through the GitHub API and prints
+the same verdict it would give a folder:
 
 ```sh
 $ npx dsh-plugin-toolkit@latest doctor --remote PrismLean/dsh-run-guard
@@ -812,15 +812,15 @@ for a whole list. `git apply --check` is the dry run: it fails before changing
 anything if the manifest moved since the diff was printed. Commit the applied
 change as you would any other edit.
 
-Then run `npx dsh-plugin-toolkit@latest doctor .` in the checkout. A checkout
-also reads the README text, so it can name a follow-up the remote read could
-not see — for `PrismLean/dsh-run-guard`, the README still has no Requirements
-section. [Repair a failed
+Then run `npx dsh-plugin-toolkit@latest doctor .` in the checkout. Both the
+remote and checkout commands now read the README text, so a `readme` line names
+the same follow-up in either place — for `PrismLean/dsh-run-guard`, the README
+still has no Requirements section. [Repair a failed
 install](https://github.com/WJDdidi-1/dsh-plugin-toolkit/blob/main/docs/repair.md#readme)
-has the smallest edit for each remaining line. Once the branch is pushed,
-`doctor --remote PrismLean/dsh-run-guard` no longer reports `engines.dsh`. If
-the diff does not apply because the file changed, run the remote fixer again —
-it always starts from the current `package.json`.
+has the smallest edit for each remaining line. Once the branch with that README
+edit is pushed, `doctor --remote PrismLean/dsh-run-guard` no longer reports
+`engines.dsh` or `readme`. If the diff does not apply because the file changed,
+run the remote fixer again — it always starts from the current `package.json`.
 
 ## When an install fails
 
@@ -1035,8 +1035,8 @@ passes too, work through [When the panel does not
 appear](#when-the-panel-does-not-appear).
 
 **Can I check a plugin before cloning it?**
-Yes. `doctor --remote owner/repo` reads the repository's `package.json` and the
-files it declares over the GitHub API, and writes nothing:
+Yes. `doctor --remote owner/repo` reads the repository's `package.json`, README
+and the files it declares over the GitHub API, and writes nothing:
 
 ```sh
 npx dsh-plugin-toolkit@latest doctor --remote V1ki/dsh-plugin-subscriptions

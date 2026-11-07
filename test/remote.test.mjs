@@ -36,7 +36,7 @@ const plugin = {
   'package.json': JSON.stringify(manifest()),
   'index.js': 'export function apply() {}\n',
   'cordis.patch.yml': '- insert: []\n',
-  'README.md': '# demo\n\nRequires dsh >=0.2.0.\n',
+  'README.md': '# demo\n\n## Requirements\n\nRequires dsh >=0.2.0.\n',
 };
 
 test('parseTarget accepts owner/repo, a URL, and a .git URL', () => {
