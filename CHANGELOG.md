@@ -1,5 +1,12 @@
 ## 0.20.12
 
+- **`doctor --remote` reads the README the way a checkout does.** A published
+  repository whose README has no `## Requirements` heading, or whose
+  Requirements section omits the `engines.dsh` range it declares, used to print
+  `ok` and exit `0`, while the same checkout failed the `readme` check. The
+  remote audit now reports that failure and exits `1`; `audit --remote` shares
+  the check, so the failing row and its `--json` finding carry it too. A README
+  that states the declared range still exits `0`.
 - **`dsh-plugin doctor` checks the package name before it packs anything.** A
   `package.json` whose `name` is missing, empty, or not a valid npm package name
   (for example `My Plugin!`) used to print `ok` and exit `0`, while
