@@ -1,5 +1,11 @@
 ## 0.20.12
 
+- **`doctor --remote` runs the same `dsh` field check as local `doctor`.** A
+  repository whose `package.json` has `dsh: {}` and no `dsh.bundle.patch` used
+  to print `ok` and exit `0`, because the remote file checks only looked for a
+  patch that was declared. It now reports `dsh field: dsh.bundle is missing` and
+  exits `1`; the failure is also carried into `audit --remote`, and a clean
+  repository still exits `0`.
 - **`dsh-plugin fix <owner>/<repo> --remote` treats an already-correct range as
   success.** When `package.json` already declares an `engines.dsh` range that
   clears the check, the command still prints `ok engines.dsh is already

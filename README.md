@@ -407,8 +407,8 @@ file. Reading `package.json` over the API is enough to name it.
 
 What it can see, and what it cannot:
 
-- Manifest checks (`engines.dsh`, `files`, `dsh.client`, `exports`) run on the
-  real `package.json`.
+- Manifest checks (`engines.dsh`, `dsh field`, `files`, `dsh.client`,
+  `exports`) run on the real `package.json`.
 - File checks (does `exports["./client"]` point at a file that exists, does the
   root export `apply`) need the tree. A package that runs `prepack`,
   `prepublishOnly`, `prepare` or `build` publishes files it does not commit, so
