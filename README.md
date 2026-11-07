@@ -409,6 +409,10 @@ What it can see, and what it cannot:
 
 - Manifest checks (`engines.dsh`, `dsh field`, `files`, `dsh.client`,
   `exports`) run on the real `package.json`.
+- README checks (`readme`) run on the text GitHub serves: the README must have
+  a `Requirements` heading and must state the host range `package.json`
+  declares. A repository whose checkout fails `readme` fails the remote check
+  too, with the same sentence.
 - File checks (does `exports["./client"]` point at a file that exists, does the
   root export `apply`) need the tree. A package that runs `prepack`,
   `prepublishOnly`, `prepare` or `build` publishes files it does not commit, so
