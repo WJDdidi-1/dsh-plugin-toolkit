@@ -7,7 +7,9 @@
   reports a `name:` failure and exits `1`, and the same check reaches
   `doctor --remote` and `audit --remote` through the shared manifest check.
   `init` uses the same validator, so a scaffold's name and the check that blesses
-  it stay in step.
+  it stay in step. `npm test` pins the result through the shipped CLI: missing,
+  empty and malformed names all exit `1` (`accepted=0/3`), while a valid plain or
+  scoped name exits `0`.
 - **`doctor --remote` runs the same `dsh` field check as local `doctor`.** A
   repository whose `package.json` has `dsh: {}` and no `dsh.bundle.patch` used
   to print `ok` and exit `0`, because the remote file checks only looked for a

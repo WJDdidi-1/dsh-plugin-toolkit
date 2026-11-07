@@ -96,6 +96,10 @@ anything is packed.
 `doctor --remote` and `audit --remote` run this same manifest check against the
 `package.json` GitHub serves, so the repository does not need a clone.
 
+`npm test` pins the behavior at the process boundary: the shipped CLI must reject
+a missing, empty and malformed name (`accepted=0/3`), and a valid plain or scoped
+name is the control that exits `0`.
+
 **Smallest fix.** Use a valid npm package name: lower-case letters, digits,
 dots, hyphens or underscores, optionally scoped with `@scope/`.
 

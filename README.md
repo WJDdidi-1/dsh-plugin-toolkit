@@ -669,7 +669,7 @@ the diff in the terminal.
 | `files list` | Every path `package.json` points at (`exports`, patch, client) must be covered by `files` |
 | `root export` | The loader imports the bare package name; if that module is the CLI (or exports no `apply`), the row mounts nothing while the install reports success |
 
-Exit code is `0` when the plugin can be installed and `1` when it cannot, so it drops into CI unchanged. `doctor --remote` and `audit --remote` run the manifest-only checks (`name`, `version`, `engines.dsh`, `dsh field`, `files list`) against the `package.json` GitHub serves, so a bad package name is reported before a clone or install.
+Exit code is `0` when the plugin can be installed and `1` when it cannot, so it drops into CI unchanged. `doctor --remote` and `audit --remote` run the manifest-only checks (`name`, `version`, `engines.dsh`, `dsh field`, `files list`) against the `package.json` GitHub serves, so a bad package name is reported before a clone or install. The `name` check is pinned at the process boundary: `npm test` expects the shipped CLI to reject a missing, empty and malformed name (`accepted=0/3`) and to accept a valid plain or scoped control.
 
 ## Repair what `doctor` finds
 
