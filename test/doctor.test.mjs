@@ -12,6 +12,34 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const fixture = (name) => path.join(here, 'fixtures', name);
 const scratch = () => fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-plugin-doctor-'));
 
+test('a missing, empty or non-npm name is a name failure, not an ok verdict', () => {
+  for (const name of [undefined, '', 'My Plugin!']) {
+    const dir = path.join(scratch(), 'plugin');
+    fs.cpSync(fixture('good'), dir, { recursive: true });
+    const manifestPath = path.join(dir, 'package.json');
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    if (name === undefined) delete manifest.name;
+    else manifest.name = name;
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+
+    const report = doctor(dir);
+    const failure = report.failures.find((entry) => entry.check === 'name');
+    assert.ok(failure, `${JSON.stringify(name)}: ${JSON.stringify(report.failures)}`);
+    assert.match(failure.message, /name/u);
+  }
+});
+
+test('a valid scoped npm name passes the name check', () => {
+  const dir = path.join(scratch(), 'plugin');
+  fs.cpSync(fixture('good'), dir, { recursive: true });
+  const manifestPath = path.join(dir, 'package.json');
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  manifest.name = '@me/my-panel';
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+
+  assert.equal(doctor(dir).failures.some((entry) => entry.check === 'name'), false);
+});
+
 test('a manifest the host can load passes every check', () => {
   const report = doctor(fixture('good'));
   assert.deepEqual(report.failures, []);
