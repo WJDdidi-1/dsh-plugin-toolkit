@@ -508,7 +508,10 @@ repositories: one repository that fails both `engines.dsh` and its client
 declaration prints `1 failing (2 problems)`. A repository whose `package.json`
 has an empty `dsh` field and no `dsh.bundle.patch` is `failing` here too: the
 batch runs the same `dsh field` check as `doctor`, and the `--json` finding
-carries that failure even though no patch path was declared to check.
+carries that failure even though no patch path was declared to check. A README
+with no `Requirements` heading is treated the same way: the batch asks the same
+`readme` question as a checkout, so the row is `failing`, the `--json` finding
+names `readme`, and the run exits `1` instead of reporting the repository clean.
 
 The command exits `1` when any repository is failing, unreadable, or
 rate-limited, and `0` only when every repository in the list is clean. `--from`

@@ -5,7 +5,8 @@
   Requirements section omits the `engines.dsh` range it declares, used to print
   `ok` and exit `0`, while the same checkout failed the `readme` check. The
   remote audit now reports that failure and exits `1`; `audit --remote` shares
-  the check, so the failing row and its `--json` finding carry it too. A README
+  the check, so both the single-repository and `--from` batch forms print the
+  `failing` row and carry its `readme` failure in the `--json` finding. A README
   that states the declared range still exits `0`.
 - **`dsh-plugin doctor` checks the package name before it packs anything.** A
   `package.json` whose `name` is missing, empty, or not a valid npm package name
