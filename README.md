@@ -377,8 +377,9 @@ forgets `client.js` passes it and fails only after `npm i`.
 
 `command: doctor` stops at the manifest checks (fast, no install), and
 `command: index` audits `market/index.json` instead, failing on any version whose
-`engines.dsh` is missing or is not a semver range. Pin `version:` if you would
-rather not track the latest release.
+`engines.dsh` is missing or is not a semver range (a malformed value such as
+`>=banana`, or a single pinned version such as `0.2.0`, both fail). Pin
+`version:` if you would rather not track the latest release.
 
 ## Check a plugin you have not cloned
 
@@ -656,7 +657,7 @@ the diff in the terminal.
 | Check | Why it matters |
 | --- | --- |
 | `version` | The tag is built from it; a malformed version produces a tag nobody can install |
-| `engines.dsh` | The market index copies this into every version entry. Missing it, or a value that is not a semver range, fails the index PR |
+| `engines.dsh` | The market index copies this into every version entry. Missing it, or a value that is not a semver range (including a pinned version such as `0.2.0`), fails the index PR |
 | `readme` | A `Requirements` section that states the declared range, so an install failure is predictable |
 | `dsh field` | `dsh.bundle.patch` must exist for the host to load the plugin |
 | `patch file` | The path declared above must be a real file |
