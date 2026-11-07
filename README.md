@@ -1011,6 +1011,56 @@ Honest list, so nobody plans around a feature that does not exist:
 - **`dev --host` is not covered by CI.** The unit tests use a synthetic event stream; the live path is exercised by hand against a running app, on macOS only.
 - **No Windows testing of the `dev` file watcher.** The Windows CI job runs the whole suite, but the watcher is only asserted against a temp directory, not a real profile.
 
+## FAQ
+
+**Do I need the app running to check a plugin?**
+No. `doctor` reads a folder and writes nothing, `mount` renders a client bundle
+in Node, and `verify` packs the plugin and installs that tarball into a
+temporary directory. None of them needs the running app.
+
+```sh
+npx dsh-plugin-toolkit@latest verify .
+```
+
+**Will `doctor --fix` rewrite my `package.json`?**
+Only with `--write`. Without it the command prints the plan and stops; with it,
+it applies the edits in the plan and runs the checks again.
+
+**`doctor` passes, but the panel still does not appear. What next?**
+`doctor` checks the manifest and source without executing the plugin. `verify`
+packs the plugin, installs the tarball and mounts the bundle, so it catches a
+root module or client bundle that throws when the loader loads it. If `verify`
+passes too, work through [When the panel does not
+appear](#when-the-panel-does-not-appear).
+
+**Can I check a plugin before cloning it?**
+Yes. `doctor --remote owner/repo` reads the repository's `package.json` and the
+files it declares over the GitHub API, and writes nothing:
+
+```sh
+npx dsh-plugin-toolkit@latest doctor --remote V1ki/dsh-plugin-subscriptions
+```
+
+**Will a plugin install on the DSH version I run?**
+Add `--host <version>` to a remote audit. It prints `compatible`,
+`incompatible` or `unknown` against that host, and an `incompatible` result is
+counted as failing and exits `1`:
+
+```sh
+npx dsh-plugin-toolkit@latest audit --remote L3n3L/dsh-resume --host 0.2.2-alpha.3
+```
+
+**What should CI run?**
+The composite action's default `command` is `verify`, the only check that reads
+the tarball. Use `command: doctor` for a fast manifest-only gate, or
+`command: index` to audit the market index:
+
+```yaml
+- uses: WJDdidi-1/dsh-plugin-toolkit@v1
+  with:
+    dir: plugin
+```
+
 ## Changelog
 
 [`CHANGELOG.md`](CHANGELOG.md) lists what changed in each release, including
