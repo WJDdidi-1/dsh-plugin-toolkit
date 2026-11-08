@@ -1,5 +1,12 @@
 ## 0.20.14
 
+- **A strict comparison against a wildcard major matches nothing.** `audit
+  --remote <owner/repo> --host <version>` treated `>*`, `>x`, `<*` and `<x` as
+  "any version" and called every host compatible, while npm reads them as an
+  empty set that no release satisfies. The host-range parser now reports
+  `incompatible` for those spellings; the inclusive `>=*` and `<=*` forms still
+  span every stable host. Regression tests pin both the parser and the CLI
+  verdict, including the major-only `>1`/`<=1` boundary.
 - **The `--jobs` benchmark asserts work, not wall-clock speed.** The throughput
   test used to fail whenever the batched run was not at least 25% faster, which
   is noise when the whole measurement is tens of milliseconds on a loaded
