@@ -41,19 +41,40 @@ function filesUnder(dir) {
   return found.sort();
 }
 
-test("init '~/my-panel' writes under HOME and leaves no literal ~ directory", () => {
-  const home = scratch();
-  const cwd = scratch();
-  const result = spawnSync(process.execPath, [BIN, 'init', '~/my-panel', '--name', 'my-panel'], {
+/** Run the shipped bin exactly as a shell would, with no shell in between. */
+function initViaBin(dir, home, cwd) {
+  return spawnSync(process.execPath, [BIN, 'init', dir, '--name', 'my-panel'], {
     cwd,
     env: envFor(home),
     encoding: 'utf8',
   });
+}
+
+test("init '~/my-panel' writes under HOME and leaves no literal ~ directory", () => {
+  const home = scratch();
+  const cwd = scratch();
+  const result = initViaBin('~/my-panel', home, cwd);
   assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /^created 8 file\(s\) in /mu);
 
   const files = filesUnder(path.join(home, 'my-panel'));
   assert.equal(files.length, 8, files.join('\n'));
+
+  // The shell-expanded spelling is the control: same scaffold, same files,
+  // written only because this process resolved the absolute path itself.
+  const controlHome = scratch();
+  const control = initViaBin(path.join(controlHome, 'my-panel'), controlHome, cwd);
+  assert.equal(control.status, 0, control.stderr);
+  const controlFiles = filesUnder(path.join(controlHome, 'my-panel'));
+  assert.deepEqual(files, controlFiles, 'the quoted path wrote a different scaffold than the expanded path');
+  assert.equal(files.length, controlFiles.length, 'the two invocations wrote different file counts');
   assert.equal(fs.existsSync(path.join(cwd, '~')), false, 'the scaffold landed in a directory literally named ~');
+});
+
+test('the README states that the tool, not the shell, expands ~ for these path arguments', () => {
+  const readme = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8').replace(/\r\n/gu, '\n');
+  assert.match(readme, /the tool, not the shell, expands `~` for these arguments/iu);
+  assert.match(readme, /init '~\/my-panel' --name my-panel/u);
 });
 
 test("doctor '~/my-panel' exits 0 on that scaffold", () => {
