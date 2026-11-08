@@ -445,11 +445,12 @@ verdict, and the remaining entries are reported without another request.
 
 ### Will this plugin install on my DSH?
 
-The seven compatibility reports all end with the same question. Add `--host
-<version>` to a remote audit and it answers that question for one repository.
-This is a real run against `L3n3L/dsh-resume`, a plugin whose declared range
-stops before DSH 0.2.0, checked against the `0.2.2-alpha.3` canary from the
-reports:
+The eight compatibility reports, from four repositories, all end with the same
+question. Add `--host <version>` to a remote audit and it answers that question
+for one repository. This is the output for `L3n3L/dsh-resume`, a real plugin
+whose declared range stops before DSH 0.2.0, checked against the
+`0.2.2-alpha.3` canary from the reports. The checked-in sample is a frozen 0.1.3
+snapshot, so the line stays true as the upstream repository changes:
 
 ```sh
 $ dsh-plugin audit --remote L3n3L/dsh-resume --host 0.2.2-alpha.3
@@ -460,9 +461,11 @@ summary: 1 repository — 0 clean, 1 failing (1 problem), 0 unreadable, 0 rate-l
 
 The verdict comes first: `incompatible` means the range in `package.json` does
 not accept the host, so the installer rejects the plugin before it unpacks it.
-This run exits `1`. The same answer is reproducible without a GitHub request —
-the manifest is checked in under `examples/compatibility-sample/`, and this
-command feeds it through the real CLI path:
+This run exits `1`. The same answer is reproducible without a GitHub request:
+the checked-in snapshot under `examples/compatibility-sample/` keeps the 0.1.3
+manifest fields that decide compatibility, and its `## Requirements` heading
+isolates the host-range answer. This command feeds that snapshot through the
+real CLI path:
 
 ```sh
 $ node scripts/compatibility-sample.mjs
@@ -470,7 +473,11 @@ $ node scripts/compatibility-sample.mjs
 
 (`npm run compatibility` runs the same script.) The test suite runs that
 command and compares its output with the block above, so the sample cannot
-drift from the formatter or from the README.
+drift from the formatter or from the README. Running
+`dsh-plugin audit --remote L3n3L/dsh-resume --host 0.2.2-alpha.3` without the
+sample audits the repository's current default branch instead; a README or
+manifest change since 0.1.3 can add another `readme` or manifest failure to the
+same row.
 
 The line carries the range `package.json` declares and one of `compatible`,
 `incompatible`, or `unknown` against that host version. `unknown` is the honest
