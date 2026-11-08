@@ -1,5 +1,13 @@
 ## 0.20.12
 
+- **Major-only comparator ranges get npm's boundaries.** `audit --remote
+  <owner/repo> --host <version>` filled a missing minor with 0 before deciding
+  the edge of `<=1`, `>1` and hyphen ranges such as `1.2.3 - 2`, so it called
+  1.2.3 compatible with `<=1` and incompatible with `>1` — the reverse of what
+  the installer does. The same answer is used by `doctor --remote`, `--json`
+  and `--patch-dir`. The older `~>` spelling of `~` is now parsed too, instead
+  of being reported as unknown. Regression tests pin all four forms against npm
+  semver.
 - **`doctor --remote` reads the README the way a checkout does.** A published
   repository whose README has no `## Requirements` heading, or whose
   Requirements section omits the `engines.dsh` range it declares, used to print
