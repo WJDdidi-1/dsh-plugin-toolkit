@@ -1,5 +1,14 @@
 ## 0.20.13
 
+- **`doctor` reads the root export from code, not from prose.** A root module
+  whose only `apply` was inside a comment, string, template or regex literal
+  used to pass the `root export` check, while `verify --no-mount` rejected the
+  installed package. The check now removes those non-code spans, without
+  importing or running the plugin, and accepts only a real exported `apply`:
+  `export function apply`, `export const apply = ...`, `export { apply }` and
+  the CommonJS `module.exports` forms still pass, while
+  `// TODO: export function apply() {}` is a failure. The same helper backs
+  `doctor --remote`, so the checkout and the published repository agree.
 - **The compatibility sample says which snapshot it answers for.** The README
   now names the eight reports behind "will this plugin install on my DSH?" and
   states that the quoted `incompatible` line comes from the frozen 0.1.3 sample
