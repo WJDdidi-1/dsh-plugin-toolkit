@@ -1,4 +1,4 @@
-## 0.20.12
+## 0.20.13
 
 - **The compatibility sample says which snapshot it answers for.** The README
   now names the eight reports behind "will this plugin install on my DSH?" and
@@ -50,6 +50,22 @@
   patch that was declared. It now reports `dsh field: dsh.bundle is missing` and
   exits `1`; the failure is also carried into `audit --remote`, and a clean
   repository still exits `0`.
+- **`fix --remote` can aim the range at the host that rejected the install.**
+  `fix <owner>/<repo> --remote --engines --host 0.3.0 --patch repair.patch`
+  plans the same `>=0.3.0 <1.0.0` range that `fix . --engines --host 0.3.0
+  --write` writes in a checkout. The remote planner and the local writer share
+  one decision, so the patch both accepts the host and rejects the next major,
+  prints why, and a non-semver `--host` exits `2` before creating a patch file.
+- **`release` refuses a bad host range instead of throwing at the index step.**
+  A malformed `engines.dsh` that reached the market-entry builder used to escape
+  as an exception, outside the normal `{ ok: false, stage, failures }` result.
+  `release` now reports that problem in the `index` stage and writes nothing; a
+  manifest with the same bad range is already stopped by the preflight, so the
+  command returns before a tag is created. The regression test checks that the
+  index file is byte-for-byte unchanged and that the registry is never called.
+
+## 0.20.12
+
 - **`dsh-plugin fix <owner>/<repo> --remote` treats an already-correct range as
   success.** When `package.json` already declares an `engines.dsh` range that
   clears the check, the command still prints `ok engines.dsh is already
