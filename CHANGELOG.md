@@ -1,5 +1,13 @@
 ## 0.20.12
 
+- **The compatibility sample says which snapshot it answers for.** The README
+  now names the eight reports behind "will this plugin install on my DSH?" and
+  states that the quoted `incompatible` line comes from the frozen 0.1.3 sample
+  under `examples/compatibility-sample/`, not from whatever the upstream
+  repository's default branch contains today. The sample README explains why it
+  keeps a `## Requirements` heading even though the upstream README is
+  localized: it isolates the host-range verdict, while a live audit also runs
+  the README check and can add a `readme` failure to the same row.
 - **A leading `~` expands in every user-named path, not just `--log`.** On
   `cmd` and PowerShell the shell leaves the tilde literal, so
   `init '~/my-panel' --name my-panel` used to create a directory literally
