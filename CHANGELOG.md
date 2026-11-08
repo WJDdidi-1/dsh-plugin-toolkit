@@ -1,4 +1,4 @@
-## 0.20.13
+## 0.20.14
 
 - **`doctor` reads the root export from code, not from prose.** A root module
   whose only `apply` was inside a comment, string, template or regex literal
@@ -18,6 +18,9 @@
   real `export function apply`, `export const apply = ...` (also `let` and
   `var`), `export { apply }` (including aliases), `exports.apply = ...` or
   `module.exports = { apply }` passes.
+
+## 0.20.13
+
 - **The compatibility sample says which snapshot it answers for.** The README
   now names the eight reports behind "will this plugin install on my DSH?" and
   states that the quoted `incompatible` line comes from the frozen 0.1.3 sample
