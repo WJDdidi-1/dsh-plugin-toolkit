@@ -1,4 +1,4 @@
-## 0.20.14
+## 0.20.15
 
 - **A strict comparison against a wildcard major matches nothing.** `audit
   --remote <owner/repo> --host <version>` treated `>*`, `>x`, `<*` and `<x` as
@@ -9,6 +9,9 @@
   verdict and the `--json` row, including the major-only `>1`/`<=1` boundary:
   `>1` rejects 1.2.3 and `<=1` accepts it, in both the text line and
   `compatibility`.
+
+## 0.20.14
+
 - **The `--jobs` benchmark asserts work, not wall-clock speed.** The throughput
   test used to fail whenever the batched run was not at least 25% faster, which
   is noise when the whole measurement is tens of milliseconds on a loaded
