@@ -388,9 +388,12 @@ export function apply(ctx) {
 ```
 
 Add `index.js` to `files`. `export const apply = ...` and
-`export { apply }` are also recognized. A plugin that only inserts a subpath
-patch and has no root module does not need a root export; do not point the root
-at the CLI to satisfy the field.
+`export { apply }` are also recognized. Comments and string literals are not
+exports: a `// TODO: export function apply() {}` does not satisfy the check.
+`doctor` reads the source, not the installed module, so it never imports or
+runs the plugin while asking this question. A plugin that only inserts a
+subpath patch and has no root module does not need a root export; do not point
+the root at the CLI to satisfy the field.
 
 If the root file named by `main`/`exports["."]` does not exist at all, `doctor`
 has no source to inspect and does not report this check — `verify` imports the
