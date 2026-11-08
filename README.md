@@ -815,11 +815,14 @@ $ git apply /tmp/dsh-run-guard-engines.patch
 
 `--patch` creates parent directories and refuses to replace an existing file
 unless you pass `--force`; its output names the file, and the repository it read
-is still untouched. The same host-aware plan works with `--patch`, and
-`audit --remote --host <version> --patch-dir <dir>` writes host-targeted repairs
-for a whole list. `git apply --check` is the dry run: it fails before changing
-anything if the manifest moved since the diff was printed. Commit the applied
-change as you would any other edit.
+is still untouched. The same host-aware plan works with `--patch`:
+`fix <owner>/<repo> --remote --engines --host 0.3.0 --patch repair.patch` plans
+`>=0.3.0 <1.0.0` and prints why. After cloning, `fix . --engines --host 0.3.0
+--write` applies that same range; either path writes one that accepts the host
+and rejects the next major. `audit --remote --host <version> --patch-dir <dir>`
+writes host-targeted repairs for a whole list. `git apply --check` is the dry
+run: it fails before changing anything if the manifest moved since the diff was
+printed. Commit the applied change as you would any other edit.
 
 Then run `npx dsh-plugin-toolkit@latest doctor .` in the checkout. Both the
 remote and checkout commands now read the README text, so a `readme` line names
