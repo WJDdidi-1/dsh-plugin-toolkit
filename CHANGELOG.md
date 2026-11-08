@@ -1,5 +1,15 @@
 ## 0.20.12
 
+- **A leading `~` expands in every user-named path, not just `--log`.** On
+  `cmd` and PowerShell the shell leaves the tilde literal, so
+  `init '~/my-panel' --name my-panel` used to create a directory literally
+  named `~` in the current folder, and `doctor '~/my-panel'` then looked in
+  the same wrong place. Both the CLI and the exported `init`/`doctor`/`fix`/
+  `verify`/`dev`/`release` functions now expand `~/` and `~\` before any
+  filesystem access, as do `--home`, `--market`, `--dest`, `--from`,
+  `--patch-dir`, `--patch`, `--log` and `--index`. The scaffold lands in
+  `$HOME/my-panel`, `doctor` exits `0` on it, and no literal `~` folder is
+  created.
 - **Major-only comparator ranges get npm's boundaries.** `audit --remote
   <owner/repo> --host <version>` filled a missing minor with 0 before deciding
   the edge of `<=1`, `>1` and hyphen ranges such as `1.2.3 - 2`, so it called
