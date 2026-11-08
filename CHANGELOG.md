@@ -9,6 +9,15 @@
   the CommonJS `module.exports` forms still pass, while
   `// TODO: export function apply() {}` is a failure. The same helper backs
   `doctor --remote`, so the checkout and the published repository agree.
+- **`doctor` and `verify --no-mount` are pinned to one root-export verdict at
+  the process boundary.** A regression test spawns the shipped CLI on the
+  comment-only fixture and requires both commands to exit `1`, so the source
+  parser and the installed import cannot disagree again. The README and
+  `docs/repair.md` now state the exact rule: the resolved root is read as
+  source, comments and string/template/regex contents are removed, and only a
+  real `export function apply`, `export const apply = ...` (also `let` and
+  `var`), `export { apply }` (including aliases), `exports.apply = ...` or
+  `module.exports = { apply }` passes.
 - **The compatibility sample says which snapshot it answers for.** The README
   now names the eight reports behind "will this plugin install on my DSH?" and
   states that the quoted `incompatible` line comes from the frozen 0.1.3 sample

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -7,6 +8,8 @@ import { run } from '../lib/cli.mjs';
 import { doctor, exportsApply } from '../lib/doctor.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(here, '..');
+const BIN = path.join(ROOT, 'bin', 'dsh-plugin.mjs');
 const fixture = (name) => path.join(here, 'fixtures', name);
 
 function recorder() {
@@ -66,6 +69,23 @@ for (const name of commentFixtures) {
     assert.match(io.lines.join('\n'), /root export: the root export index\.js does not export apply/u);
   });
 }
+
+test('the shipped CLI makes doctor and verify --no-mount agree on comment-only roots', () => {
+  // `run()` above is in-process. A shell invocation is the boundary users and
+  // CI actually hit, and it is where the two commands used to disagree: 0.20.12
+  // let `doctor` accept a comment-only root that `verify --no-mount` rejected.
+  for (const name of commentFixtures) {
+    const dir = fixture(name);
+    const doctorRun = spawnSync(process.execPath, [BIN, 'doctor', dir], { encoding: 'utf8' });
+    assert.equal(doctorRun.status, 1, `doctor ${name}:\n${doctorRun.stdout}\n${doctorRun.stderr}`);
+    assert.match(doctorRun.stderr, /root export: the root export index\.js does not export apply/u, doctorRun.stderr);
+
+    const verifyRun = spawnSync(process.execPath, [BIN, 'verify', dir, '--no-mount'], { encoding: 'utf8' });
+    assert.equal(verifyRun.status, 1, `verify ${name}:\n${verifyRun.stdout}\n${verifyRun.stderr}`);
+    assert.match(verifyRun.stderr, /dsh-plugin verify: stopped at doctor/u, verifyRun.stderr);
+    assert.match(verifyRun.stderr, /root export: the root export index\.js does not export apply/u, verifyRun.stderr);
+  }
+});
 
 test('a real apply export still passes after the comment-only fixtures fail', async () => {
   const report = doctor(fixture('root-export-string-apply'));
