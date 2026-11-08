@@ -133,6 +133,8 @@ next: npm install && npm test && npm run doctor
 
 What you get is not a snippet: it is a plugin whose `doctor` already passes (`engines.dsh`, the patch file, the `files` list), with a client bundle that registers a sidebar tab, a testkit test for it, and a CI workflow that runs both. `init` refuses a directory that is not empty unless you pass `--force`, and refuses a name npm would refuse — those are the two mistakes that cost the most time later.
 
+Every command that takes a path expands a leading `~` before touching the filesystem, because `cmd` and PowerShell leave it literal. `init '~/my-panel' --name my-panel` writes into your home directory (the same place `init ~/my-panel` writes on a POSIX shell), and `doctor '~/my-panel'` reads it back. The Windows spelling `~\my-panel` works too; a directory literally named `~` is never created.
+
 ## Where it lives
 
 The checker is docked **under the conversation**, above the input bar: a single
@@ -878,10 +880,13 @@ $ npx dsh-plugin-toolkit explain "plugin install failed" ./my-panel
 The same checkout argument works after the log:
 `dsh-plugin explain --log ~/.dsh/logs/install.log ./my-panel`.
 
-On Windows, `cmd` and PowerShell leave the tilde alone:
-`--log ~\.dsh\logs\install.log` expands exactly like
-`--log ~/.dsh/logs/install.log`. A log that cannot be read exits `2` and names
-the resolved absolute path it tried, never a directory literally named `~`.
+On Windows, `cmd` and PowerShell leave the tilde alone. Every user-named path
+expands it: the directory argument of `init`, `doctor`, `fix`, `verify`, `dev`
+and `release`, and the `--home`, `--market`, `--dest`, `--from`, `--patch-dir`,
+`--patch`, `--log` and `--index` flags. `--log ~\.dsh\logs\install.log`
+expands exactly like `--log ~/.dsh/logs/install.log`. A log that cannot be read
+exits `2` and names the resolved absolute path it tried, never a directory
+literally named `~`.
 
 Text it does not recognise exits `2` instead of guessing: a wrong diagnosis
 sends you editing the wrong file. A log with no known cause also exits `2` and
