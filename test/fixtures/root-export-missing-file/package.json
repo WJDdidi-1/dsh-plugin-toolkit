@@ -1,7 +1,7 @@
 {
   "name": "root-export-missing-file",
   "version": "1.0.0",
-  "description": "the root export is a string naming a file that does not exist",
+  "description": "exports['.'] names a file that does not exist",
   "license": "MIT",
   "type": "module",
   "engines": {

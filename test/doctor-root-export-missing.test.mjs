@@ -3,7 +3,9 @@
  * `doctor` skipped a missing file silently and let a directory escape as a raw
  * `EISDIR` from `readFileSync`. Both shapes are a loader import that cannot
  * succeed, so they belong in the same `root export` line as an `apply` that is
- * absent. The process-boundary assertions spawn the shipped CLI because that is
+ * absent. All three export spellings Node accepts reach the same check: a
+ * string root, `exports["."]` as a string, and `exports["."]` as a conditions
+ * object. The process-boundary assertions spawn the shipped CLI because that is
  * where users and CI see the verdict; `verify` is spawned too, because it must
  * stop at this same check instead of packing a package whose root cannot load.
  * The scaffold control makes sure the new failure does not turn a healthy
@@ -28,6 +30,7 @@ const fixture = (name) => path.join(here, 'fixtures', name);
 const FIXTURES = [
   { name: 'root-export-missing-file', target: 'missing.js', problem: /does not exist/u },
   { name: 'root-export-missing-conditions-file', target: 'missing.js', problem: /does not exist/u },
+  { name: 'root-export-string-missing-file', target: 'missing.js', problem: /does not exist/u },
   { name: 'root-export-directory', target: 'lib', problem: /is a directory/u },
 ];
 
@@ -50,6 +53,9 @@ test('the shipped CLI exits 1 on each unloadable root export and names the targe
     assert.ok(line, `${name} printed no root export line:\n${output}`);
     assert.match(line, problem, `${name}: ${line}`);
     assert.ok(line.includes(target), `${name} did not name ${target}: ${line}`);
+    // 0.20.12 exited 0 for a missing file and escaped the directory case as a
+    // raw EISDIR; neither is a verdict a user can act on.
+    assert.doesNotMatch(output, /\bEISDIR\b/u, `${name} leaked a raw EISDIR:\n${output}`);
   }
 });
 
@@ -67,6 +73,7 @@ test('verify --no-mount stops at the same doctor root-export check, not at pack'
     assert.ok(line, `${name} printed no root export line:\n${output}`);
     assert.match(line, problem, `${name}: ${line}`);
     assert.ok(line.includes(target), `${name} did not name ${target}: ${line}`);
+    assert.doesNotMatch(output, /\bEISDIR\b/u, `${name} leaked a raw EISDIR:\n${output}`);
     assert.doesNotMatch(output, /stopped at pack|✗ pack:/u, `${name} reached pack:\n${output}`);
   }
 });
