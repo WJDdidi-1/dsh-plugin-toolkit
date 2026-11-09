@@ -990,7 +990,7 @@ checks settled after 1s (1 look(s))
 merged
 ```
 
-Without `--pr` it prints the `git add` / `gh pr create` commands instead of running them; `--dry-run` prints the whole sequence before anything happens. A re-run after a failure is safe: when the tag already points at HEAD it is reused rather than recreated, the release continues with the registry wait, and the same version with the same publish time is a no-op. A no-op release prints `<index> already carried <version>; nothing to commit` and exits `0` without creating a `market/<version>` branch, even when `--pr` or `--merge` is passed.
+Without `--pr` it prints the `git add` / `gh pr create` commands instead of running them; `--dry-run` prints the whole sequence before anything happens. A re-run after a failure is safe: when the tag already points at HEAD it is reused rather than recreated, the release continues with the registry wait, and the same version with the same publish time is a no-op. A no-op release prints `<index> already carried <version>; nothing to commit` and exits `0` without creating a `market/<version>` branch, even when `--pr` or `--merge` is passed. A different publish time is not a no-op: the release stops at `index`, names the indexed and registry timestamps in the error, exits `1`, and creates no `market/<version>` branch.
 
 If that tag points at another commit, the release does not move it. It exits `1`
 and names the tag, the commit it points at, HEAD, and the recovery:

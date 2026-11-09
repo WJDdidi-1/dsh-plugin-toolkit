@@ -9,7 +9,9 @@
   <version>; nothing to commit`, exits `0`, and creates no branch even with
   `--pr` or `--merge`. A different publish time still stops with both
   timestamps named. Three consecutive runs and the module-level result are
-  now regression-tested, and the README documents the no-op.
+  now regression-tested, and the README documents the no-op. A checked-in
+  one-second-mismatch fixture pins the failure through the CLI as well: exit
+  `1`, both timestamps in the error, and no `market/<version>` branch.
 
 ## 0.20.19
 

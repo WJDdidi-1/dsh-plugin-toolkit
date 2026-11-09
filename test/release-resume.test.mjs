@@ -11,6 +11,7 @@ import { run } from '../lib/cli.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fixture = path.join(here, 'fixtures', 'good');
+const mismatchFixture = path.join(here, 'fixtures', 'release-timestamp-mismatch');
 
 function git(dir, args) {
   return execFileSync('git', args, { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
@@ -197,6 +198,65 @@ test('a release whose index already carries the version skips the PR sequence', 
   assert.equal(result.pullRequest, undefined);
   assert.equal(result.merged, undefined);
   // The unchanged index has nothing to commit, so no branch may be left behind.
+  assert.equal(git(dir, ['branch', '--list', `market/${version}`]), '');
+});
+
+/** A repository whose index lists the version one second after the registry. */
+function timestampMismatchRepo() {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rel-mismatch-'));
+  const dir = path.join(root, 'plugin');
+  fs.cpSync(mismatchFixture, dir, { recursive: true });
+  git(dir, ['init', '-q']);
+  git(dir, ['config', 'user.email', 'test@example.com']);
+  git(dir, ['config', 'user.name', 'Test']);
+  git(dir, ['add', '.']);
+  git(dir, ['commit', '-q', '-m', 'one']);
+  git(dir, ['tag', 'plugin-v1.0.0']);
+  return { dir, name: 'demo-plugin', version: '1.0.0' };
+}
+
+test('a publish time one second off the index still fails the release', async () => {
+  const { dir, name, version } = timestampMismatchRepo();
+
+  const result = await release({
+    dir,
+    pr: true,
+    fetch: registryHit(version, '2026-01-01T00:00:00.000Z'),
+    sleep: async () => {},
+  });
+
+  assert.equal(result.ok, false, JSON.stringify(result.failures ?? []));
+  assert.equal(result.stage, 'index');
+  const message = result.failures[0].message;
+  assert.match(message, /already in the index with publishTimestamp 1767225601, not 1767225600/u);
+  // A mismatch is not the same-timestamp resume path: nothing is committed and
+  // no branch is left behind for a release that did not finish.
+  assert.equal(result.indexUpdate, undefined);
+  assert.equal(git(dir, ['branch', '--list', `market/${version}`]), '');
+  assert.equal(readVersions(dir, name)[0].publishTimestamp, 1767225601);
+});
+
+test('the CLI exits 1 on a publish-time mismatch and creates no PR branch', async () => {
+  const { dir, version } = timestampMismatchRepo();
+  const lines = [];
+  const errors = [];
+  const originalFetch = globalThis.fetch;
+  let code;
+  try {
+    globalThis.fetch = registryHit(version, '2026-01-01T00:00:00.000Z');
+    code = await run(['release', dir, '--pr'], {
+      log: (line) => lines.push(String(line)),
+      error: (line) => errors.push(String(line)),
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  assert.equal(code, 1, [...lines, ...errors].join('\n'));
+  const errorText = errors.join('\n');
+  assert.match(errorText, /dsh-plugin release stopped at index/u);
+  assert.ok(errorText.includes('1767225601'), errorText);
+  assert.ok(errorText.includes('1767225600'), errorText);
   assert.equal(git(dir, ['branch', '--list', `market/${version}`]), '');
 });
 
