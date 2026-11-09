@@ -10,6 +10,7 @@ import { audit, listInstalled } from '../lib/audit.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..');
+const MISSING_BUNDLE_FIXTURE = path.join(here, 'fixtures', 'missing-declared-bundle');
 
 function scratch() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'audit-missing-install-'));
@@ -106,6 +107,38 @@ test('the shipped CLI reports the missing declared bundle and exits 1', () => {
   assert.match(output, /^ghost-plugin\s+\?\s+missing\b/mu);
   assert.match(output, /node_modules\/ghost-plugin/u);
   assert.match(output, /^good-plugin\b/mu, 'the valid plugin must still be printed');
+});
+
+test('the checked-in declared-but-absent fixture prints the ghost row and exits 1', async () => {
+  // This is the minimal 0.20.12 shape: one name in dsh.profile.bundles and no
+  // node_modules directory at all. The scan must start from the profile, not
+  // from whatever it happens to find on disk, or the only declared plugin
+  // silently vanishes and the command reports a clean exit.
+  const modules = path.join(MISSING_BUNDLE_FIXTURE, 'profiles', 'desktop', 'node_modules');
+  assert.equal(fs.existsSync(modules), false, 'the fixture must keep node_modules absent');
+
+  const io = recorder();
+  const result = await audit({ home: MISSING_BUNDLE_FIXTURE, io });
+  assert.equal(result.ok, false, 'a declared but uninstalled plugin must fail the audit');
+  assert.deepEqual(result.plugins.map((plugin) => plugin.name), ['ghost-plugin']);
+  const ghost = result.plugins[0];
+  assert.equal(ghost.missing, true);
+  assert.equal(ghost.version, '?');
+  assert.deepEqual(ghost.failures.map((failure) => failure.check), ['install']);
+  assert.match(ghost.failures[0].message, /node_modules\/ghost-plugin/u);
+  assert.match(io.lines.join('\n'), /^ghost-plugin\s+\?\s+missing\b/mu);
+
+  const run = spawnSync(
+    process.execPath,
+    [path.join(ROOT, 'bin', 'dsh-plugin.mjs'), 'audit', '--home', MISSING_BUNDLE_FIXTURE, '--timeout', '50'],
+    { encoding: 'utf8' },
+  );
+  const output = `${run.stdout}\n${run.stderr}`;
+  assert.equal(run.status, 1, output);
+  assert.match(output, /^ghost-plugin\s+\?\s+missing\b/mu, 'the missing declared bundle needs its own row');
+  assert.match(output, /node_modules\/ghost-plugin/u, 'the row must name the absent folder');
+  assert.match(output, /fix: reinstall ghost-plugin/u);
+  assert.match(output, /1 of 1 installed plugin\(s\) have problems/u);
 });
 
 test('an absent package that the profile never declared stays out of the audit', async () => {

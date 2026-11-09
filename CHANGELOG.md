@@ -11,7 +11,11 @@
   ignored, so ordinary dependencies do not appear. A regression test pins the
   module result and the spawned CLI exit code in both directions: the declared
   missing bundle exits `1`, and the same home with the name removed from the
-  profile exits `0` without printing it.
+  profile exits `0` without printing it. A checked-in home at
+  `test/fixtures/missing-declared-bundle` also keeps the minimal case — one
+  declared name and no `node_modules` directory at all — reproducible through
+  `audit --home`, so the scan cannot fall back to "nothing installed" and exit
+  clean again.
 - **`doctor` names a root export that cannot be loaded.** A package whose
   `exports["."]` (or `main`) named a missing file printed `ok` and exited `0`,
   while the same package would fail when the loader imported it; a target that
