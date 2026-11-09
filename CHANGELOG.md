@@ -1,4 +1,4 @@
-## 0.20.15
+## 0.20.16
 
 - **`doctor` names a root export that cannot be loaded.** A package whose
   `exports["."]` (or `main`) named a missing file printed `ok` and exited `0`,
@@ -14,6 +14,9 @@
   `verify --no-mount` on the same fixtures exits `1` at `stopped at doctor`
   without a `pack:` failure, while the unmodified `init` scaffold still passes
   both commands.
+
+## 0.20.15
+
 - **A strict comparison against a wildcard major matches nothing.** `audit
   --remote <owner/repo> --host <version>` treated `>*`, `>x`, `<*` and `<x` as
   "any version" and called every host compatible, while npm reads them as an
