@@ -21,11 +21,28 @@ import { audit } from '../lib/audit.mjs';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..');
 const BIN = path.join(ROOT, 'bin', 'dsh-plugin.mjs');
-const FIXTURE_HOME = path.join(here, 'fixtures', 'audit-home-tilde', 'home');
-const FIXTURE_PROFILE = path.join(FIXTURE_HOME, '.dsh');
+const FIXTURE_ROOT = path.join(here, 'fixtures', 'audit-home-tilde');
+const FIXTURE_HOME = path.join(FIXTURE_ROOT, 'home');
+const FIXTURE_PLUGIN = path.join(FIXTURE_ROOT, 'plugin', 'broken');
 
 function scratch() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'audit-home-tilde-'));
+}
+
+/**
+ * Copy the checked-in home and install its declared `broken` plugin as
+ * `node_modules/broken`. A committed `node_modules` path is ignored by git, so
+ * the fixture keeps the package beside the home and materialises the installed
+ * shape here instead.
+ */
+function materializeHome(t) {
+  const home = scratch();
+  t.after(() => fs.rmSync(home, { recursive: true, force: true }));
+  fs.cpSync(FIXTURE_HOME, home, { recursive: true });
+  const dest = path.join(home, '.dsh', 'profiles', 'desktop', 'node_modules', 'broken');
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.cpSync(FIXTURE_PLUGIN, dest, { recursive: true });
+  return home;
 }
 
 function envFor(home) {
@@ -34,10 +51,10 @@ function envFor(home) {
   return { ...process.env, HOME: home, USERPROFILE: home };
 }
 
-function runAudit(homeSpelling, cwd) {
+function runAudit(homeSpelling, cwd, home) {
   return spawnSync(process.execPath, [BIN, 'audit', '--home', homeSpelling, '--timeout', '50'], {
     cwd,
-    env: envFor(FIXTURE_HOME),
+    env: envFor(home),
     encoding: 'utf8',
   });
 }
@@ -51,21 +68,23 @@ function assertBrokenRow(result) {
 }
 
 test('audit --home expands ~/ and ~\\ to the same real profile and exits 1', (t) => {
+  const home = materializeHome(t);
   const cwd = scratch();
   t.after(() => fs.rmSync(cwd, { recursive: true, force: true }));
 
   for (const spelling of ['~/.dsh', '~\\.dsh']) {
-    const result = runAudit(spelling, cwd);
+    const result = runAudit(spelling, cwd, home);
     assertBrokenRow(result);
     assert.equal(fs.existsSync(path.join(cwd, '~')), false, `${spelling} created a directory literally named ~`);
   }
 });
 
 test('the absolute-path control reads the same profile and exits 1', (t) => {
+  const home = materializeHome(t);
   const cwd = scratch();
   t.after(() => fs.rmSync(cwd, { recursive: true, force: true }));
 
-  const result = runAudit(FIXTURE_PROFILE, cwd);
+  const result = runAudit(path.join(home, '.dsh'), cwd, home);
   assertBrokenRow(result);
   assert.equal(fs.existsSync(path.join(cwd, '~')), false);
 });
@@ -86,9 +105,10 @@ test('a bare --home is a usage error, not a scan of the current folder', (t) => 
 });
 
 test('the exported audit expands ~/.dsh without a shell in between', async (t) => {
+  const home = materializeHome(t);
   const previous = { HOME: process.env.HOME, USERPROFILE: process.env.USERPROFILE };
-  process.env.HOME = FIXTURE_HOME;
-  process.env.USERPROFILE = FIXTURE_HOME;
+  process.env.HOME = home;
+  process.env.USERPROFILE = home;
   t.after(() => {
     for (const [name, value] of Object.entries(previous)) {
       if (value === undefined) delete process.env[name];
