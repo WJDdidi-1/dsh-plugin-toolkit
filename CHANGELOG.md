@@ -7,12 +7,13 @@
   `root export` check now asks the filesystem what the resolved path is and
   reports a missing file, a directory, or an unreadable file as a named failure
   before reading source. `verify --no-mount` stops at that same `doctor` check
-  instead of reaching pack or install. Three fixtures pin the behavior through
-  the shipped CLI: a string export and a conditions-object export naming
-  `missing.js` and an export naming the `lib` directory all exit `1` with a
-  `root export:` line naming the target, and `verify --no-mount` on the same
-  fixtures exits `1` at `stopped at doctor` without a `pack:` failure, while the
-  unmodified `init` scaffold still passes both commands.
+  instead of reaching pack or install. Four fixtures pin the behavior through
+  the shipped CLI: a string root, an `exports["."]` string and a conditions
+  object naming `missing.js`, and an export naming the `lib` directory all exit
+  `1` with a `root export:` line naming the target and no raw `EISDIR`, and
+  `verify --no-mount` on the same fixtures exits `1` at `stopped at doctor`
+  without a `pack:` failure, while the unmodified `init` scaffold still passes
+  both commands.
 - **A strict comparison against a wildcard major matches nothing.** `audit
   --remote <owner/repo> --host <version>` treated `>*`, `>x`, `<*` and `<x` as
   "any version" and called every host compatible, while npm reads them as an
