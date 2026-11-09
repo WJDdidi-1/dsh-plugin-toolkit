@@ -4,8 +4,10 @@
  * `EISDIR` from `readFileSync`. Both shapes are a loader import that cannot
  * succeed, so they belong in the same `root export` line as an `apply` that is
  * absent. The process-boundary assertions spawn the shipped CLI because that is
- * where users and CI see the verdict; the scaffold control makes sure the new
- * failure does not turn a healthy package red.
+ * where users and CI see the verdict; `verify` is spawned too, because it must
+ * stop at this same check instead of packing a package whose root cannot load.
+ * The scaffold control makes sure the new failure does not turn a healthy
+ * package red.
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -51,6 +53,24 @@ test('the shipped CLI exits 1 on each unloadable root export and names the targe
   }
 });
 
+test('verify --no-mount stops at the same doctor root-export check, not at pack', () => {
+  // `verify` runs `doctor` first, so a root the loader cannot import has to stop
+  // there. Reaching `npm pack` would spend time packing a package whose root is
+  // already known to be unloadable, and would print a `pack:` failure instead of
+  // the sentence that names the missing target.
+  for (const { name, target, problem } of FIXTURES) {
+    const run = spawnSync(process.execPath, [BIN, 'verify', fixture(name), '--no-mount'], { encoding: 'utf8' });
+    const output = `${run.stdout}\n${run.stderr}`;
+    assert.equal(run.status, 1, `${name}:\n${output}`);
+    assert.match(output, /dsh-plugin verify: stopped at doctor/u, output);
+    const line = output.split('\n').find((entry) => entry.includes('root export:'));
+    assert.ok(line, `${name} printed no root export line:\n${output}`);
+    assert.match(line, problem, `${name}: ${line}`);
+    assert.ok(line.includes(target), `${name} did not name ${target}: ${line}`);
+    assert.doesNotMatch(output, /stopped at pack|✗ pack:/u, `${name} reached pack:\n${output}`);
+  }
+});
+
 test('the unmodified scaffold still exits 0 with ok', () => {
   const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-doctor-missing-root-')), 'plugin');
   try {
@@ -61,6 +81,22 @@ test('the unmodified scaffold still exits 0 with ok', () => {
     assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
     assert.match(run.stdout, /^ok {2}scaffold-ok@\d+\.\d+\.\d+ \(host >=0\.2\.0\)$/m, run.stdout);
     assert.doesNotMatch(run.stderr, /root export:/u, run.stderr);
+  } finally {
+    fs.rmSync(path.dirname(dir), { recursive: true, force: true });
+  }
+});
+
+test('the unmodified scaffold still passes verify --no-mount', () => {
+  const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-verify-missing-root-')), 'plugin');
+  try {
+    const scaffold = init({ dir, name: 'scaffold-verify', title: 'Scaffold Verify' });
+    assert.equal(scaffold.ok, true, JSON.stringify(scaffold.failures));
+
+    const run = spawnSync(process.execPath, [BIN, 'verify', dir, '--no-mount'], { encoding: 'utf8' });
+    const output = `${run.stdout}\n${run.stderr}`;
+    assert.equal(run.status, 0, output);
+    assert.match(run.stdout, /^ok {2}packed \d+ file\(s\)/m, run.stdout);
+    assert.doesNotMatch(output, /root export:/u, output);
   } finally {
     fs.rmSync(path.dirname(dir), { recursive: true, force: true });
   }
