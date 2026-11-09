@@ -1,5 +1,17 @@
 ## 0.20.18
 
+- **`audit --home` expands `~` and `~\` before the scan, and a bare flag is
+  refused.** The local audit resolves its home like every other user-named
+  path, so `audit --home '~/.dsh'` and `audit --home '~\.dsh'` read
+  `$HOME/.dsh` on cmd and PowerShell instead of a folder literally named `~`.
+  A checked-in home with one declared plugin whose `dsh.bundle.patch` names
+  `./missing.yml` now pins both spellings through the shipped CLI: each prints
+  the `broken` row, names the missing patch, exits `1`, and leaves no `~`
+  directory in the working folder; the absolute-path control exits `1` with the
+  same row. `--home` with no value exits `2` and says what it needs, rather
+  than scanning the current folder and reporting "no plugins installed" with
+  exit `0`. `--help` documents the flag.
+
 - **`verify` resolves the installed root the way the loader does.** It used to
   import the file `main` named, so a tarball whose `exports` map had no `.`
   entry passed `verify --no-mount` even though `import("<name>")` failed with
