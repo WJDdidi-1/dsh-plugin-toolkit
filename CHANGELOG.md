@@ -9,7 +9,11 @@
   failure and the command exits `1`; the same fixture with `exports["."]` exits
   `0` and prints `imported its host half`. A package that declares neither
   `exports` nor `main` still has no root module to import, so its success line
-  keeps saying the host import was skipped.
+  keeps saying the host import was skipped. Two checked-in fixtures
+  (`test/fixtures/verify-exports-no-dot` and `verify-exports-dot`) now pin both
+  sides through the shipped CLI process, including the exit code, so `npm test`
+  fails if the no-`.` tarball ever exits `0` again. The README states that the
+  bare specifier, not a file path, is what `verify` imports.
 
 - **`audit` reports a declared bundle whose folder is gone.** When a package
   name stayed in `dsh.profile.bundles` but its `node_modules/<name>` folder had

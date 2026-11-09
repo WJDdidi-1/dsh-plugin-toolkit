@@ -4,6 +4,7 @@
  * panel passes `doctor` and must fail `verify`.
  */
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -11,6 +12,8 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const BIN = path.join(ROOT, 'bin', 'dsh-plugin.mjs');
+const fixture = (name) => path.join(ROOT, 'test', 'fixtures', name);
 
 import { init } from '../lib/init.mjs';
 import { verify } from '../lib/verify.mjs';
@@ -165,6 +168,32 @@ test('verify --no-mount resolves the installed root through the package specifie
   const passedOutput = passedIo.lines.join('\n');
   assert.equal(passedCode, 0, passedOutput);
   assert.match(passedOutput, /imported its host half/, passedOutput);
+});
+
+test('the shipped CLI fails the no-"." tarball at the process boundary and passes the control', () => {
+  // The module-level test above proves `verify` resolves the specifier. This
+  // one pins the verdict users and CI actually see: spawn `bin/dsh-plugin.mjs`
+  // on both checked-in fixtures. If the no-`.` package ever exits 0 again, this
+  // assertion is what turns `npm test` red.
+  const missing = spawnSync(process.execPath, [BIN, 'verify', fixture('verify-exports-no-dot'), '--no-mount'], {
+    encoding: 'utf8',
+  });
+  const missingOutput = `${missing.stdout}\n${missing.stderr}`;
+  assert.equal(missing.status, 1, missingOutput);
+  assert.match(missingOutput, /dsh-plugin verify: stopped at install/, missingOutput);
+  const line = missingOutput.split('\n').find((entry) => entry.includes('root export:'));
+  assert.ok(line, missingOutput);
+  assert.match(line, /exports\["\."\]/, line);
+  assert.match(line, /ERR_PACKAGE_PATH_NOT_EXPORTED/, line);
+  assert.doesNotMatch(missingOutput, /imported its host half/, missingOutput);
+  assert.doesNotMatch(missingOutput, /^ok {2}packed/m, missingOutput);
+
+  const control = spawnSync(process.execPath, [BIN, 'verify', fixture('verify-exports-dot'), '--no-mount'], {
+    encoding: 'utf8',
+  });
+  const controlOutput = `${control.stdout}\n${control.stderr}`;
+  assert.equal(control.status, 0, controlOutput);
+  assert.match(controlOutput, /^ok {2}packed \d+ file\(s\), installed the tarball and imported its host half$/m, controlOutput);
 });
 
 test('a manifest that doctor rejects stops before npm is asked anything', async () => {

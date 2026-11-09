@@ -80,7 +80,7 @@ npx dsh-plugin-toolkit@latest release . --pr --merge
 
 ![Five steps, and the failure each one catches](https://raw.githubusercontent.com/WJDdidi-1/dsh-plugin-toolkit/main/docs/pipeline.svg)
 
-The order matters. Packing first means the check reads the file list npm will publish, not the folder you have. Installing the tarball means the root export is imported the way the loader imports it. Mounting means the client bundle is actually executed, in jsdom, with a host that records what it registered.
+The order matters. Packing first means the check reads the file list npm will publish, not the folder you have. Installing the tarball means the root is imported by its bare specifier — the package name the loader uses — not by a file path taken from `main` or `exports["."]`. Node ignores `main` once `exports` exists, so a package whose `exports` map has no `"."` entry fails with `ERR_PACKAGE_PATH_NOT_EXPORTED` at that step even though the file is present. Mounting means the client bundle is actually executed, in jsdom, with a host that records what it registered.
 
 Each step exists because a plugin once got past the step before it and still installed into nothing.
 
