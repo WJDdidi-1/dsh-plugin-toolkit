@@ -1,4 +1,4 @@
-## 0.20.16
+## 0.20.17
 
 - **`audit` reports a declared bundle whose folder is gone.** When a package
   name stayed in `dsh.profile.bundles` but its `node_modules/<name>` folder had
@@ -16,6 +16,9 @@
   declared name and no `node_modules` directory at all — reproducible through
   `audit --home`, so the scan cannot fall back to "nothing installed" and exit
   clean again.
+
+## 0.20.16
+
 - **`doctor` names a root export that cannot be loaded.** A package whose
   `exports["."]` (or `main`) named a missing file printed `ok` and exited `0`,
   while the same package would fail when the loader imported it; a target that
