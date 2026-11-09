@@ -1,5 +1,15 @@
 ## 0.20.16
 
+- **`audit` reports a declared bundle whose folder is gone.** When a package
+  name stayed in `dsh.profile.bundles` but its `node_modules/<name>` folder had
+  been removed, the install scan never saw the package and `audit --home`
+  printed only its healthy siblings, so the command exited `0` and hid the
+  reason the loader could not mount it. The scan now starts from the profile's
+  declared bundles and prints a `missing` row with an `install` failure naming
+  the absent `node_modules/<name>` path; the valid siblings are still listed
+  and the command exits `1`. A package that is absent but undeclared is still
+  ignored, so ordinary dependencies do not appear. A regression test pins the
+  module result, the printed rows, and the spawned CLI exit code.
 - **`doctor` names a root export that cannot be loaded.** A package whose
   `exports["."]` (or `main`) named a missing file printed `ok` and exited `0`,
   while the same package would fail when the loader imported it; a target that
