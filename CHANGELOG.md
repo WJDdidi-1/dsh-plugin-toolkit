@@ -1,17 +1,20 @@
 ## 0.20.20
 
-- **A repeated `release --pr` is a no-op when the index already carries the
-  version.** The resume path noticed that the same version with the same
-  publish time needed no index write, but it still entered the PR sequence;
-  `git commit` then failed because there was nothing staged, and the run
-  stopped with a `market/<version>` branch left behind. The unchanged index now
-  ends the release after the registry wait: it prints `<index> already carried
-  <version>; nothing to commit`, exits `0`, and creates no branch even with
-  `--pr` or `--merge`. A different publish time still stops with both
-  timestamps named. Three consecutive runs and the module-level result are
-  now regression-tested, and the README documents the no-op. A checked-in
-  one-second-mismatch fixture pins the failure through the CLI as well: exit
-  `1`, both timestamps in the error, and no `market/<version>` branch.
+- **A repeated `release --pr` is a no-op when the committed index already
+  carries the version.** The resume path noticed that the same version with the
+  same publish time needed no index write, but it still entered the PR
+  sequence; `git commit` then failed because there was nothing staged, and the
+  run stopped with a `market/<version>` branch left behind. An unchanged index
+  that is already committed now ends the release after the registry wait: it
+  prints `<index> already carried <version>; nothing to commit`, exits `0`,
+  leaves `git log -1` alone, and creates no branch even with `--pr` or
+  `--merge`. An entry that an earlier run without `--pr` wrote but did not
+  commit still goes through the branch and PR so the release is finished. A
+  different publish time still stops with both timestamps named. Three
+  consecutive CLI runs now assert exit `0` and an unchanged `git log -1`, and a
+  checked-in one-second-mismatch fixture pins the failure through the CLI as
+  well: exit `1`, both timestamps in the error, and no `market/<version>`
+  branch.
 
 ## 0.20.19
 

@@ -260,20 +260,23 @@ test('the CLI exits 1 on a publish-time mismatch and creates no PR branch', asyn
   assert.equal(git(dir, ['branch', '--list', `market/${version}`]), '');
 });
 
-test('the CLI exits 0 on a repeated release --pr and prints the no-op line', async () => {
+test('the CLI exits 0 on a repeated release --pr and leaves git log -1 unchanged', async () => {
   const { dir, version, timestamp } = alreadyReleasedRepo();
+  const headBefore = git(dir, ['log', '-1', '--format=%H']);
   const output = [];
   const originalFetch = globalThis.fetch;
   let code;
   try {
     globalThis.fetch = registryHit(version, timestamp);
-    // Three runs: a release that is already finished stays finished.
+    // Three runs: a release that is already finished stays finished, and none
+    // of them may add a commit for an index entry that is already committed.
     for (let trial = 0; trial < 3; trial += 1) {
       code = await run(['release', dir, '--pr'], {
         log: (line) => output.push(String(line)),
         error: (line) => output.push(String(line)),
       });
       assert.equal(code, 0, output.join('\n'));
+      assert.equal(git(dir, ['log', '-1', '--format=%H']), headBefore, 'a no-op release must not move HEAD');
     }
   } finally {
     globalThis.fetch = originalFetch;
@@ -283,6 +286,42 @@ test('the CLI exits 0 on a repeated release --pr and prints the no-op line', asy
   assert.match(text, /already carried 1\.0\.0; nothing to commit/u);
   assert.doesNotMatch(text, /opened https?:\/\//u);
   assert.equal(git(dir, ['branch', '--list', `market/${version}`]), '');
+  assert.equal(git(dir, ['status', '--porcelain']), '');
+});
+
+test('a later release --pr commits an index entry an earlier run left uncommitted', async () => {
+  const { dir, manifest, version } = releaseRepo();
+  const timestamp = '2026-11-05T12:00:00.000Z';
+
+  // The first run has no --pr: it writes the entry and leaves it in the working
+  // tree. This is the resume path that must not be mistaken for "nothing to
+  // commit" just because this release added no further index change.
+  const first = await release({ dir, fetch: registryHit(version, timestamp), sleep: async () => {} });
+  assert.equal(first.ok, true, JSON.stringify(first.failures ?? []));
+  assert.equal(first.indexUpdate.unchanged, undefined);
+  assert.equal(git(dir, ['status', '--porcelain']), 'M market/index.json');
+  const headBefore = git(dir, ['log', '-1', '--format=%H']);
+
+  let prArgs;
+  const gh = (args) => {
+    prArgs = args;
+    return 'https://example.test/pr/resumed';
+  };
+  const second = await release({
+    dir,
+    pr: true,
+    fetch: registryHit(version, timestamp),
+    sleep: async () => {},
+    gh,
+  });
+
+  assert.equal(second.ok, true, JSON.stringify(second.failures ?? []));
+  assert.equal(second.pullRequest.url, 'https://example.test/pr/resumed');
+  assert.match(prArgs.join(' '), /pr create .*--head market\/1\.0\.0/u);
+  assert.notEqual(git(dir, ['log', '-1', '--format=%H']), headBefore);
+  assert.equal(git(dir, ['status', '--porcelain']), '');
+  assert.match(git(dir, ['branch', '--list', `market/${version}`]), /market\/1\.0\.0/u);
+  assert.deepEqual(readVersions(dir, manifest.name).map((entry) => entry.version), [version]);
 });
 
 test('a tag that points at an older commit still stops the release and names the recovery', async () => {
