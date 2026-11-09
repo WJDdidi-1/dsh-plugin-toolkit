@@ -330,7 +330,8 @@ interrupted install, or a package deleted by hand), `audit` prints a `missing`
 row with an `install` failure naming the absent folder and exits `1`, while
 still listing the healthy plugins on the same run. An absent package that the
 profile never declared is not an install record, so it is not invented in the
-report.
+report; a regression test removes the name from the profile and requires the
+shipped CLI to exit `0` without printing it.
 
 ## Edit a plugin that is already installed
 
