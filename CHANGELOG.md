@@ -1,5 +1,17 @@
 ## 0.20.15
 
+- **`doctor` names a root export that cannot be loaded.** A package whose
+  `exports["."]` (or `main`) named a missing file printed `ok` and exited `0`,
+  while the same package would fail when the loader imported it; a target that
+  was a directory crashed `doctor` with a raw `EISDIR` from `readFileSync`. The
+  `root export` check now asks the filesystem what the resolved path is and
+  reports a missing file, a directory, or an unreadable file as a named failure
+  before reading source. `verify --no-mount` stops at that same `doctor` check
+  instead of reaching pack or install. Three fixtures pin the behavior through
+  the shipped CLI: a string export and a conditions-object export naming
+  `missing.js` and an export naming the `lib` directory all exit `1` with a
+  `root export:` line naming the target, while the unmodified `init` scaffold
+  still exits `0` with `ok`.
 - **A strict comparison against a wildcard major matches nothing.** `audit
   --remote <owner/repo> --host <version>` treated `>*`, `>x`, `<*` and `<x` as
   "any version" and called every host compatible, while npm reads them as an
