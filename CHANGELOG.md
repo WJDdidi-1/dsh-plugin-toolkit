@@ -1,5 +1,16 @@
 ## 0.20.17
 
+- **`verify` resolves the installed root the way the loader does.** It used to
+  import the file `main` named, so a tarball whose `exports` map had no `.`
+  entry passed `verify --no-mount` even though `import("<name>")` failed with
+  `ERR_PACKAGE_PATH_NOT_EXPORTED`. The installed copy is now imported by its
+  bare package name from a probe module beside it, so Node's own `exports`
+  resolution decides. The missing `.` entry is reported as a `root export`
+  failure and the command exits `1`; the same fixture with `exports["."]` exits
+  `0` and prints `imported its host half`. A package that declares neither
+  `exports` nor `main` still has no root module to import, so its success line
+  keeps saying the host import was skipped.
+
 - **`audit` reports a declared bundle whose folder is gone.** When a package
   name stayed in `dsh.profile.bundles` but its `node_modules/<name>` folder had
   been removed, the install scan never saw the package and `audit --home`

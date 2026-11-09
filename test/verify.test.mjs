@@ -103,18 +103,21 @@ test('verify can stop after packing when mounting is not wanted', async () => {
   assert.equal(result.text, undefined);
 });
 
-test('the success line says the host import was skipped when there is no root export', async () => {
+test('the success line says the host import was skipped when the package declares no root at all', async () => {
   const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-verify-no-root-')), 'plugin');
-  init({ dir, name: 'subpath-only' });
+  init({ dir, name: 'patch-only' });
   const manifestPath = path.join(dir, 'package.json');
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-  // A bundle that only inserts a subpath plugin needs no root module. There is
-  // nothing for the loader to import, so verify must not claim it did.
+  // A bundle that only inserts a subpath patch and declares neither `main` nor
+  // `exports` needs no root module. There is nothing for the loader to import,
+  // so verify must not claim it did.
   delete manifest.main;
-  manifest.exports = { './client': './client.js' };
-  manifest.files = ['client.js', 'cordis.patch.yml', 'README.md'];
+  delete manifest.exports;
+  delete manifest.dsh.client;
+  manifest.files = ['cordis.patch.yml', 'README.md'];
   fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   fs.rmSync(path.join(dir, 'index.js'));
+  fs.rmSync(path.join(dir, 'client.js'));
 
   const result = await verify({ dir, mount: false });
   assert.equal(result.ok, true, JSON.stringify(result.failures));
@@ -126,6 +129,42 @@ test('the success line says the host import was skipped when there is no root ex
   assert.equal(code, 0, output);
   assert.match(output, /skipped the host import/);
   assert.doesNotMatch(output, /imported its host half/);
+});
+
+test('verify --no-mount resolves the installed root through the package specifier, not main', async () => {
+  // Node ignores `main` as soon as `exports` exists. Keep the working module
+  // and its `main` entry, remove only the `.` export: the bare import the
+  // loader performs fails with ERR_PACKAGE_PATH_NOT_EXPORTED, so verify must
+  // too instead of importing the file `main` names.
+  const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-verify-no-dot-')), 'plugin');
+  init({ dir, name: 'no-dot-export' });
+  const manifestPath = path.join(dir, 'package.json');
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+
+  manifest.exports = { './client': './client.js' };
+  fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+
+  const failedIo = recorder();
+  const failedCode = await run(['verify', dir, '--no-mount'], failedIo);
+  const failedOutput = failedIo.lines.join('\n');
+  assert.equal(failedCode, 1, failedOutput);
+  assert.match(failedOutput, /stopped at install/, failedOutput);
+  const line = failedOutput.split('\n').find((entry) => entry.includes('root export:'));
+  assert.ok(line, failedOutput);
+  assert.match(line, /exports\["\."\]/, line);
+  assert.match(line, /ERR_PACKAGE_PATH_NOT_EXPORTED/, line);
+  assert.doesNotMatch(failedOutput, /imported its host half/, failedOutput);
+
+  // The same fixture with the `.` entry restored is the control: the installed
+  // bare name imports, apply is callable, and the success line says so.
+  manifest.exports = { '.': './index.js', './client': './client.js' };
+  fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+
+  const passedIo = recorder();
+  const passedCode = await run(['verify', dir, '--no-mount'], passedIo);
+  const passedOutput = passedIo.lines.join('\n');
+  assert.equal(passedCode, 0, passedOutput);
+  assert.match(passedOutput, /imported its host half/, passedOutput);
 });
 
 test('a manifest that doctor rejects stops before npm is asked anything', async () => {
