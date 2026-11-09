@@ -123,3 +123,19 @@ test('an absent package that the profile never declared stays out of the audit',
   assert.deepEqual(result.plugins.map((plugin) => plugin.name), ['good-plugin']);
   assert.doesNotMatch(io.lines.join('\n'), /ghost-plugin/u);
 });
+
+test('the shipped CLI exits 0 and never mentions an absent undeclared package', () => {
+  const home = scratch();
+  writeProfile(home, ['good-plugin']);
+  writePlugin(home, 'good-plugin', goodManifest('good-plugin'), goodFiles);
+
+  const result = spawnSync(
+    process.execPath,
+    [path.join(ROOT, 'bin', 'dsh-plugin.mjs'), 'audit', '--home', home, '--timeout', '50'],
+    { encoding: 'utf8' },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.doesNotMatch(output, /ghost-plugin/u, 'an ordinary absent dependency must not be invented as a missing install');
+  assert.match(output, /^good-plugin\b/mu, 'the installed plugin must still be printed');
+});
