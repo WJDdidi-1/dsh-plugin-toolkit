@@ -976,7 +976,7 @@ The install reports success and nothing shows up. In this order:
 3. Create and push the tag, which starts the plugin's release workflow.
 4. Poll the registry until it actually serves that version, reporting each wait.
 5. Write the index entry with the publish time **the registry reports**, not the local clock. It waits for `time[version]` specifically: the abbreviated registry document has no `time` field, and an entry with a null timestamp is rejected by the market checker.
-6. With `--pr`: commit that entry on `market/<version>`, push it, and open the pull request. With `--merge` as well: wait for `gh pr checks` to settle, then squash-merge. When the index already carries this version with the same publish time there is nothing to commit, so the branch and PR steps are skipped instead of failing at `git commit`.
+6. With `--pr`: commit that entry on `market/<version>`, push it, and open the pull request. With `--merge` as well: wait for `gh pr checks` to settle, then squash-merge. When the committed index already carries this version with the same publish time there is nothing to commit, so the branch and PR steps are skipped instead of failing at `git commit`. An entry written by an earlier run without `--pr` is still uncommitted, so a later `--pr` run commits it and opens the PR.
 
 ```sh
 npx dsh-plugin release . --pr --merge
@@ -990,7 +990,7 @@ checks settled after 1s (1 look(s))
 merged
 ```
 
-Without `--pr` it prints the `git add` / `gh pr create` commands instead of running them; `--dry-run` prints the whole sequence before anything happens. A re-run after a failure is safe: when the tag already points at HEAD it is reused rather than recreated, the release continues with the registry wait, and the same version with the same publish time is a no-op. A no-op release prints `<index> already carried <version>; nothing to commit` and exits `0` without creating a `market/<version>` branch, even when `--pr` or `--merge` is passed. A different publish time is not a no-op: the release stops at `index`, names the indexed and registry timestamps in the error, exits `1`, and creates no `market/<version>` branch.
+Without `--pr` it prints the `git add` / `gh pr create` commands instead of running them; `--dry-run` prints the whole sequence before anything happens. A re-run after a failure is safe: when the tag already points at HEAD it is reused rather than recreated, the release continues with the registry wait, and the same version with the same publish time is a no-op once the index entry is committed. A no-op release prints `<index> already carried <version>; nothing to commit`, exits `0`, leaves `git log -1` unchanged, and creates no `market/<version>` branch, even when `--pr` or `--merge` is passed. A different publish time is not a no-op: the release stops at `index`, names the indexed and registry timestamps in the error, exits `1`, and creates no `market/<version>` branch.
 
 If that tag points at another commit, the release does not move it. It exits `1`
 and names the tag, the commit it points at, HEAD, and the recovery:
