@@ -163,6 +163,68 @@ test('the CLI finishes the release after the first run stopped at the registry',
   assert.equal(tagHash(origin, tag), remoteTag);
 });
 
+/** A repository whose tag and index both already describe a finished release. */
+function alreadyReleasedRepo(version = '1.0.0', timestamp = '2026-11-05T12:00:00.000Z') {
+  const state = releaseRepo(version);
+  const { dir, manifest } = state;
+  const indexFile = path.join(dir, 'market/index.json');
+  const index = JSON.parse(fs.readFileSync(indexFile, 'utf8'));
+  index.plugins.find((plugin) => plugin.name === manifest.name).versions = [{
+    version,
+    publishTimestamp: Math.floor(Date.parse(timestamp) / 1000),
+    engines: { dsh: '>=0.2.0' },
+    source: { type: 'npm' },
+  }];
+  fs.writeFileSync(indexFile, `${JSON.stringify(index, null, 2)}\n`);
+  git(dir, ['add', 'market/index.json']);
+  git(dir, ['commit', '-q', '-m', `market: ${version}`]);
+  git(dir, ['tag', `plugin-v${version}`]);
+  return { ...state, timestamp };
+}
+
+test('a release whose index already carries the version skips the PR sequence', async () => {
+  const { dir, version, timestamp } = alreadyReleasedRepo();
+
+  const result = await release({
+    dir,
+    pr: true,
+    fetch: registryHit(version, timestamp),
+    sleep: async () => {},
+  });
+
+  assert.equal(result.ok, true, JSON.stringify(result.failures ?? []));
+  assert.equal(result.indexUpdate.unchanged, true);
+  assert.equal(result.pullRequest, undefined);
+  assert.equal(result.merged, undefined);
+  // The unchanged index has nothing to commit, so no branch may be left behind.
+  assert.equal(git(dir, ['branch', '--list', `market/${version}`]), '');
+});
+
+test('the CLI exits 0 on a repeated release --pr and prints the no-op line', async () => {
+  const { dir, version, timestamp } = alreadyReleasedRepo();
+  const output = [];
+  const originalFetch = globalThis.fetch;
+  let code;
+  try {
+    globalThis.fetch = registryHit(version, timestamp);
+    // Three runs: a release that is already finished stays finished.
+    for (let trial = 0; trial < 3; trial += 1) {
+      code = await run(['release', dir, '--pr'], {
+        log: (line) => output.push(String(line)),
+        error: (line) => output.push(String(line)),
+      });
+      assert.equal(code, 0, output.join('\n'));
+    }
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  const text = output.join('\n');
+  assert.match(text, /already carried 1\.0\.0; nothing to commit/u);
+  assert.doesNotMatch(text, /opened https?:\/\//u);
+  assert.equal(git(dir, ['branch', '--list', `market/${version}`]), '');
+});
+
 test('a tag that points at an older commit still stops the release and names the recovery', async () => {
   const { dir, origin, manifest, version } = releaseRepo();
   const tag = `plugin-v${version}`;

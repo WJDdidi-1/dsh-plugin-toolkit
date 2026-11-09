@@ -1,3 +1,16 @@
+## 0.20.20
+
+- **A repeated `release --pr` is a no-op when the index already carries the
+  version.** The resume path noticed that the same version with the same
+  publish time needed no index write, but it still entered the PR sequence;
+  `git commit` then failed because there was nothing staged, and the run
+  stopped with a `market/<version>` branch left behind. The unchanged index now
+  ends the release after the registry wait: it prints `<index> already carried
+  <version>; nothing to commit`, exits `0`, and creates no branch even with
+  `--pr` or `--merge`. A different publish time still stops with both
+  timestamps named. Three consecutive runs and the module-level result are
+  now regression-tested, and the README documents the no-op.
+
 ## 0.20.19
 
 - **`audit --home` expands `~` and `~\` before the scan, and a bare flag is
