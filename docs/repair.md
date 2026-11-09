@@ -410,6 +410,9 @@ satisfy the field.
 If the root file named by `main`/`exports["."]` does not exist at all, `doctor`
 reports it as a `root export` failure naming that path instead of silently
 passing; a directory gets the same failure instead of a raw `EISDIR`.
+`verify --no-mount` runs `doctor` before it packs, so on these fixtures it exits
+at `stopped at doctor` with the same `root export` line and never reaches a
+`pack:` failure. The unmodified `init` scaffold still passes both commands.
 
 ## files list
 
