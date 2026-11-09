@@ -1,4 +1,4 @@
-## 0.20.17
+## 0.20.18
 
 - **`verify` resolves the installed root the way the loader does.** It used to
   import the file `main` named, so a tarball whose `exports` map had no `.`
@@ -14,6 +14,8 @@
   sides through the shipped CLI process, including the exit code, so `npm test`
   fails if the no-`.` tarball ever exits `0` again. The README states that the
   bare specifier, not a file path, is what `verify` imports.
+
+## 0.20.17
 
 - **`audit` reports a declared bundle whose folder is gone.** When a package
   name stayed in `dsh.profile.bundles` but its `node_modules/<name>` folder had
