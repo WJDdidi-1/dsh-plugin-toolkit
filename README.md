@@ -324,6 +324,14 @@ damaged `package.json` in a package that is neither in `dsh.profile.bundles` nor
 readable enough to expose a `dsh` field is still an ordinary dependency and is
 skipped, so one broken transitive install does not fail every audit.
 
+A declared bundle can also be missing entirely. If a name stays in
+`dsh.profile.bundles` after its `node_modules/<name>` folder is removed (an
+interrupted install, or a package deleted by hand), `audit` prints a `missing`
+row with an `install` failure naming the absent folder and exits `1`, while
+still listing the healthy plugins on the same run. An absent package that the
+profile never declared is not an install record, so it is not invented in the
+report.
+
 ## Edit a plugin that is already installed
 
 The host already swaps a rebuilt bundle without a page reload: it watches each plugin's entry artifact and reports a `rebuilt` frame on `/plugins/events`. `dev` puts the new file where the host is looking, then **proves** the frame arrived instead of asking you to check by eye.
