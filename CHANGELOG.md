@@ -1,4 +1,4 @@
-## 0.20.18
+## 0.20.19
 
 - **`audit --home` expands `~` and `~\` before the scan, and a bare flag is
   refused.** The local audit resolves its home like every other user-named
@@ -11,6 +11,8 @@
   same row. `--home` with no value exits `2` and says what it needs, rather
   than scanning the current folder and reporting "no plugins installed" with
   exit `0`. `--help` documents the flag.
+
+## 0.20.18
 
 - **`verify` resolves the installed root the way the loader does.** It used to
   import the file `main` named, so a tarball whose `exports` map had no `.`
