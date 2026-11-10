@@ -1,5 +1,17 @@
 ## 0.20.22
 
+- **A failed `git push` is reported as the `git` stage, not a raw exec error.**
+  When `origin` was unreachable, `release` created the local tag and then let
+  the `execFileSync` error escape, so the user saw a command line and stack
+  instead of the stage and the tag that still needed pushing. Tag creation and
+  the tag push now catch git's failure, return `stage: 'git'`, and print
+  `release stopped at git` with the tag, git's own reason, and the fact that
+  the tag exists only locally. With `origin` pointed at a missing path the CLI
+  exits `1` and leaves `plugin-v<version>` at HEAD; after `git remote set-url
+  origin` points at the bare repository, the same working tree re-runs, resumes
+  from that tag, pushes it, and exits `0`. A process-level test covers the
+  failed push and the corrected retry.
+
 - **A retry pushes a tag that exists only locally.** When `release` created
   `plugin-v<version>` and then failed at `git push`, the next run saw the local
   tag at HEAD, took the resume path, skipped both the tag and the push, and
