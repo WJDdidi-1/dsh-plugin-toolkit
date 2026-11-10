@@ -1,4 +1,4 @@
-## 0.20.20
+## 0.20.21
 
 - **`doctor --fix --write` repairs a manifest saved with a UTF-8 BOM.** `doctor`
   read the BOM away, but the repair write re-read the raw file with `JSON.parse`,
@@ -13,6 +13,8 @@
   `doctor . --fix --write` and `fix . --engines --write` from a temp plugin with
   no `engines.dsh`: both repair a BOM copy and a no-BOM control, and both
   normalize a doubled BOM without adding another one.
+
+## 0.20.20
 
 - **A repeated `release --pr` is a no-op when the committed index already
   carries the version.** The resume path noticed that the same version with the
