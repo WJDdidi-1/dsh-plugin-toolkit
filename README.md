@@ -309,6 +309,12 @@ profile where the app silently skipped a plugin. It exits `0` when every
 installed plugin is loaded and valid. If no graph was read (`--host` omitted),
 the loaded column is `?` and only hard failures change the exit code.
 
+`audit --home <dir>` scans a different profile home; both `~/.dsh` and
+`~\.dsh` expand. A bare `--home`, or one followed by another flag such as
+`--timeout 50` or `--json`, is a missing value rather than a request to scan
+`$HOME/.dsh` or a folder literally named after the flag: the command exits `2`,
+names `--home`, and prints no profile report.
+
 Without `--host` the loaded column is `?`, because guessing would be worse than
 saying nothing. Only packages that declare a `dsh` field are audited — the rest of
 `node_modules` is ordinary dependencies, and auditing those is noise.

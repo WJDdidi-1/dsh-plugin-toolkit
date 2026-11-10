@@ -1,5 +1,16 @@
 ## 0.20.21
 
+- **A missing `audit --home` value is refused before the scan, and a later
+  `--home` cannot hide it.** The parser used to leave the missing path only in
+  the value slot, so a second `--home <dir>` overwrote the typo and the command
+  scanned anyway; every missing spelling is now recorded through the rest of
+  parsing. `audit --home`, `audit --home --timeout 50`, `audit --home --json`
+  and `audit --home --home <dir>` each exit `2` with `--home needs a directory
+  path` on stderr and no profile report on stdout, while `audit --home <dir>`
+  against the one-declared-plugin fixture still prints its `missing` row and
+  exits `1`. The README says a bare `--home` is a usage error, not a request to
+  scan `$HOME/.dsh` or a folder named after the next flag.
+
 - **`doctor --fix --write` repairs a manifest saved with a UTF-8 BOM.** `doctor`
   read the BOM away, but the repair write re-read the raw file with `JSON.parse`,
   so it printed the planned `engines.dsh` edit and then failed with a bare
