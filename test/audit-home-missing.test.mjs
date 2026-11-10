@@ -9,6 +9,8 @@
  */
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -17,6 +19,9 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..');
 const BIN = path.join(ROOT, 'bin', 'dsh-plugin.mjs');
 const FIXTURE_HOME = path.join(here, 'fixtures', 'missing-declared-bundle');
+const CLEAN_FIXTURE_ROOT = path.join(here, 'fixtures', 'audit-home-clean');
+const CLEAN_FIXTURE_HOME = path.join(CLEAN_FIXTURE_ROOT, 'home');
+const CLEAN_FIXTURE_PLUGIN = path.join(CLEAN_FIXTURE_ROOT, 'plugin', 'clean-plugin');
 
 function runAudit(args) {
   return spawnSync(process.execPath, [BIN, ...args], {
@@ -25,7 +30,18 @@ function runAudit(args) {
   });
 }
 
-test('a missing --home value exits 2 and names --home before scanning', () => {
+/** Copy the clean home and install its declared plugin in the loader's shape. */
+function materializeCleanHome(t) {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'audit-home-clean-'));
+  t.after(() => fs.rmSync(home, { recursive: true, force: true }));
+  fs.cpSync(CLEAN_FIXTURE_HOME, home, { recursive: true });
+  const dest = path.join(home, '.dsh', 'profiles', 'desktop', 'node_modules', 'clean-plugin');
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.cpSync(CLEAN_FIXTURE_PLUGIN, dest, { recursive: true });
+  return path.join(home, '.dsh');
+}
+
+test('a missing --home value exits 2, while a clean fixture home exits 0 with its row', (t) => {
   const forms = [
     ['audit', '--home'],
     ['audit', '--home', '--timeout', '50'],
@@ -40,6 +56,15 @@ test('a missing --home value exits 2 and names --home before scanning', () => {
     assert.doesNotMatch(output, /no plugins installed/u, `${args.join(' ')} scanned a folder and reported it empty`);
     assert.equal(result.stdout, '', `${args.join(' ')} must not print a report`);
   }
+
+  // The other side of the same boundary: a genuine clean scan still exits 0 and
+  // names the plugin, so the assertions above are not satisfied by any failure.
+  const home = materializeCleanHome(t);
+  const control = runAudit(['audit', '--home', home, '--timeout', '50']);
+  const controlOutput = `${control.stdout}\n${control.stderr}`;
+  assert.equal(control.status, 0, controlOutput);
+  assert.match(control.stdout, /^clean-plugin\s+1\.0\.0\s+\?\s+ok$/mu, controlOutput);
+  assert.doesNotMatch(controlOutput, /no plugins installed/u, 'the clean fixture home was not scanned');
 });
 
 test('a later --home does not overwrite an earlier bare --home', () => {

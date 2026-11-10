@@ -9,7 +9,11 @@
   path` on stderr and no profile report on stdout, while `audit --home <dir>`
   against the one-declared-plugin fixture still prints its `missing` row and
   exits `1`. The README says a bare `--home` is a usage error, not a request to
-  scan `$HOME/.dsh` or a folder named after the next flag.
+  scan `$HOME/.dsh` or a folder named after the next flag. A process-boundary
+  test spawns the shipped CLI for all three missing spellings and requires exit
+  `2` with no report, then runs the same binary against a checked-in clean home
+  and requires exit `0` with its `clean-plugin` row, so the refusal cannot pass
+  by breaking every scan.
 
 - **`doctor --fix --write` repairs a manifest saved with a UTF-8 BOM.** `doctor`
   read the BOM away, but the repair write re-read the raw file with `JSON.parse`,
