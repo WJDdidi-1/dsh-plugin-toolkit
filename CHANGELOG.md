@@ -1,5 +1,16 @@
 ## 0.20.20
 
+- **`doctor --fix --write` repairs a manifest saved with a UTF-8 BOM.** `doctor`
+  read the BOM away, but the repair write re-read the raw file with `JSON.parse`,
+  so it printed the planned `engines.dsh` edit and then failed with a bare
+  `Unexpected token` on the same manifest it had just accepted. Both repair
+  entry points (`doctor --fix` and `fix --engines`) now read through `doctor`'s
+  one BOM-aware manifest source, keep the existing indentation and line endings,
+  and write a manifest without the BOM. Three process-level tests use a temp
+  plugin with no `engines.dsh`: the BOM copy and its no-BOM control both exit
+  `0` with `engines.dsh` in the rewritten JSON, and `fix --engines --write`
+  repairs the BOM copy too.
+
 - **A repeated `release --pr` is a no-op when the committed index already
   carries the version.** The resume path noticed that the same version with the
   same publish time needed no index write, but it still entered the PR
