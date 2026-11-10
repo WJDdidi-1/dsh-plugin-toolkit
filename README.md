@@ -1062,7 +1062,7 @@ npx dsh-plugin-toolkit@latest verify .
 Only with `--write`. Without it the command prints the plan and stops; with it,
 it applies the edits in the plan and runs the checks again. A manifest saved
 with a UTF-8 BOM is read and repaired through the same path, and the rewritten
-file no longer starts with the BOM.
+file no longer starts with the BOM; `fix --engines --write` uses that path too.
 
 **`doctor` passes, but the panel still does not appear. What next?**
 `doctor` checks the manifest and source without executing the plugin. `verify`

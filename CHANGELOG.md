@@ -6,10 +6,13 @@
   `Unexpected token` on the same manifest it had just accepted. Both repair
   entry points (`doctor --fix` and `fix --engines`) now read through `doctor`'s
   one BOM-aware manifest source, keep the existing indentation and line endings,
-  and write a manifest without the BOM. Three process-level tests use a temp
-  plugin with no `engines.dsh`: the BOM copy and its no-BOM control both exit
-  `0` with `engines.dsh` in the rewritten JSON, and `fix --engines --write`
-  repairs the BOM copy too.
+  and write through one shared helper that starts from the BOM-stripped source,
+  so the rewritten file has no BOM (not a doubled one) and is valid JSON. A
+  write failure is now reported as a `manifest` failure by both commands instead
+  of escaping from `fix --engines`. Four process-level tests run the literal
+  `doctor . --fix --write` and `fix . --engines --write` from a temp plugin with
+  no `engines.dsh`: both repair a BOM copy and a no-BOM control, and both
+  normalize a doubled BOM without adding another one.
 
 - **A repeated `release --pr` is a no-op when the committed index already
   carries the version.** The resume path noticed that the same version with the
