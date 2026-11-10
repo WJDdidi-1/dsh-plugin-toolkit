@@ -1,4 +1,4 @@
-## 0.20.23
+## 0.20.24
 
 - **A failed `market/<version>` push is named, not a raw exec error.** With
   `--pr`, a rejected or denied branch push used to surface only as
@@ -19,6 +19,8 @@
   makes the push throw while the bare origin already carries the tag and
   requires exit `0`; a conflicting-tag test requires both ids in the `git`
   stage error and leaves origin's tag untouched.
+
+## 0.20.23
 
 - **A failed `git push` is reported as the `git` stage, not a raw exec error.**
   When `origin` was unreachable, `release` created the local tag and then let
