@@ -1,5 +1,17 @@
 ## 0.20.23
 
+- **A failed push is checked against origin before the retry is blamed.** A
+  push can exit non-zero after receive-pack already updated the ref (a
+  post-receive hook, or a connection that drops after the reply). The retry
+  path now reads `refs/tags/<tag>` from `origin` when `git push` fails: the same
+  tag object means the tag landed and the release continues; a different object
+  means origin owns that name at another commit, so the error names both object
+  ids and says neither tag was moved instead of claiming "the tag is still
+  local" and telling the user to re-run a push that cannot succeed. A test
+  makes the push throw while the bare origin already carries the tag and
+  requires exit `0`; a conflicting-tag test requires both ids in the `git`
+  stage error and leaves origin's tag untouched.
+
 - **A failed `git push` is reported as the `git` stage, not a raw exec error.**
   When `origin` was unreachable, `release` created the local tag and then let
   the `execFileSync` error escape, so the user saw a command line and stack

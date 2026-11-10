@@ -276,6 +276,79 @@ test('the CLI names a failed push, then the corrected origin pushes the tag on r
   assert.equal(tagHash(origin, tag), localTag);
 });
 
+test('a push error after origin already has the tag still finishes the release', async () => {
+  const { dir, origin, manifest, version } = releaseRepo('1.2.3');
+  const tag = `plugin-v${version}`;
+  const timestamp = '2026-11-05T12:00:00.000Z';
+
+  // The tag is already on origin, but the next push exits non-zero: a
+  // post-receive hook or a dropped connection can do this after receive-pack
+  // accepted the ref. The release's goal is already met, so it must continue.
+  git(dir, ['tag', tag]);
+  git(dir, ['push', 'origin', tag]);
+
+  const realGit = (args) => git(dir, args);
+  const gitThatRejectsPush = (args) => {
+    if (args[0] === 'push') {
+      const error = new Error(`Command failed: git ${args.join(' ')}`);
+      error.stderr = 'error: RPC failed; the connection dropped after receive-pack accepted the ref';
+      throw error;
+    }
+    return realGit(args);
+  };
+
+  const result = await release({
+    dir,
+    git: gitThatRejectsPush,
+    fetch: registryHit(version, timestamp),
+    sleep: async () => {},
+  });
+
+  assert.equal(result.ok, true, JSON.stringify(result.failures ?? []));
+  assert.equal(result.tag, tag);
+  assert.deepEqual(tags(dir), [tag]);
+  assert.deepEqual(tags(origin), [tag]);
+  assert.equal(tagHash(origin, tag), tagHash(dir, tag));
+  assert.deepEqual(readVersions(dir, manifest.name).map((entry) => entry.version), [version]);
+});
+
+test('a tag that origin holds at another object is named, not called local', async () => {
+  const { dir, origin, manifest, version } = releaseRepo('1.2.3');
+  const tag = `plugin-v${version}`;
+  const firstCommit = git(dir, ['rev-parse', 'HEAD']);
+  // Put the first commit on origin so a tag there can name it.
+  git(dir, ['push', 'origin', 'HEAD:refs/heads/main']);
+
+  // This checkout releases a second commit and tags it. Origin still has the
+  // tag at the first commit, so the push is a non-fast-forward rejection.
+  fs.writeFileSync(path.join(dir, 'after-tag.txt'), 'second\n');
+  git(dir, ['add', '.']);
+  git(dir, ['commit', '-q', '-m', 'two']);
+  git(dir, ['tag', tag]);
+  execFileSync('git', ['--git-dir', origin, 'tag', tag, firstCommit]);
+  const localObject = tagHash(dir, tag);
+  const remoteObject = git(origin, ['rev-parse', tag]);
+  assert.notEqual(localObject, remoteObject);
+
+  const result = await release({
+    dir,
+    fetch: registryHit(version, '2026-11-05T12:00:00.000Z'),
+    sleep: async () => {},
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.stage, 'git');
+  const message = result.failures[0].message;
+  assert.ok(message.includes('origin already has'), message);
+  assert.ok(message.includes(remoteObject), message);
+  assert.ok(message.includes(localObject), message);
+  assert.match(message, /neither tag was moved/u);
+  assert.doesNotMatch(message, /still local/u);
+  assert.deepEqual(tags(origin), [tag]);
+  assert.equal(tagHash(origin, tag), remoteObject);
+  assert.deepEqual(readVersions(dir, manifest.name), []);
+});
+
 test('a failed push stops at the git stage and a retry leaves exactly one tag on origin', async () => {
   const { dir, origin, version } = releaseRepo();
   const tag = `plugin-v${version}`;
