@@ -1,4 +1,4 @@
-## 0.20.21
+## 0.20.22
 
 - **A missing `audit --home` value is refused before the scan, and a later
   `--home` cannot hide it.** The parser used to leave the missing path only in
@@ -14,6 +14,8 @@
   `2` with no report, then runs the same binary against a checked-in clean home
   and requires exit `0` with its `clean-plugin` row, so the refusal cannot pass
   by breaking every scan.
+
+## 0.20.21
 
 - **`doctor --fix --write` repairs a manifest saved with a UTF-8 BOM.** `doctor`
   read the BOM away, but the repair write re-read the raw file with `JSON.parse`,
