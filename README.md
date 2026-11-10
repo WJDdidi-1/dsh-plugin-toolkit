@@ -1021,7 +1021,11 @@ dsh-plugin release stopped at git
 
 Fix the remote (for example `git remote set-url origin <url>`) and run the same
 command again. The local tag already points at HEAD, so the re-run resumes and
-pushes it instead of creating it again.
+pushes it instead of creating it again. A push that exits non-zero is checked
+against origin before it is reported: if the remote already has the same tag
+object, the release continues (the ref landed despite the error); if origin has
+that tag at a different commit, the error names both objects and says neither
+tag was moved, because re-running cannot resolve a published-tag conflict.
 
 ### When nothing publishes for you
 
