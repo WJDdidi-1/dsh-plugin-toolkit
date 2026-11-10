@@ -1,4 +1,4 @@
-## 0.20.22
+## 0.20.23
 
 - **A failed `git push` is reported as the `git` stage, not a raw exec error.**
   When `origin` was unreachable, `release` created the local tag and then let
@@ -21,6 +21,8 @@
   one tag on origin. A test reproduces the failed-push state, retries, and
   requires the bare origin to list the tag exactly once; a CLI test starts from
   a local-only tag and requires exit `0` with the tag on origin.
+
+## 0.20.22
 
 - **A missing `audit --home` value is refused before the scan, and a later
   `--home` cannot hide it.** The parser used to leave the missing path only in
