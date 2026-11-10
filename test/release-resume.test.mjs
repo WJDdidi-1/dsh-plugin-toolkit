@@ -216,7 +216,67 @@ test('the CLI pushes a local-only tag instead of reporting a false success', asy
   assert.equal(tagHash(origin, tag), tagHash(dir, tag));
 });
 
-test('a failed push followed by a retry leaves exactly one tag on origin', async () => {
+test('the CLI names a failed push, then the corrected origin pushes the tag on retry', async () => {
+  const { dir, origin, manifest, version } = releaseRepo();
+  const tag = `plugin-v${version}`;
+  const timestamp = '2026-11-05T12:00:00.000Z';
+  const missingOrigin = path.join(path.dirname(dir), 'missing-origin.git');
+  assert.equal(fs.existsSync(missingOrigin), false);
+  git(dir, ['remote', 'set-url', 'origin', missingOrigin]);
+
+  // The remote is unreachable, so the tag is created locally and the push is
+  // the step that fails. That must be a named stage, not a raw exec stack.
+  const firstLines = [];
+  const firstErrors = [];
+  const originalFetch = globalThis.fetch;
+  let firstCode;
+  try {
+    globalThis.fetch = registryHit(version, timestamp);
+    firstCode = await run(['release', dir, '--budget', '5'], {
+      log: (line) => firstLines.push(String(line)),
+      error: (line) => firstErrors.push(String(line)),
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  assert.equal(firstCode, 1, [...firstLines, ...firstErrors].join('\n'));
+  const firstError = firstErrors.join('\n');
+  assert.match(firstError, /dsh-plugin release stopped at git/u);
+  assert.ok(firstError.includes(tag), firstError);
+  assert.match(firstError, /does not appear to be a git repository|Could not read from remote repository/u);
+  assert.match(firstError, /still local/u);
+  assert.deepEqual(tags(dir), [tag]);
+  assert.deepEqual(tags(origin), []);
+  assert.deepEqual(readVersions(dir, manifest.name), []);
+
+  const localTag = tagHash(dir, tag);
+
+  // Point origin back at the bare repository. The same working tree re-runs,
+  // resumes from the local tag, and this time the push must reach origin.
+  git(dir, ['remote', 'set-url', 'origin', origin]);
+  const secondLines = [];
+  const secondErrors = [];
+  let secondCode;
+  try {
+    globalThis.fetch = registryHit(version, timestamp);
+    secondCode = await run(['release', dir, '--budget', '5'], {
+      log: (line) => secondLines.push(String(line)),
+      error: (line) => secondErrors.push(String(line)),
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  assert.equal(secondCode, 0, [...secondLines, ...secondErrors].join('\n'));
+  assert.ok(secondLines.join('\n').includes(`tagged ${tag}, npm served ${manifest.name}@${version}`), secondLines.join('\n'));
+  assert.deepEqual(tags(dir), [tag]);
+  assert.deepEqual(tags(origin), [tag]);
+  assert.equal(tagHash(dir, tag), localTag);
+  assert.equal(tagHash(origin, tag), localTag);
+});
+
+test('a failed push stops at the git stage and a retry leaves exactly one tag on origin', async () => {
   const { dir, origin, version } = releaseRepo();
   const tag = `plugin-v${version}`;
   const timestamp = '2026-11-05T12:00:00.000Z';
@@ -226,10 +286,13 @@ test('a failed push followed by a retry leaves exactly one tag on origin', async
   fs.mkdirSync(path.dirname(hook), { recursive: true });
   fs.writeFileSync(hook, '#!/bin/sh\necho "push rejected by the test" >&2\nexit 1\n', { mode: 0o755 });
 
-  await assert.rejects(
-    release({ dir, fetch: registryHit(version, timestamp), sleep: async () => {} }),
-    /git push/u,
-  );
+  const first = await release({ dir, fetch: registryHit(version, timestamp), sleep: async () => {} });
+  assert.equal(first.ok, false);
+  assert.equal(first.stage, 'git');
+  const message = first.failures[0].message;
+  assert.ok(message.includes(tag), message);
+  assert.match(message, /push rejected by the test|pre-receive hook declined/u);
+  assert.match(message, /still local|could not push/u);
   assert.deepEqual(tags(dir), [tag]);
   assert.deepEqual(tags(origin), []);
 
