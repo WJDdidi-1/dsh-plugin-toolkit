@@ -1,5 +1,13 @@
 ## 0.20.23
 
+- **A failed `market/<version>` push is named, not a raw exec error.** With
+  `--pr`, a rejected or denied branch push used to surface only as
+  `Command failed: git push -u origin market/<version>` from the exec wrapper.
+  The `push` step now quotes git's own `stderr` (or `stdout` when that is where a
+  wrapper wrote the reason), names the branch, and drops the wrapper's
+  `Command failed:` line. The tag push uses the same helper, so a remote that
+  writes its rejection on stdout is named too.
+
 - **A failed push is checked against origin before the retry is blamed.** A
   push can exit non-zero after receive-pack already updated the ref (a
   post-receive hook, or a connection that drops after the reply). The retry

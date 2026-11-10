@@ -1025,7 +1025,10 @@ pushes it instead of creating it again. A push that exits non-zero is checked
 against origin before it is reported: if the remote already has the same tag
 object, the release continues (the ref landed despite the error); if origin has
 that tag at a different commit, the error names both objects and says neither
-tag was moved, because re-running cannot resolve a published-tag conflict.
+tag was moved, because re-running cannot resolve a published-tag conflict. With
+`--pr`, a rejected push of the `market/<version>` branch is reported the same
+way: the branch is named and git's own reason is quoted instead of the exec
+wrapper's `Command failed:` line.
 
 ### When nothing publishes for you
 
