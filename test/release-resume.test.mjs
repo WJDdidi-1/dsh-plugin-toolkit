@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -10,6 +10,8 @@ import { release } from '../lib/release.mjs';
 import { run } from '../lib/cli.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(here, '..');
+const CLI = path.join(ROOT, 'bin', 'dsh-plugin.mjs');
 const fixture = path.join(here, 'fixtures', 'good');
 const mismatchFixture = path.join(here, 'fixtures', 'release-timestamp-mismatch');
 
@@ -270,6 +272,59 @@ test('the CLI names a failed push, then the corrected origin pushes the tag on r
 
   assert.equal(secondCode, 0, [...secondLines, ...secondErrors].join('\n'));
   assert.ok(secondLines.join('\n').includes(`tagged ${tag}, npm served ${manifest.name}@${version}`), secondLines.join('\n'));
+  assert.deepEqual(tags(dir), [tag]);
+  assert.deepEqual(tags(origin), [tag]);
+  assert.equal(tagHash(dir, tag), localTag);
+  assert.equal(tagHash(origin, tag), localTag);
+});
+
+test('the shipped CLI names the failed push, then pushes the tag after the remote is fixed', (t) => {
+  const { dir, origin, version } = releaseRepo();
+  const tag = `plugin-v${version}`;
+  const timestamp = '2026-11-05T12:00:00.000Z';
+  const missingOrigin = path.join(path.dirname(dir), 'missing-origin.git');
+  git(dir, ['remote', 'set-url', 'origin', missingOrigin]);
+
+  // The real entry point, not `run()` in this process: a regression in bin/ or
+  // in the top-level error handling must not turn this back into a raw stack.
+  const first = spawnSync(process.execPath, [CLI, 'release', dir, '--budget', '5'], {
+    cwd: ROOT,
+    encoding: 'utf8',
+    timeout: 30_000,
+  });
+  const firstOutput = `${first.stdout}\n${first.stderr}`;
+  assert.equal(first.status, 1, firstOutput);
+  assert.match(first.stderr, /dsh-plugin release stopped at git/u);
+  assert.ok(first.stderr.includes(tag), firstOutput);
+  assert.match(first.stderr, /does not appear to be a git repository|Could not read from remote repository/u);
+  assert.match(first.stderr, /still local/u);
+  assert.doesNotMatch(first.stderr, /Command failed:/u);
+  assert.doesNotMatch(first.stderr, /^\s+at /mu);
+  assert.deepEqual(tags(dir), [tag]);
+  assert.deepEqual(tags(origin), []);
+  const localTag = tagHash(dir, tag);
+
+  // Point origin at the bare repository and re-run the same working tree. npm
+  // is stubbed in the child so the check does not depend on the network.
+  const preload = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'rel-registry-')), 'registry.cjs');
+  t.after(() => fs.rmSync(path.dirname(preload), { recursive: true, force: true }));
+  fs.writeFileSync(preload, `const version = process.env.DSH_TEST_VERSION;
+const timestamp = process.env.DSH_TEST_TIMESTAMP;
+globalThis.fetch = async () => ({
+  status: 200,
+  ok: true,
+  json: async () => ({ versions: { [version]: {} }, time: { [version]: timestamp } }),
+});
+`);
+  git(dir, ['remote', 'set-url', 'origin', origin]);
+  const second = spawnSync(process.execPath, ['--require', preload, CLI, 'release', dir, '--budget', '5'], {
+    cwd: ROOT,
+    encoding: 'utf8',
+    timeout: 30_000,
+    env: { ...process.env, DSH_TEST_VERSION: version, DSH_TEST_TIMESTAMP: timestamp },
+  });
+  assert.equal(second.status, 0, `${second.stdout}\n${second.stderr}`);
+  assert.ok(second.stdout.includes(`tagged ${tag}, npm served demo-plugin@${version}`), second.stdout);
   assert.deepEqual(tags(dir), [tag]);
   assert.deepEqual(tags(origin), [tag]);
   assert.equal(tagHash(dir, tag), localTag);
