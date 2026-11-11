@@ -1,5 +1,15 @@
 ## 0.20.24
 
+- **`audit` reads a profile `package.json` saved with a UTF-8 BOM instead of
+  calling its bundles unlisted.** The profile reader passed the BOM straight to
+  `JSON.parse`, which throws; the catch then returned no bundles, so a plugin
+  that `dsh.profile.bundles` really did list was reported as missing and the
+  repair said `add it to dsh.profile.bundles` rather than `restart the app`.
+  `readProfileBundles` now strips a leading run of U+FEFF through the same
+  `stripBom` helper `readManifest` uses. A BOM profile lists its bundles and a
+  malformed profile still degrades to no bundles; tests cover one BOM, a
+  doubled BOM, the malformed control, and the audit row's restart repair.
+
 - **A check run with a conclusion is settled even if GitHub leaves its status
   at `in_progress`.** On 2026-11-11 GitHub wrote `conclusion: success` and
   `completed_at` for `the tool on a real plugin` but kept `status:
