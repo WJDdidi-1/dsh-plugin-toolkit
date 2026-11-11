@@ -442,7 +442,10 @@ removed by a negation is reported as missing. `doctor --remote` and
 `audit --remote` run this same check against the manifest GitHub serves, so a
 glob or a negation that hides an exported file fails there too. This check is
 about the manifest; `verify` is what proves the packed tarball actually contains
-the file.
+the file. The test suite packs a committed negation fixture
+(`files: ["lib", "!lib/secret.js"]`), requires `npm pack` to leave the exported
+client out of the tarball, and requires `doctor` to report it on every run, so
+the prediction cannot drift from the packer.
 
 **What you see.**
 
