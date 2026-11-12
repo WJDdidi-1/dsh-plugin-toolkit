@@ -10,6 +10,14 @@
   malformed profile still degrades to no bundles; tests cover one BOM, a
   doubled BOM, the malformed control, and the audit row's restart repair.
 
+- **The BOM repair is locked at the CLI boundary.** A test replays the
+  six-trial experiment (three BOM profiles, three no-BOM controls), installing
+  the same listed plugin and pointing `audit --home` at a fake app graph that
+  does not contain it. It requires 6/6 `restart the app once to load it`
+  sentences and zero `does not list it`; on 0.20.12 the three BOM trials print
+  the unlisted cause and an edit the profile already has. The test spawns the
+  real CLI, so a future change that bypasses `readProfileBundles` cannot pass.
+
 - **A check run with a conclusion is settled even if GitHub leaves its status
   at `in_progress`.** On 2026-11-11 GitHub wrote `conclusion: success` and
   `completed_at` for `the tool on a real plugin` but kept `status:
