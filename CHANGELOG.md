@@ -9,6 +9,14 @@
   it and installs the packed tarball into a temp prefix, where the installed
   copy must be byte-identical to the repository file.
 
+- **Every `node scripts/<name>.mjs` command a shipped README tells a reader to
+  run is now gated against the tarball.** The 0.20.12 `files` list shipped the
+  benchmark and compatibility scripts but not `scripts/preview.mjs`, and only
+  that one path had a dedicated test. A new test extracts every such command
+  from `README.md` and `README.zh.md`, compares the paths with
+  `npm pack --dry-run --json`, and fails with the omitted path. The 0.20.12 file
+  list is kept as a control, so the gate is shown to fail on the bug it closes.
+
 - **`audit` reads a profile `package.json` saved with a UTF-8 BOM instead of
   calling its bundles unlisted.** The profile reader passed the BOM straight to
   `JSON.parse`, which throws; the catch then returned no bundles, so a plugin
