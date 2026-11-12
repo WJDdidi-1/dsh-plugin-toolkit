@@ -306,8 +306,12 @@ that is actually broken.
 `audit` exits `1` when an installed plugin has a hard failure **or** when the
 running app did not load at least one installed plugin, so CI can gate on a
 profile where the app silently skipped a plugin. It exits `0` when every
-installed plugin is loaded and valid. If no graph was read (`--host` omitted),
-the loaded column is `?` and only hard failures change the exit code.
+installed plugin is loaded and valid. When `--host` is given but the app cannot
+be reached, the command has not observed the graph it was asked for: it prints
+the `/plugins/events` URL it could not read, prints no plugin rows or clean
+summary, and exits `2` so a CI gate cannot pass against an unreachable app.
+Without `--host`, the loaded column is `?` and only hard failures change the
+exit code.
 
 `audit --home <dir>` scans a different profile home; both `~/.dsh` and
 `~\.dsh` expand. A bare `--home`, or one followed by another flag such as
