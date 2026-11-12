@@ -16,12 +16,9 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { run } from '../lib/exec.mjs';
+import { documentedRunCommands } from '../lib/readme-commands.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-// Both READMEs are in the published file list. A command documented only in the
-// Chinese README is still a command an installed reader can try to run.
-const SHIPPED_READMES = ['README.md', 'README.zh.md'];
-const EXAMPLE_COMMAND = /\bnode\s+(examples\/[A-Za-z0-9._/-]+\.mjs)\b/gu;
 const REQUIRED = [
   'examples/aria.mjs',
   'examples/baseline.mjs',
@@ -29,20 +26,15 @@ const REQUIRED = [
   'examples/route-stubs.mjs',
 ];
 
-/** Every distinct `examples/<name>.mjs` the READMEs tell a reader to pass to node. */
+/**
+ * Every distinct `examples/<name>.mjs` the READMEs tell a reader to pass to
+ * node. The shared reader also covers commands under `scripts/`; this test is
+ * about what an installed reader can run from `examples/`.
+ */
 function documentedExamples() {
-  const found = new Map();
-  for (const readme of SHIPPED_READMES) {
-    const file = path.join(ROOT, readme);
-    if (fs.existsSync(file) === false) continue;
-    // A Windows checkout writes README.md with CRLF; the command is text, so
-    // normalize before matching the line a reader copies.
-    const text = fs.readFileSync(file, 'utf8').replace(/\r\n/gu, '\n');
-    for (const match of text.matchAll(EXAMPLE_COMMAND)) {
-      if (found.has(match[1]) === false) found.set(match[1], readme);
-    }
-  }
-  return found;
+  return new Map(
+    [...documentedRunCommands(ROOT)].filter(([command]) => command.startsWith('examples/')),
+  );
 }
 
 test('a fresh install contains the four examples the shipped README cites', () => {

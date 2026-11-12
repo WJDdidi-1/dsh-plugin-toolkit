@@ -1,5 +1,13 @@
 ## 0.20.28
 
+- **The tarball gate covers `examples/*.mjs` as well as `scripts/*.mjs`.** The
+  gate reads every `node <path>` command from `README.md` and `README.zh.md`,
+  compares the paths with `npm pack --dry-run --json` and with the published
+  `files` list, and names every missing path. Replaying the 0.20.12 file list
+  fails with the four example paths and `scripts/preview.mjs`; the current list
+  passes, so a future `files` edit that drops either kind of documented command
+  is caught before publication.
+
 - **A fresh install ships the four `node examples/*.mjs` commands its README
   cites.** `files` listed only `examples/compatibility-sample/`, so the four
   testkit examples worked in a checkout and were absent after `npm pack` +
