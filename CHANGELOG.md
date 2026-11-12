@@ -1,5 +1,14 @@
 ## 0.20.28
 
+- **A fresh install ships the four `node examples/*.mjs` commands its README
+  cites.** `files` listed only `examples/compatibility-sample/`, so the four
+  testkit examples worked in a checkout and were absent after `npm pack` +
+  `npm install`. The published file list now names `mount-a-bundle.mjs`,
+  `route-stubs.mjs`, `baseline.mjs` and `aria.mjs`. A regression test reads the
+  commands from the shipped READMEs, packs and installs the tarball into a temp
+  prefix, and requires each installed example to exist and match the repository
+  byte for byte.
+
 - **`doctor` reads a README saved with a UTF-8 BOM instead of calling its
   Requirements section missing.** A file written by Notepad starts with U+FEFF,
   so a README whose first line is `## Requirements` began with the marker
