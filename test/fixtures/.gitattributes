@@ -1,0 +1,6 @@
+# The README fixtures pin exact bytes: a UTF-8 BOM and either LF or CRLF line
+# endings. Git's `core.autocrlf` (on by default on Windows) would rewrite the
+# LF fixtures to CRLF on checkout, so mark them binary and ship the working
+# tree exactly as committed. The test checks the bytes before running doctor,
+# which is what makes a BOM or line-ending regression visible.
+readme-*/README.md -text
