@@ -1,4 +1,4 @@
-## 0.20.27
+## 0.20.28
 
 - **`doctor` reads a README saved with a UTF-8 BOM instead of calling its
   Requirements section missing.** A file written by Notepad starts with U+FEFF,
@@ -8,6 +8,8 @@
   now strips the BOM through the same helper the manifest reader uses, while a
   BOM README without the heading still fails. Tests pin the local and remote
   first-line cases and the missing-heading control.
+
+## 0.20.27
 
 - **`fix --remote` reads a `package.json` saved with a UTF-8 BOM, so the host
   range can be aimed at the install that failed.** The remote reader passed the
