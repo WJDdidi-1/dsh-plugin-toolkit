@@ -1,5 +1,15 @@
 ## 0.20.26
 
+- **`fix --remote` reads a `package.json` saved with a UTF-8 BOM, so the host
+  range can be aimed at the install that failed.** The remote reader passed the
+  BOM straight to `JSON.parse`, which threw; `fix --remote --engines --host 0.3.0`
+  exited `2` and `audit --remote` reported the manifest as invalid JSON, while
+  the local fixer repaired the same file. The remote reader now strips the BOM
+  through the same helper `doctor` uses, the planned diff removes it, and the
+  applied patch writes the host range without putting it back. A regression test
+  applies the remote patch to a BOM checkout and checks that the written
+  `>=0.3.0 <1.0.0` accepts `0.3.0` and rejects `1.0.0`.
+
 - **A requested app graph that cannot be read now fails the audit instead of
   passing it.** `audit --host` logged `could not read the plugin graph: fetch
   failed` and then exited `0` with a clean `?` row, so the documented CI gate
