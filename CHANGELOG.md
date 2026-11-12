@@ -1,5 +1,15 @@
 ## 0.20.26
 
+- **A requested app graph that cannot be read now fails the audit instead of
+  passing it.** `audit --host` logged `could not read the plugin graph: fetch
+  failed` and then exited `0` with a clean `?` row, so the documented CI gate
+  passed without observing which plugins the running app loaded. The command now
+  names the `/plugins/events` URL that failed, prints no plugin rows or clean
+  summary, and exits `2`; an audit without `--host` still exits `0` with `?` and
+  only hard failures change the exit code. A CLI regression runs the closed
+  `127.0.0.1:9` control and requires the `--host` run to exit `2` while the
+  same profile without it stays clean.
+
 - **`audit --remote --host` refuses a missing value instead of silently
   dropping the compatibility answer.** A bare `--host` left the host unset, so
   the command printed an audit without the comparison the user asked for, and
