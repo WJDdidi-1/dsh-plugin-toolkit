@@ -9,6 +9,14 @@
   BOM README without the heading still fails. Tests pin the local and remote
   first-line cases and the missing-heading control.
 
+- **The BOM acceptance cases run through the real CLI.** Three checked-in
+  fixtures (`readme-plain`, `readme-bom`, `readme-bom-no-heading`) turn the
+  documented behavior into commands: the first two exit `0` with `ok`, and the
+  third exits `1` with the `readme` failure. The test asserts each fixture
+  README really does (or does not) start with U+FEFF before spawning
+  `bin/dsh-plugin.mjs doctor`, so a fixture that lost its BOM cannot make the
+  test pass for the wrong reason.
+
 ## 0.20.27
 
 - **`fix --remote` reads a `package.json` saved with a UTF-8 BOM, so the host
