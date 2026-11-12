@@ -514,6 +514,9 @@ the DSH version to compare against, and `--json` for the machine-readable
 finding. `--jobs <n>` sets the batch width, and `--patch-dir <dir>` writes the
 host-targeted repair for each repository that needs one. The help text lists
 the same flags; a test fails if this section names a flag the CLI does not have.
+A bare `--host` is a usage error, not an audit without the comparison: the
+command exits `2` before it reads GitHub, and `--host --json` does not consume
+the `--json` flag as a version.
 
 `--host` still names the running app URL for a local `audit`; on `--remote` it
 is the DSH version to compare against. With `--json`, each finding gains
