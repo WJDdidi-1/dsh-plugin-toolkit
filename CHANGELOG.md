@@ -9,13 +9,16 @@
   BOM README without the heading still fails. Tests pin the local and remote
   first-line cases and the missing-heading control.
 
-- **The BOM acceptance cases run through the real CLI.** Three checked-in
-  fixtures (`readme-plain`, `readme-bom`, `readme-bom-no-heading`) turn the
-  documented behavior into commands: the first two exit `0` with `ok`, and the
-  third exits `1` with the `readme` failure. The test asserts each fixture
-  README really does (or does not) start with U+FEFF before spawning
-  `bin/dsh-plugin.mjs doctor`, so a fixture that lost its BOM cannot make the
-  test pass for the wrong reason.
+- **The BOM acceptance cases run through the real CLI.** Six checked-in
+  fixtures turn the documented behavior into commands: three READMEs whose
+  `Requirements` heading is the first line after a UTF-8 BOM (`##` with LF, `#`
+  with LF, and `##` with CRLF) and three plain controls of the same shapes must
+  all exit `0` with `ok` (3/3 in each set). A BOM README and a plain README with
+  no heading exit `1` with the `readme` failure. The test asserts each fixture
+  really does (or does not) start with U+FEFF and carry the heading before
+  spawning `bin/dsh-plugin.mjs doctor`, so a fixture that lost its BOM cannot
+  make the test pass for the wrong reason; removing the BOM fix fails all three
+  BOM trials.
 
 ## 0.20.27
 
