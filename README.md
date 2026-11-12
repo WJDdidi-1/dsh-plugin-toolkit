@@ -852,7 +852,8 @@ is still untouched. The same host-aware plan works with `--patch`:
 `fix <owner>/<repo> --remote --engines --host 0.3.0 --patch repair.patch` plans
 `>=0.3.0 <1.0.0` and prints why. After cloning, `fix . --engines --host 0.3.0
 --write` applies that same range; either path writes one that accepts the host
-and rejects the next major. `audit --remote --host <version> --patch-dir <dir>`
+and rejects the next major. The remote reader strips a UTF-8 BOM, so a manifest
+saved on Windows gives the same plan and the patch removes the BOM too. `audit --remote --host <version> --patch-dir <dir>`
 writes host-targeted repairs for a whole list. `git apply --check` is the dry
 run: it fails before changing anything if the manifest moved since the diff was
 printed. Commit the applied change as you would any other edit.
