@@ -1,4 +1,4 @@
-## 0.20.28
+## 0.20.29
 
 - **The tarball gate covers `examples/*.mjs` as well as `scripts/*.mjs`.** The
   gate reads every `node <path>` command from `README.md` and `README.zh.md`,
@@ -17,6 +17,16 @@
   prefix, and requires each installed example to exist and match the repository
   byte for byte.
 
+- **The BOM acceptance cases run through the real CLI.** Three checked-in
+  fixtures (`readme-plain`, `readme-bom`, `readme-bom-no-heading`) turn the
+  documented behavior into commands: the first two exit `0` with `ok`, and the
+  third exits `1` with the `readme` failure. The test asserts each fixture
+  README really does (or does not) start with U+FEFF before spawning
+  `bin/dsh-plugin.mjs doctor`, so a fixture that lost its BOM cannot make the
+  test pass for the wrong reason.
+
+## 0.20.28
+
 - **`doctor` reads a README saved with a UTF-8 BOM instead of calling its
   Requirements section missing.** A file written by Notepad starts with U+FEFF,
   so a README whose first line is `## Requirements` began with the marker
@@ -25,14 +35,6 @@
   now strips the BOM through the same helper the manifest reader uses, while a
   BOM README without the heading still fails. Tests pin the local and remote
   first-line cases and the missing-heading control.
-
-- **The BOM acceptance cases run through the real CLI.** Three checked-in
-  fixtures (`readme-plain`, `readme-bom`, `readme-bom-no-heading`) turn the
-  documented behavior into commands: the first two exit `0` with `ok`, and the
-  third exits `1` with the `readme` failure. The test asserts each fixture
-  README really does (or does not) start with U+FEFF before spawning
-  `bin/dsh-plugin.mjs doctor`, so a fixture that lost its BOM cannot make the
-  test pass for the wrong reason.
 
 ## 0.20.27
 
