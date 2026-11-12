@@ -1,5 +1,14 @@
 ## 0.20.27
 
+- **`doctor` reads a README saved with a UTF-8 BOM instead of calling its
+  Requirements section missing.** A file written by Notepad starts with U+FEFF,
+  so a README whose first line is `## Requirements` began with the marker
+  rather than `#`; both the local and `--remote` check reported `README.md has
+  no Requirements section` even though it was there. The shared README reader
+  now strips the BOM through the same helper the manifest reader uses, while a
+  BOM README without the heading still fails. Tests pin the local and remote
+  first-line cases and the missing-heading control.
+
 - **`fix --remote` reads a `package.json` saved with a UTF-8 BOM, so the host
   range can be aimed at the install that failed.** The remote reader passed the
   BOM straight to `JSON.parse`, which threw; `fix --remote --engines --host 0.3.0`
