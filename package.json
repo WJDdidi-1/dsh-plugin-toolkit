@@ -28,6 +28,7 @@
     "docs/ecosystem-audit-2026-11-03.txt",
     "scripts/benchmark-audit.mjs",
     "scripts/compatibility-sample.mjs",
+    "scripts/preview.mjs",
     "examples/compatibility-sample/"
   ],
   "engines": {

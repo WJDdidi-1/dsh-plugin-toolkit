@@ -1,5 +1,14 @@
 ## 0.20.25
 
+- **The published tarball ships `scripts/preview.mjs`, so the command the
+  README tells a reader to run exists after install.** `files` listed the
+  benchmark and compatibility scripts but not the panel preview, so
+  `node scripts/preview.mjs /tmp/panel.html` worked only in a checkout and
+  failed with `MODULE_NOT_FOUND` in an installed package. The script is now in
+  the published file list. A test requires `npm pack --dry-run --json` to list
+  it and installs the packed tarball into a temp prefix, where the installed
+  copy must be byte-identical to the repository file.
+
 - **`audit` reads a profile `package.json` saved with a UTF-8 BOM instead of
   calling its bundles unlisted.** The profile reader passed the BOM straight to
   `JSON.parse`, which throws; the catch then returned no bundles, so a plugin
