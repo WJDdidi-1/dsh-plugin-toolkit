@@ -1,4 +1,4 @@
-## 0.20.25
+## 0.20.26
 
 - **The published tarball ships `scripts/preview.mjs`, so the command the
   README tells a reader to run exists after install.** `files` listed the
@@ -16,6 +16,8 @@
   from `README.md` and `README.zh.md`, compares the paths with
   `npm pack --dry-run --json`, and fails with the omitted path. The 0.20.12 file
   list is kept as a control, so the gate is shown to fail on the bug it closes.
+
+## 0.20.25
 
 - **`audit` reads a profile `package.json` saved with a UTF-8 BOM instead of
   calling its bundles unlisted.** The profile reader passed the BOM straight to
