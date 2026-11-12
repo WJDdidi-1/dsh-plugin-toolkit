@@ -1,4 +1,4 @@
-## 0.20.26
+## 0.20.27
 
 - **`fix --remote` reads a `package.json` saved with a UTF-8 BOM, so the host
   range can be aimed at the install that failed.** The remote reader passed the
@@ -36,6 +36,8 @@
   compatibility parser called them malformed and answered `unknown`. They now
   expand to any version, with the same pre-release exclusion npm applies, so
   `audit --remote --host` and `doctor` agree with the installer.
+
+## 0.20.26
 
 - **The published tarball ships `scripts/preview.mjs`, so the command the
   README tells a reader to run exists after install.** `files` listed the
