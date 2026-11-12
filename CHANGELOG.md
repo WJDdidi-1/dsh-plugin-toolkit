@@ -1,5 +1,22 @@
 ## 0.20.26
 
+- **`audit --remote --host` refuses a missing value instead of silently
+  dropping the compatibility answer.** A bare `--host` left the host unset, so
+  the command printed an audit without the comparison the user asked for, and
+  `--host --json` consumed `--json` as a version and compared every repository
+  against the literal text `--json`. A following option or the end of the line
+  is now a missing value: the CLI exits `2`, names the flag, and reads neither
+  GitHub nor a `--from` file. `fix --host` gets the same guard, so a bare flag
+  cannot fall back to planning the default range. Tests pin the bare flag,
+  `--host --json`, a missing `--from` file, a local `fix`, a valid control, and
+  the process boundary.
+
+- **Caret and tilde ranges on a wildcard major match npm's `*`.** `^*`, `~x`
+  and `~>*` are valid npm ranges that accept every stable host; the
+  compatibility parser called them malformed and answered `unknown`. They now
+  expand to any version, with the same pre-release exclusion npm applies, so
+  `audit --remote --host` and `doctor` agree with the installer.
+
 - **The published tarball ships `scripts/preview.mjs`, so the command the
   README tells a reader to run exists after install.** `files` listed the
   benchmark and compatibility scripts but not the panel preview, so
