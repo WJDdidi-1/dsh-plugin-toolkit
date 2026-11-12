@@ -4,14 +4,17 @@
  * so it must not report the profile as clean and exit `0`: the documented CI
  * gate would pass without checking anything.
  *
- * The regression is pinned twice: the exported audit returns the operational
- * failure and the URL it could not read, and the shipped CLI exits `2`, prints
- * that URL, and prints no clean row or summary. The same profile without
- * `--host` remains the `?` control that exits `0`.
+ * The regression is pinned at the process boundary: the shipped CLI exits `2`,
+ * prints the URL it could not read, and prints no clean row or summary. Two
+ * controls keep the gate from becoming "always fail": the same profile without
+ * `--host` stays the `?` control that exits `0`, and a reachable app that
+ * loaded the plugin is the `loaded` control that also exits `0`. The exported
+ * audit separately returns the operational failure and the URL.
  */
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -45,6 +48,28 @@ function runAudit(args) {
   });
 }
 
+/** Spawn without blocking the event loop, so a local graph server can answer. */
+function runAuditAsync(args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [BIN, ...args], {
+      cwd: ROOT,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.setEncoding('utf8');
+    child.stderr.setEncoding('utf8');
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk;
+    });
+    child.on('error', reject);
+    child.on('close', (status, signal) => resolve({ status, signal, stdout, stderr }));
+  });
+}
+
 test('an unreadable requested graph is an exit-2 audit, not a clean report', (t) => {
   const home = materializeCleanHome(t);
   const result = runAudit(['audit', '--home', home, '--host', HOST, '--timeout', '200']);
@@ -62,6 +87,28 @@ test('an unreadable requested graph is an exit-2 audit, not a clean report', (t)
   const controlOutput = `${control.stdout}\n${control.stderr}`;
   assert.equal(control.status, 0, controlOutput);
   assert.match(control.stdout, /^clean-plugin\s+1\.0\.0\s+\?\s+ok$/mu, controlOutput);
+});
+
+test('a reachable app that loaded the one plugin is the exit-0 control', { timeout: 15_000 }, async (t) => {
+  const home = materializeCleanHome(t);
+  const server = http.createServer((request, response) => {
+    if (request.url !== '/plugins/events') {
+      response.writeHead(404, { 'content-type': 'text/plain' });
+      response.end('not found');
+      return;
+    }
+    response.writeHead(200, { 'content-type': 'text/event-stream' });
+    response.end('data: {"type":"graph","graph":{"entries":[{"id":"clean-plugin"}]}}\n\n');
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  const { port } = server.address();
+
+  const result = await runAuditAsync(['audit', '--home', home, '--host', `http://127.0.0.1:${port}`]);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.equal(result.status, 0, output);
+  assert.match(output, /^clean-plugin\s+1\.0\.0\s+loaded\s+ok$/mu, output);
+  assert.doesNotMatch(output, /not in the running app/u, output);
 });
 
 test('the exported audit names the graph URL and returns exitCode 2', async (t) => {
