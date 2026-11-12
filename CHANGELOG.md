@@ -1,4 +1,4 @@
-## 0.20.24
+## 0.20.25
 
 - **`audit` reads a profile `package.json` saved with a UTF-8 BOM instead of
   calling its bundles unlisted.** The profile reader passed the BOM straight to
@@ -31,6 +31,8 @@
   `files` list to both `npm pack` and `doctor`: the suite requires the packer to
   leave `lib/secret.js` out of the tarball and `doctor` to report it on three
   consecutive runs, so the check cannot drift from the packer.
+
+## 0.20.24
 
 - **A failed `market/<version>` push is named, not a raw exec error.** With
   `--pr`, a rejected or denied branch push used to surface only as
