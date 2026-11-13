@@ -1,5 +1,13 @@
 ## 0.20.30
 
+- **`index --index` with no path is a usage error, not a silent default.** A
+  bare `--index` used to store `undefined`, so the command read
+  `./market/index.json` and could exit `0` on an index the caller never named;
+  a CI step could therefore go green against the wrong file. The flag parser
+  now records the missing value separately, and the CLI exits `2` with
+  `--index` named before any index is read. A named path, whether
+  `--index market/index.json` or the positional form, still audits that file.
+
 - **The compatibility sample is the shipped CLI's output, not a library
   shortcut.** `scripts/compatibility-sample.mjs` used to call `run()` in
   process; it now starts `bin/dsh-plugin.mjs` as a child with a preload that
