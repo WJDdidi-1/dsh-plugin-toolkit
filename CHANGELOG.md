@@ -1,5 +1,15 @@
 ## 0.20.29
 
+- **The compatibility sample is the shipped CLI's output, not a library
+  shortcut.** `scripts/compatibility-sample.mjs` used to call `run()` in
+  process; it now starts `bin/dsh-plugin.mjs` as a child with a preload that
+  answers GitHub from the checked-in `examples/compatibility-sample/` folder.
+  The README's `incompatible` block is therefore the executable's stdout, and
+  the script fails unless that process exits `1`, so the documented command's
+  flag parsing, output formatter and exit-code path are covered by the same
+  reproducible sample. The test still compares the script's output with the
+  README and fails if the section names a flag the CLI does not document.
+
 - **`fix --remote --host` rejects a bad version before it reads GitHub.** The
   remote planner used to fetch `package.json` first and only then parse
   `--host`, so `--host 0.3` against an unreachable GitHub reported "cannot
