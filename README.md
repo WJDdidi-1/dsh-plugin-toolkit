@@ -948,7 +948,7 @@ ok  packed 5 file(s), installed the tarball, mounted the panel
     My panel This panel came from dsh-plugin init. Clicks: 0
 ```
 
-It packs, installs that tarball into a throwaway directory, then mounts the bundle **from the installed copy**. The host half is imported by the package's bare name, exactly as the loader imports it, so an `exports` map with no `.` entry fails with `ERR_PACKAGE_PATH_NOT_EXPORTED` even when `main` names a working file; `verify --no-mount` reports that as a `root export` failure naming the missing `.` export. A package that declares neither `exports` nor `main` has no root module at all; there is nothing to import, and the success line says it skipped the host import instead of claiming one ran. When the `files` list drops the panel:
+It packs, installs that tarball into a throwaway directory, then mounts the bundle **from the installed copy**. The host half is imported by the package's bare name, exactly as the loader imports it, so an `exports` map with no `.` entry fails with `ERR_PACKAGE_PATH_NOT_EXPORTED` even when `main` names a working file; `verify --no-mount` reports that as a `root export` failure naming the missing `.` export. The host half is also called and awaited, so an `async apply()` that rejects is reported as a `host apply` failure instead of printing the success line and then crashing with an unhandled rejection. A package that declares neither `exports` nor `main` has no root module at all; there is nothing to import, and the success line says it skipped the host import instead of claiming one ran. When the `files` list drops the panel:
 
 ```sh
 $ npx dsh-plugin-toolkit verify .
