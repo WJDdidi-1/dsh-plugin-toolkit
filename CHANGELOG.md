@@ -1,4 +1,4 @@
-## 0.20.29
+## 0.20.30
 
 - **The compatibility sample is the shipped CLI's output, not a library
   shortcut.** `scripts/compatibility-sample.mjs` used to call `run()` in
@@ -31,6 +31,8 @@
   `v0.2.2` remains a valid version and still reaches the compatibility answer.
   Tests pin the sequential value, the batch-before-file case, the process
   boundary, and the leading-`v` control.
+
+## 0.20.29
 
 - **The tarball gate covers `examples/*.mjs` as well as `scripts/*.mjs`.** The
   gate reads every `node <path>` command from `README.md` and `README.zh.md`,
