@@ -1,5 +1,17 @@
 ## 0.20.29
 
+- **`fix --remote --host` rejects a bad version before it reads GitHub.** The
+  remote planner used to fetch `package.json` first and only then parse
+  `--host`, so `--host 0.3` against an unreachable GitHub reported "cannot
+  reach GitHub" instead of the typo, and a reachable run spent the
+  unauthenticated API request before exiting `2`. The range/host validation now
+  runs before the one GitHub request, from the same helper the local planner
+  and the post-read remote plan use, so both report the same message. An
+  explicit `--range` that is not a semver range gets the same early rejection.
+  Tests pin the sequential values, the invalid range, the leading-`v` control
+  that still plans `>=0.3.0 <1.0.0`, and the shipped CLI boundary where no
+  request may happen.
+
 - **`audit --remote --host` rejects a value that is not a complete DSH
   version.** A typo such as `--host banana`, a range such as `>=0.2.0`, or a
   partial version such as `0.2` used to reach the compatibility parser, which
