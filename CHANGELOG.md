@@ -1,5 +1,15 @@
 ## 0.20.29
 
+- **`audit --remote --host` rejects a value that is not a complete DSH
+  version.** A typo such as `--host banana`, a range such as `>=0.2.0`, or a
+  partial version such as `0.2` used to reach the compatibility parser, which
+  answered `unknown` for every repository; an otherwise clean batch then exited
+  `0` even though the host question was never answered. The CLI now exits `2`
+  with the value named before it reads a `--from` file or contacts GitHub, while
+  `v0.2.2` remains a valid version and still reaches the compatibility answer.
+  Tests pin the sequential value, the batch-before-file case, the process
+  boundary, and the leading-`v` control.
+
 - **The tarball gate covers `examples/*.mjs` as well as `scripts/*.mjs`.** The
   gate reads every `node <path>` command from `README.md` and `README.zh.md`,
   compares the paths with `npm pack --dry-run --json` and with the published
