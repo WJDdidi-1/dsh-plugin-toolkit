@@ -1,4 +1,4 @@
-## 0.20.32
+## 0.20.33
 
 - **`fix --remote --patch` keeps a CRLF manifest's line endings in the diff.**
   The diff splitter normalized `\r\n` to `\n`, so a `package.json` saved on
@@ -12,6 +12,8 @@
   marker, so `git apply --check` accepts those bytes too.
   `test/fix-remote-crlf.test.mjs` runs the CLI for both line-ending styles and
   checks each patch with `git apply --check`.
+
+## 0.20.32
 
 - **Every value-taking flag rejects a missing value instead of falling back to
   a default or swallowing the next option.** `--range`, `--log`, `--tag-prefix`,
