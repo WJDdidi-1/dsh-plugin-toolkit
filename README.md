@@ -520,7 +520,10 @@ host-targeted repair for each repository that needs one. The help text lists
 the same flags; a test fails if this section names a flag the CLI does not have.
 A bare `--host` is a usage error, not an audit without the comparison: the
 command exits `2` before it reads GitHub, and `--host --json` does not consume
-the `--json` flag as a version.
+the `--json` flag as a version. The value itself must be a complete version
+(`0.2.2`, `v0.2.2`, or `0.2.2-alpha.3`): a range (`>=0.2.0`), a partial version
+(`0.2`), or a tag name is rejected with exit `2` before any repository is read,
+so a typo cannot turn into a clean-looking `unknown` row.
 
 `--host` still names the running app URL for a local `audit`; on `--remote` it
 is the DSH version to compare against. With `--json`, each finding gains
