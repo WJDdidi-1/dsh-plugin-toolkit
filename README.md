@@ -464,7 +464,7 @@ verdict, and the remaining entries are reported without another request.
 
 ### Will this plugin install on my DSH?
 
-The eight compatibility reports, from four repositories, all end with the same
+The fifteen compatibility reports, from four repositories, all end with the same
 question. Add `--host <version>` to a remote audit and it answers that question
 for one repository. This is the output for `L3n3L/dsh-resume`, a real plugin
 whose declared range stops before DSH 0.2.0, checked against the
@@ -856,7 +856,10 @@ is still untouched. The same host-aware plan works with `--patch`:
 `>=0.3.0 <1.0.0` and prints why. After cloning, `fix . --engines --host 0.3.0
 --write` applies that same range; either path writes one that accepts the host
 and rejects the next major. The remote reader strips a UTF-8 BOM, so a manifest
-saved on Windows gives the same plan and the patch removes the BOM too. `audit --remote --host <version> --patch-dir <dir>`
+saved on Windows gives the same plan and the patch removes the BOM too. A
+`--host` or `--range` the planner cannot parse is refused before the GitHub
+read, so a typo names the flag instead of looking like a network failure or
+spending the unauthenticated request quota. `audit --remote --host <version> --patch-dir <dir>`
 writes host-targeted repairs for a whole list. `git apply --check` is the dry
 run: it fails before changing anything if the manifest moved since the diff was
 printed. Commit the applied change as you would any other edit.

@@ -22,7 +22,9 @@ apply it after cloning (or paste it into a pull request). Add `--engines --host
 repository is cloned, `fix . --engines --host <version> --write` applies the
 same range locally. The remote reader strips a UTF-8 BOM, so a manifest saved
 on Windows produces the same plan, and the patch removes the BOM while it adds
-the range. The command creates parent directories and refuses to
+the range. A `--host` or `--range` the planner cannot parse is refused before
+GitHub is read, so a typo is named as a typo instead of becoming a network
+error. The command creates parent directories and refuses to
 replace an existing file unless `--force` is passed. A manifest whose range
 already clears the check is a success: the command prints `ok engines.dsh is
 already ...; nothing to apply` and exits `0` without writing a diff or patch
