@@ -7,6 +7,8 @@
  */
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -51,4 +53,21 @@ test('verify awaits an async host apply and reports it as a host apply failure',
   assert.equal(result.failures.length, 1);
   assert.equal(result.failures[0].check, 'host apply');
   assert.match(result.failures[0].message, /async apply exploded/);
+});
+
+test('a host apply that rejects without an Error still names the rejection', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-verify-host-string-'));
+  try {
+    fs.cpSync(fixture('verify-host-apply-async'), dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'index.js'), `export async function apply() {
+  throw 'string apply exploded';
+}
+`);
+    const result = await verify({ dir, mount: false });
+    assert.equal(result.ok, false, JSON.stringify(result.failures));
+    assert.equal(result.failures[0].check, 'host apply');
+    assert.match(result.failures[0].message, /string apply exploded/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });

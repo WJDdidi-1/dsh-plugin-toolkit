@@ -20,6 +20,16 @@
   success line. Checked-in async and sync fixtures pin the process boundary, and
   the module-level test names the `host apply` check.
 
+- **`verify` also awaits an async client `apply()` on its boot probe.** The
+  host half was made safe first; the mounted path then handed the client face a
+  bare context without waiting for the returned promise. A client `async
+  apply()` that rejected on that context escaped the probe, so the process died
+  with an unhandled rejection and a stack trace instead of naming the failure.
+  The probe now awaits the same way as the host, so the rejection is a `boot`
+  failure naming the error. An async client fixture pins the process boundary,
+  and a non-`Error` rejection now reports its value instead of `undefined` or a
+  second TypeError from reading `.message`.
+
 - **`fix --remote --host` rejects a bad version before it reads GitHub.** The
   remote planner used to fetch `package.json` first and only then parse
   `--host`, so `--host 0.3` against an unreachable GitHub reported "cannot
