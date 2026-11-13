@@ -1,5 +1,15 @@
 ## 0.20.29
 
+- **`verify --no-mount` awaits an async host `apply()`, so a rejection is a
+  `host apply` failure instead of a printed success followed by a crash.** The
+  installed host half was called without `await`; an `async apply()` that threw
+  returned a rejected promise, verify printed `ok  packed ... imported its host
+  half`, and Node then killed the process with an unhandled rejection and a
+  `Node.js v...` trace. The call is now awaited inside the same try/catch as the
+  synchronous throw, so both report the error message and exit `1` with no
+  success line. Checked-in async and sync fixtures pin the process boundary, and
+  the module-level test names the `host apply` check.
+
 - **`fix --remote --host` rejects a bad version before it reads GitHub.** The
   remote planner used to fetch `package.json` first and only then parse
   `--host`, so `--host 0.3` against an unreachable GitHub reported "cannot
