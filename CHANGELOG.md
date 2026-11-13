@@ -1,4 +1,4 @@
-## 0.20.30
+## 0.20.31
 
 - **`index --index` with no path is a usage error, not a silent default.** A
   bare `--index` used to store `undefined`, so the command read
@@ -7,6 +7,18 @@
   now records the missing value separately, and the CLI exits `2` with
   `--index` named before any index is read. A named path, whether
   `--index market/index.json` or the positional form, still audits that file.
+
+- **`verify` also awaits an async client `apply()` on its boot probe.** The
+  host half was made safe first; the mounted path then handed the client face a
+  bare context without waiting for the returned promise. A client `async
+  apply()` that rejected on that context escaped the probe, so the process died
+  with an unhandled rejection and a stack trace instead of naming the failure.
+  The probe now awaits the same way as the host, so the rejection is a `boot`
+  failure naming the error. An async client fixture pins the process boundary,
+  and a non-`Error` rejection now reports its value instead of `undefined` or a
+  second TypeError from reading `.message`.
+
+## 0.20.30
 
 - **The compatibility sample is the shipped CLI's output, not a library
   shortcut.** `scripts/compatibility-sample.mjs` used to call `run()` in
@@ -27,16 +39,6 @@
   synchronous throw, so both report the error message and exit `1` with no
   success line. Checked-in async and sync fixtures pin the process boundary, and
   the module-level test names the `host apply` check.
-
-- **`verify` also awaits an async client `apply()` on its boot probe.** The
-  host half was made safe first; the mounted path then handed the client face a
-  bare context without waiting for the returned promise. A client `async
-  apply()` that rejected on that context escaped the probe, so the process died
-  with an unhandled rejection and a stack trace instead of naming the failure.
-  The probe now awaits the same way as the host, so the rejection is a `boot`
-  failure naming the error. An async client fixture pins the process boundary,
-  and a non-`Error` rejection now reports its value instead of `undefined` or a
-  second TypeError from reading `.message`.
 
 - **`fix --remote --host` rejects a bad version before it reads GitHub.** The
   remote planner used to fetch `package.json` first and only then parse
