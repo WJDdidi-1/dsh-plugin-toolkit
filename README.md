@@ -490,9 +490,12 @@ real CLI path:
 $ node scripts/compatibility-sample.mjs
 ```
 
-(`npm run compatibility` runs the same script.) The test suite runs that
-command and compares its output with the block above, so the sample cannot
-drift from the formatter or from the README. Running
+(`npm run compatibility` runs the same script.) The script starts the shipped
+`bin/dsh-plugin.mjs` as a child process and answers its GitHub reads from the
+checked-in folder, so the block above is that executable's stdout rather than a
+library shortcut; it exits `0` only after the replayed command exited `1`. The
+test suite runs the script and compares its output with the block above, so the
+sample cannot drift from the flag parser, the formatter, or the README. Running
 `dsh-plugin audit --remote L3n3L/dsh-resume --host 0.2.2-alpha.3` without the
 sample audits the repository's current default branch instead; a README or
 manifest change since 0.1.3 can add another `readme` or manifest failure to the
