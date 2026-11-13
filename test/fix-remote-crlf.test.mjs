@@ -13,6 +13,7 @@ import path from 'node:path';
 import test from 'node:test';
 
 import { run } from '../lib/cli.mjs';
+import { fixRemote } from '../lib/remote.mjs';
 
 const manifest = {
   name: 'crlf-plugin',
@@ -83,6 +84,72 @@ test('a CRLF manifest produces a patch that git apply --check accepts', async (t
   const after = fs.readFileSync(path.join(target, 'package.json'), 'utf8');
   assert.equal(after.includes('\r\n'), true, 'the applied manifest is no longer CRLF');
   assert.equal(/(^|[^\r])\n/u.test(after), false, 'the applied manifest has a bare LF');
+  assert.equal(JSON.parse(after).engines.dsh, '>=0.2.0');
+});
+
+test('a batch repair reuses the audited CRLF manifestText and applies its patch', async (t) => {
+  // `audit --remote --patch-dir` hands `fixRemote` the manifest it already read
+  // instead of spending a second GitHub request. That is the documented batch
+  // repair, and it must use the same CRLF-safe diff as the single-repository
+  // command rather than re-reading (or normalizing) the manifest.
+  const raw = `${JSON.stringify(manifest, null, 2)}\n`.replace(/\n/gu, '\r\n');
+  const root = workspace(t);
+  const target = checkout(path.join(root, 'batch'), raw);
+  const patchFile = path.join(root, 'batch.patch');
+  let requests = 0;
+
+  const result = await fixRemote('acme/crlf-plugin', {
+    manifestText: raw,
+    patch: patchFile,
+    fetchImpl: async () => {
+      requests += 1;
+      throw new Error('the batch repair must reuse the manifest it was given');
+    },
+  });
+
+  assert.equal(requests, 0, 'the batch repair issued a second GitHub read');
+  assert.equal(result.patchWritten, true);
+  const written = fs.readFileSync(patchFile, 'utf8');
+  assert.equal(written, result.diff, 'the saved patch is not the diff the batch planned');
+  assert.ok(written.includes('\r\n'), 'the patch lost the manifest’s CRLF body');
+
+  execFileSync('git', ['apply', '--check', patchFile], { cwd: target, stdio: 'pipe' });
+  execFileSync('git', ['apply', patchFile], { cwd: target, stdio: 'pipe' });
+
+  const after = fs.readFileSync(path.join(target, 'package.json'), 'utf8');
+  assert.equal(after.includes('\r\n'), true, 'the applied manifest is no longer CRLF');
+  assert.equal(/(^|[^\r])\n/u.test(after), false, 'the applied manifest has a bare LF');
+  assert.equal(JSON.parse(after).engines.dsh, '>=0.2.0');
+});
+
+test('audit --remote --patch-dir writes the CRLF repair the batch claims', async (t) => {
+  // The documented batch command is `audit --remote --from <list> --patch-dir`.
+  // Pin the whole path, not just `fixRemote`: the audit has to carry the CRLF
+  // bytes it read into the repair, and the patch it saves has to apply in the
+  // checkout those bytes came from.
+  const raw = `${JSON.stringify(manifest, null, 2)}\n`.replace(/\n/gu, '\r\n');
+  const root = workspace(t);
+  const target = checkout(path.join(root, 'audit-checkout'), raw);
+  const list = path.join(root, 'repos.txt');
+  fs.writeFileSync(list, 'acme/crlf-plugin\n');
+  const patchDir = path.join(root, 'repairs');
+  const io = recorder();
+
+  const code = await run(['audit', '--remote', '--from', list, '--patch-dir', patchDir], io, {
+    fetchImpl: github(raw),
+  });
+
+  assert.equal(code, 1, io.lines.join('\n'));
+  assert.deepEqual(fs.readdirSync(patchDir), ['acme__crlf-plugin.patch']);
+  const patchFile = path.join(patchDir, 'acme__crlf-plugin.patch');
+  assert.ok(io.lines.join('\n').includes(patchFile), 'the batch did not name the patch it wrote');
+  assert.ok(fs.readFileSync(patchFile, 'utf8').includes('\r\n'), 'the batch patch lost the manifest’s CRLF body');
+
+  execFileSync('git', ['apply', '--check', patchFile], { cwd: target, stdio: 'pipe' });
+  execFileSync('git', ['apply', patchFile], { cwd: target, stdio: 'pipe' });
+
+  const after = fs.readFileSync(path.join(target, 'package.json'), 'utf8');
+  assert.equal(after.includes('\r\n'), true, 'the applied manifest is no longer CRLF');
   assert.equal(JSON.parse(after).engines.dsh, '>=0.2.0');
 });
 
