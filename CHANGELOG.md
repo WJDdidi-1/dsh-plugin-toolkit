@@ -1,12 +1,4 @@
-## 0.20.31
-
-- **`index --index` with no path is a usage error, not a silent default.** A
-  bare `--index` used to store `undefined`, so the command read
-  `./market/index.json` and could exit `0` on an index the caller never named;
-  a CI step could therefore go green against the wrong file. The flag parser
-  now records the missing value separately, and the CLI exits `2` with
-  `--index` named before any index is read. A named path, whether
-  `--index market/index.json` or the positional form, still audits that file.
+## 0.20.32
 
 - **Every value-taking flag rejects a missing value instead of falling back to
   a default or swallowing the next option.** `--range`, `--log`, `--tag-prefix`,
@@ -19,6 +11,16 @@
   reading a file or planning a release. A valid value still reaches the
   command, and `test/value-flag-contract.test.mjs` pins the whole family at the
   process boundary.
+
+## 0.20.31
+
+- **`index --index` with no path is a usage error, not a silent default.** A
+  bare `--index` used to store `undefined`, so the command read
+  `./market/index.json` and could exit `0` on an index the caller never named;
+  a CI step could therefore go green against the wrong file. The flag parser
+  now records the missing value separately, and the CLI exits `2` with
+  `--index` named before any index is read. A named path, whether
+  `--index market/index.json` or the positional form, still audits that file.
 
 - **`verify` also awaits an async client `apply()` on its boot probe.** The
   host half was made safe first; the mounted path then handed the client face a
