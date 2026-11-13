@@ -1077,6 +1077,14 @@ merged
 | 1 | A check failed, an installed plugin was not loaded by the running app, or the release stopped (the failing stage is named) |
 | 2 | Unknown command, invalid usage, or a remote request that could not be completed |
 
+A flag that takes a value must be given one. When `--range`, `--log`,
+`--tag-prefix`, `--base`, `--market`, `--timeout`, `--debounce`, `--slot`,
+`--surface`, `--dest`, `--entry`, `--build`, `--title`, `--name`, `--index`,
+`--host`, `--home`, `--budget`, `--patch`, `--from`, `--jobs` or `--patch-dir`
+is the last token, or is followed by another flag, the command exits `2` and
+names the flag instead of falling back to a default or consuming the next
+option as the value.
+
 `fix <owner>/<repo> --remote` exits `0` both when it prints a diff for a missing
 `engines.dsh` and when the manifest already declares a range that clears the
 check; the second case prints `ok ... nothing to apply` and writes no diff.
