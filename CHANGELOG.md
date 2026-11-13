@@ -1,5 +1,18 @@
 ## 0.20.32
 
+- **`fix --remote --patch` keeps a CRLF manifest's line endings in the diff.**
+  The diff splitter normalized `\r\n` to `\n`, so a `package.json` saved on
+  Windows produced hunks whose context and removed lines lacked the carriage
+  return. The saved patch then failed `git apply --check` against the very
+  checkout it described, dead-ending the documented batch repair. The splitter
+  now keeps the `\r` as part of each line, so the patch body is CRLF when the
+  manifest is and LF when it is not; the same shared diff also fixes
+  `audit --remote --patch-dir` repairs. A hunk that reaches a manifest without
+  a final newline now carries the standard `\ No newline at end of file`
+  marker, so `git apply --check` accepts those bytes too.
+  `test/fix-remote-crlf.test.mjs` runs the CLI for both line-ending styles and
+  checks each patch with `git apply --check`.
+
 - **Every value-taking flag rejects a missing value instead of falling back to
   a default or swallowing the next option.** `--range`, `--log`, `--tag-prefix`,
   `--base`, `--market`, `--timeout`, `--debounce`, `--slot`, `--surface`,
