@@ -854,8 +854,8 @@ dsh-plugin fix: would write engines.dsh ">=0.2.0" (was missing) in PrismLean/dsh
 
 When `package.json` already declares a range that clears the check, there is
 nothing to apply: the command prints `ok engines.dsh is already "<range>";
-nothing to apply` and exits `0`, the same no-op as `fix --engines` on a
-checkout. No diff and no patch file is written.
+nothing to apply`, exits `1`, and writes no diff or patch file. Exit `0` means a
+repair was printed for the author; `1` means there was no repair to print.
 
 To apply it, clone the repository, save that diff with `--patch`, and apply it
 in the checkout:
@@ -1089,8 +1089,8 @@ merged
 
 | Code | Meaning |
 | --- | --- |
-| 0 | Done, or nothing to complain about — including `fix --remote` when `engines.dsh` is already a valid range |
-| 1 | A check failed, an installed plugin was not loaded by the running app, or the release stopped (the failing stage is named) |
+| 0 | Done, or nothing to complain about |
+| 1 | A check failed, a remote `fix` found nothing to apply, an installed plugin was not loaded by the running app, or the release stopped (the failing stage is named) |
 | 2 | Unknown command, invalid usage, or a remote request that could not be completed |
 
 A flag that takes a value must be given one. When `--range`, `--log`,
@@ -1101,9 +1101,9 @@ is the last token, or is followed by another flag, the command exits `2` and
 names the flag instead of falling back to a default or consuming the next
 option as the value.
 
-`fix <owner>/<repo> --remote` exits `0` both when it prints a diff for a missing
-`engines.dsh` and when the manifest already declares a range that clears the
-check; the second case prints `ok ... nothing to apply` and writes no diff.
+`fix <owner>/<repo> --remote` exits `0` when it prints a diff for a missing
+`engines.dsh`; when the manifest already declares a range that clears the check,
+the second case prints `ok ... nothing to apply`, writes no diff and exits `1`.
 
 ## What is not here yet
 
