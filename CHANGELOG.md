@@ -1,5 +1,21 @@
 ## 0.20.33
 
+- **`doctor --fix --host` aims the repaired `engines.dsh` at the DSH that
+  rejected the install.** The repair planner already accepted a host, but the
+  CLI never passed `--host` through, so `doctor --fix ./my-panel --host 0.3.0`
+  silently wrote the default `>=0.2.0` — the same range `fix --engines --host`
+  would have replaced. The flag now reaches the planner, the preview prints why
+  the next major is excluded, and `--write` applies exactly that range.
+  `test/doctor-fix.test.mjs` covers the host-aimed preview, the write and an
+  incomplete host version that must stop before reading the manifest.
+- **A `package.json` that is not a JSON object is named instead of crashing.**
+  A file holding `null`, a string or an array parses as JSON, but every check
+  then read a field off the wrong shape: plain `doctor` died with
+  `Cannot read properties of null` and `doctor --fix` repeated that message.
+  The shared manifest reader now rejects the shape once with
+  `package.json does not hold a JSON object`, so the fixer reports the file the
+  same way it reports a parse error. The installed-plugin audit uses the same
+  reader and gets the cleaner message without a second code path.
 - **`fix --remote --patch` keeps a CRLF manifest's line endings in the diff.**
   The diff splitter normalized `\r\n` to `\n`, so a `package.json` saved on
   Windows produced hunks whose context and removed lines lacked the carriage
