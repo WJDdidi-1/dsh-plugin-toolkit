@@ -746,6 +746,22 @@ and a range that already passes is not touched. `--range <range>` chooses the
 value used when `engines.dsh` needs repair, and `--dry-run` wins if it is passed
 alongside `--write`.
 
+When the failed install names the host version, `--host` aims that repair at
+the DSH that rejected it instead of falling back to the default. It is the same
+decision as `fix --engines --host`, so the preview shows the range and why the
+next major is excluded, and `--write` applies exactly that edit:
+
+```sh
+$ npx dsh-plugin-toolkit@latest doctor --fix ./my-panel --host 0.3.0
+dsh-plugin doctor --fix: 1 failed check(s) in /Users/you/my-panel
+  ✗ engines.dsh: package.json — would write engines.dsh ">=0.3.0 <1.0.0" (was missing)
+    host 0.3.0 is inside ">=0.3.0 <1.0.0"; 1.0.0 is excluded, so the range includes the host you run and stops before the next major
+nothing written; pass --write to apply
+```
+
+An incomplete version such as `--host 0.3` is refused before the manifest is
+read, and `--range` still wins when both flags are passed.
+
 Checks that cannot be repaired without guessing — a missing patch file, a root
 export that points at the CLI, a README with no Requirements section — still
 appear in the plan with `manual:`, so the command never invents file contents.
