@@ -1,5 +1,14 @@
 ## 0.20.33
 
+- **`fix <owner>/<repo> --remote` exits `1` when there is nothing to apply.**
+  The command is a repair planner, so exit `0` now means it printed a unified
+  diff the author can apply. A manifest that already declares a valid
+  `engines.dsh` still prints `ok engines.dsh is already "<range>"; nothing to
+  apply` and writes no diff or patch file, but the plan is empty and the exit
+  code says so. This makes the remote repair usable in a shell loop that has to
+  tell a printed repair from an already-clean repository. The process-boundary
+  test now asserts both outcomes, and the README and `docs/repair.md` describe
+  the same contract.
 - **`doctor --fix --host` aims the repaired `engines.dsh` at the DSH that
   rejected the install.** The repair planner already accepted a host, but the
   CLI never passed `--host` through, so `doctor --fix ./my-panel --host 0.3.0`
