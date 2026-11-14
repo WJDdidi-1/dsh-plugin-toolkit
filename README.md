@@ -600,6 +600,8 @@ For a CI job or a repair sweep, add `--json`:
 ```sh
 $ dsh-plugin audit --remote --from repos.txt --json
 ```
+
+```json
 [
   {
     "target": "V1ki/dsh-plugin-subscriptions",

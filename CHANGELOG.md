@@ -1,5 +1,17 @@
 ## 0.20.33
 
+- **`audit --remote` names every finding the same way and never reads a
+  failed request as clean.** A batch given GitHub URLs reported the rows it had
+  read as `owner/repo` but kept the URL for rows skipped after a rate limit, so
+  a consumer joining findings saw two shapes for one list. Every target is now
+  normalised through the same parser. A read that fails for a reason other than
+  the quota (an HTTP 500 or a network error) is reported as `unreadable` with
+  the reason in `notes` and still exits `1`, so an empty `failures` array is
+  never mistaken for a pass. A local folder that happens to be named
+  `owner/repo` no longer hides the remote target. `test/audit-batch.test.mjs`,
+  `test/audit-rate-limit.test.mjs` and `test/remote.test.mjs` cover the
+  unreadable row, URL normalisation and the folder-name collision, and the
+  README's `--json` example is fenced as JSON so it renders as a code block.
 - **`fix <owner>/<repo> --remote` exits `1` when there is nothing to apply.**
   The command is a repair planner, so exit `0` now means it printed a unified
   diff the author can apply. A manifest that already declares a valid
