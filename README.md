@@ -764,7 +764,9 @@ nothing written; pass --write to apply
 ```
 
 An incomplete version such as `--host 0.3` is refused before the manifest is
-read, and `--range` still wins when both flags are passed.
+read. Passing `--range` beside `--host` is allowed only when that range accepts
+the host; a contradictory pair is refused before the manifest is read, the same
+as in `fix`.
 
 Checks that cannot be repaired without guessing — a missing patch file, a root
 export that points at the CLI, a README with no Requirements section — still
@@ -810,8 +812,11 @@ dsh-plugin fix: wrote engines.dsh ">=0.3.0 <1.0.0" (was missing)
     /Users/you/my-panel/package.json
 ```
 
-A host version that is not complete semver is refused, and `--range` still wins
-when it is passed beside `--host`.
+A host version that is not complete semver is refused. `--range` wins when it
+is passed beside `--host`, but only when that range accepts the host: a pair
+that disagrees is refused instead of written, because a range that excludes the
+host would leave the install failing. Drop `--range` to let `--host` aim the
+range automatically, or pass a range that includes the host version.
 
 For a repository you have not cloned, see
 [Repair a repository you have not cloned](#repair-a-repository-you-have-not-cloned):
