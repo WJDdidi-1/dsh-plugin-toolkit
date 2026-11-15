@@ -1,5 +1,17 @@
 ## 0.20.34
 
+- **A blank remote `--host` gets the same refusal as any other invalid
+  version.** `audit --remote owner/repo --host '   '` and the batch form used
+  to fall through the generic "running app URL" hint because the value was
+  empty, while the exported audit functions reported the complete-version
+  sentence. The CLI now identifies the remote form before it resolves the
+  target, the jobs or a list file, and routes blank and whitespace values
+  through `hostVersionIssue()`; the host check also runs before `--jobs`
+  parsing. The single-target and `--from` forms are pinned with their
+  valid-host controls in `test/audit-remote-host-invalid.test.mjs`: the
+  real-list invalid case, the shared blank message, the shipped batch exit
+  code, and the `compatible` control.
+
 - **A host-aimed repair can no longer write a range that excludes the host.**
   `fix --engines --host 0.3.0 --range ">=0.5.0"` printed `host 0.3.0 is not
   inside the explicit range`, then wrote `>=0.5.0` and exited `0` — the same
