@@ -1,5 +1,18 @@
 ## 0.20.34
 
+- **The remote audit refuses an invalid `--host` before any read, whichever
+  entry point is used.** The CLI already stopped `--host banana` with exit `2`,
+  but `auditRemote()` and `auditRemoteTargets()` — the single-target and batch
+  paths the command delegates to — still accepted it, read GitHub and answered
+  `compatibility: "unknown"`. All three now share `hostVersionIssue()`, so a
+  value that is not a complete DSH version is rejected before the repository or
+  a `--from` list is read. The acceptance case
+  (`audit --remote acme/clean --host banana --json`) is pinned: exit `2`, the
+  message names `--host` and `banana`, stdout stays empty and the mocked fetch
+  is never called; `--host 0.2.0` still exits `0` with `compatible`. The
+  regression test covers the CLI, both exported fan-out functions and a batch
+  whose list file must not be opened.
+
 - **`audit --remote --host` no longer claims a range it never read.** A
   repository GitHub answered with a 500 or skipped after a rate limit was
   printed as `unknown with dsh <version>; declares no engines.dsh range`, even
