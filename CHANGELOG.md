@@ -1,4 +1,4 @@
-## 0.20.34
+## 0.20.35
 
 - **The compatibility answer now has a reproducible machine-readable form.**
   The README's "Will this plugin install on my DSH?" section already showed
@@ -62,6 +62,8 @@
   verdict without a fabricated range or compatibility answer. The regression
   test pins the unreadable row, the skipped batch row and a readable control
   that still gets `compatible`.
+
+## 0.20.34
 
 - **`audit --remote` names every finding the same way and never reads a
   failed request as clean.** A batch given GitHub URLs reported the rows it had
