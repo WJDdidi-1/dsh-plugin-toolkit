@@ -1,4 +1,4 @@
-## 0.20.35
+## 0.20.36
 
 - **`audit --remote` no longer reads an arbitrary `build` script as a pre-pack
   hook.** The remote audit skipped the patch, client and root-export file
@@ -17,6 +17,8 @@
   the tarball still exit `0` with the skipped-files note, and a committed
   client beside a `build` script stays clean without the built note. The
   README and `docs/repair.md` state the same rule.
+
+## 0.20.35
 
 - **The compatibility answer now has a reproducible machine-readable form.**
   The README's "Will this plugin install on my DSH?" section already showed
