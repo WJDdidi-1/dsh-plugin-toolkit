@@ -15,6 +15,8 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { run } from '../lib/cli.mjs';
+import { auditRemoteTargets } from '../lib/audit.mjs';
+import { auditRemote } from '../lib/remote.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BIN = path.join(ROOT, 'bin', 'dsh-plugin.mjs');
@@ -118,4 +120,59 @@ test('a leading v is a version, so the compatibility answer is still reached', a
   assert.equal(row.host, 'v0.2.2');
   assert.equal(row.hostRange, '>=0.2.0');
   assert.equal(row.compatibility, 'compatible');
+});
+
+test('the acceptance case names --host and banana, prints no finding and makes no request', async () => {
+  let requests = 0;
+  const stdout = [];
+  const stderr = [];
+  const io = {
+    log: (line) => stdout.push(String(line)),
+    error: (line) => stderr.push(String(line)),
+  };
+
+  const code = await run(['audit', '--remote', 'acme/clean', '--host', 'banana', '--json'], io, {
+    fetchImpl: async (url) => {
+      requests += 1;
+      throw new Error(`the command read ${url} before rejecting the --host value`);
+    },
+  });
+
+  assert.equal(code, 2);
+  assert.equal(requests, 0, 'an invalid host made a GitHub request');
+  assert.deepEqual(stdout, [], 'an invalid host printed a JSON finding');
+  const message = stderr.join('\n');
+  assert.match(message, /--host/u, 'the message did not name --host');
+  assert.match(message, /banana/u, 'the message did not quote the rejected value');
+});
+
+test('the valid 0.2.0 control still exits 0 with a compatible finding', async () => {
+  const io = recorder();
+  const code = await run(['audit', '--remote', 'acme/clean', '--host', '0.2.0', '--json'], io, {
+    fetchImpl: github(),
+  });
+
+  assert.equal(code, 0, io.lines.join('\n'));
+  const [row] = JSON.parse(io.lines.join('\n'));
+  assert.equal(row.host, '0.2.0');
+  assert.equal(row.compatibility, 'compatible');
+});
+
+test('the exported single-target and batch audits hold the same host contract before a read', async () => {
+  let requests = 0;
+  const fetchImpl = async (url) => {
+    requests += 1;
+    throw new Error(`the library read ${url} before rejecting the --host value`);
+  };
+
+  await assert.rejects(() => auditRemote('acme/clean', { fetchImpl, host: 'banana' }), /--host.*banana/u);
+  await assert.rejects(() => auditRemoteTargets('acme/clean', { fetchImpl, host: 'banana' }), /--host.*banana/u);
+  await assert.rejects(() => auditRemote('acme/clean', { fetchImpl, host: '   ' }), /--host.*"   "/u);
+  await assert.rejects(() => auditRemoteTargets('acme/clean', { fetchImpl, host: '' }), /--host.*""/u);
+  await assert.rejects(
+    () => auditRemoteTargets(undefined, { fetchImpl, from: '/does/not/exist', host: 'banana' }),
+    /--host.*banana/u,
+    'the list file was read before the host was validated',
+  );
+  assert.equal(requests, 0, 'an invalid host made a GitHub request');
 });
