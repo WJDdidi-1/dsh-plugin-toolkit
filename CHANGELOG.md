@@ -1,5 +1,18 @@
 ## 0.20.34
 
+- **The compatibility answer now has a reproducible machine-readable form.**
+  The README's "Will this plugin install on my DSH?" section already showed
+  the real `audit --remote --host` output for `L3n3L/dsh-resume@0.1.3` from the
+  checked-in snapshot; it now also shows
+  `node scripts/compatibility-sample.mjs --json`. `scripts/compatibility-sample.mjs`
+  gains the `--json` form of the same replay, so both the human line and the CI
+  object come from the shipped executable. The section spells out that an
+  incompatible range is reported through `compatibility` (and the exit code)
+  rather than an extra `failures` entry, so a consumer that counts only
+  `failures.length` cannot mistake a host mismatch for a clean object.
+  `test/readme-compatibility.test.mjs` compares both documentation blocks with
+  the script's output and pins the JSON shape.
+
 - **A blank remote `--host` gets the same refusal as any other invalid
   version.** `audit --remote owner/repo --host '   '` and the batch form used
   to fall through the generic "running app URL" hint because the value was

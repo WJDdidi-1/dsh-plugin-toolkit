@@ -501,6 +501,31 @@ sample audits the repository's current default branch instead; a README or
 manifest change since 0.1.3 can add another `readme` or manifest failure to the
 same row.
 
+CI should read the same answer as data. This is the reproducible sample again,
+with the flag that changes the form rather than the verdict:
+
+```sh
+$ node scripts/compatibility-sample.mjs --json
+[
+  {
+    "target": "L3n3L/dsh-resume",
+    "version": "0.1.3",
+    "hostRange": ">=0.1.0-rc.6 <0.2.0-0",
+    "failures": [],
+    "notes": [],
+    "host": "0.2.2-alpha.3",
+    "compatibility": "incompatible"
+  }
+]
+```
+
+`compatibility` is the finding for an incompatible range; the object does not
+invent a second entry in `failures` for the same fact. Gate on `compatibility`
+or the process exit code, not on `failures.length` alone, or a host mismatch
+will look clean. The command still exits `1`, and the test suite compares this
+block with the JSON the executable prints, so the documented shape cannot drift
+from the code that emits it.
+
 The line carries the range `package.json` declares and one of `compatible`,
 `incompatible`, or `unknown` against that host version. `unknown` is the honest
 answer for a missing or malformed range — there is nothing to compare — while a
