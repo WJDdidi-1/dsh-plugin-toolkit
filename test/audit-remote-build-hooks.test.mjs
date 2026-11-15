@@ -7,8 +7,9 @@
  * This test crosses both process boundaries. It asks npm what each fixture's
  * tarball contains, then runs the shipped CLI against a fake GitHub tree with
  * the same committed files. The three build-only fixtures must exit 1 and name
- * the missing `client.js`; the `prepack` control must still exit 0 with the
- * built-not-committed note because its hook really does create the file.
+ * the missing `client.js`; the `prepack` and `prepare` controls must still exit
+ * 0 with the skipped-files note because their hooks really do create the file,
+ * and a committed client beside a `build` script must stay clean.
  */
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -26,7 +27,21 @@ const REPO = 'demo/plugin';
 const README = '# demo\n\n## Requirements\n\nRequires dsh >=0.2.0.\n';
 const PATCH = '- insert: []\n';
 const INDEX = 'export function apply() {}\n';
-const CREATE_CLIENT = `node -e "require('node:fs').writeFileSync('client.js','built by prepack')"`;
+
+/**
+ * A fixture hook that creates the client file if npm runs it. The build-only
+ * fixture proves `npm pack` does not run it; the lifecycle fixtures prove the
+ * hooks npm does run do create the file.
+ */
+function hookSource(clientPath) {
+  const target = clientPath.replace(/^\.\//u, '');
+  return `import fs from 'node:fs';
+import path from 'node:path';
+const target = ${JSON.stringify(target)};
+fs.mkdirSync(path.dirname(target), { recursive: true });
+fs.writeFileSync(target, 'built by the fixture hook');
+`;
+}
 
 function manifest({ scripts, clientPath }) {
   return {
@@ -41,7 +56,7 @@ function manifest({ scripts, clientPath }) {
   };
 }
 
-/** A committed tree with no client file: the fixture npm pack and the fake GitHub both see. */
+/** The committed tree npm pack and the fake GitHub both see, as path -> text. */
 function createFixture(t, options) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-remote-build-hook-'));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -52,6 +67,7 @@ function createFixture(t, options) {
     'README.md': README,
     'cordis.patch.yml': PATCH,
     'index.js': INDEX,
+    ...(options.extraFiles ?? {}),
   };
   for (const [name, contents] of Object.entries(files)) {
     fs.writeFileSync(path.join(dir, name), contents);
@@ -116,7 +132,14 @@ function audit(t, files) {
 
 test('three build-only fixtures exit 1 and the report names the missing client.js', (t) => {
   for (const clientPath of ['./client.js', './lib/client.js', './dist/client.js']) {
-    const fixture = createFixture(t, { scripts: { build: 'node build.mjs' }, clientPath });
+    const fixture = createFixture(t, {
+      scripts: { build: 'node build.mjs' },
+      clientPath,
+      // If npm treated `build` as a hook this script would create the client
+      // and the tarball would contain it. A plain script must stay inert.
+      extraFiles: { 'build.mjs': hookSource(clientPath) },
+    });
+    const committedClient = path.join(fixture.dir, clientPath.replace(/^\.\//u, ''));
 
     // npm pack runs no `build` script, so the tarball is the committed tree:
     // there is no client bundle to serve and the audit must not call it clean.
@@ -124,6 +147,11 @@ test('three build-only fixtures exit 1 and the report names the missing client.j
       packedFiles(t, fixture.dir),
       ['README.md', 'cordis.patch.yml', 'index.js', 'package.json'],
       `npm pack shipped a client for ${clientPath} without a lifecycle hook`,
+    );
+    assert.equal(
+      fs.existsSync(committedClient),
+      false,
+      `npm pack ran scripts.build for ${clientPath}; a plain build script is not a pack hook`,
     );
 
     const result = audit(t, fixture.files);
@@ -135,11 +163,16 @@ test('three build-only fixtures exit 1 and the report names the missing client.j
       `${clientPath}: the report did not name the missing client:\n${result.stdout}${result.stderr}`,
     );
     assert.doesNotMatch(result.stdout, /built rather than committed/u);
+    assert.doesNotMatch(result.stdout, /skipped/u);
   }
 });
 
-test('a prepack fixture that creates client.js exits 0 with the built-not-committed note', (t) => {
-  const fixture = createFixture(t, { scripts: { prepack: CREATE_CLIENT }, clientPath: './client.js' });
+test('a prepack fixture that creates client.js exits 0 with the skipped-files note', (t) => {
+  const fixture = createFixture(t, {
+    scripts: { prepack: 'node hook.mjs' },
+    clientPath: './client.js',
+    extraFiles: { 'hook.mjs': hookSource('./client.js') },
+  });
 
   // The hook really creates the file before the tarball is listed; the file is
   // not in the committed tree the fake GitHub serves, so only the lifecycle
@@ -152,8 +185,50 @@ test('a prepack fixture that creates client.js exits 0 with the built-not-commit
 
   const result = audit(t, fixture.files);
   assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /note: package\.json runs "prepack" before it publishes/u);
-  assert.match(result.stdout, /built rather than committed/u);
+  assert.match(
+    result.stdout,
+    /note: package\.json runs "prepack" before it publishes, so the files it ships are built rather than committed; the checks that need those files were skipped/u,
+  );
+  assert.doesNotMatch(result.stdout, /client declaration/u);
+});
+
+test('prepare is pack lifecycle evidence too, and its built client exits 0', (t) => {
+  const fixture = createFixture(t, {
+    scripts: { prepare: 'node hook.mjs' },
+    clientPath: './client.js',
+    extraFiles: { 'hook.mjs': hookSource('./client.js') },
+  });
+
+  assert.ok(
+    packedFiles(t, fixture.dir).includes('client.js'),
+    'the prepare fixture did not put client.js in the tarball',
+  );
+  assert.equal(fs.existsSync(path.join(fixture.dir, 'client.js')), true, 'prepare did not create client.js');
+
+  const result = audit(t, fixture.files);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(
+    result.stdout,
+    /note: package\.json runs "prepare" before it publishes, so the files it ships are built rather than committed; the checks that need those files were skipped/u,
+  );
+  assert.doesNotMatch(result.stdout, /client declaration/u);
+});
+
+test('a build script beside a committed client does not make the audit skip the tree', (t) => {
+  const fixture = createFixture(t, {
+    scripts: { build: 'node build.mjs' },
+    clientPath: './client.js',
+    extraFiles: {
+      'build.mjs': hookSource('./client.js'),
+      'client.js': 'export function apply() {}\n',
+    },
+  });
+
+  // The fix must not turn a plain `build` script into a failure either: the
+  // bundle is in the committed tree, so the ordinary file checks stay on.
+  const result = audit(t, fixture.files);
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stdout, /built rather than committed/u);
   assert.doesNotMatch(result.stdout, /client declaration/u);
 });
 

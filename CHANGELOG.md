@@ -11,8 +11,11 @@
   is not evidence. `test/audit-remote-build-hooks.test.mjs` crosses both
   process boundaries: it asks npm what three build-only fixtures actually
   ship, runs the shipped CLI against the same committed tree, and requires exit
-  `1` with a failure naming `client.js`; a `prepack` fixture that creates the
-  file in the tarball still exits `0` with the built-not-committed note. The
+  `1` with a failure naming `client.js`; each fixture's `build` script would
+  create the client if npm ran it, so the test also proves `npm pack` leaves it
+  alone. A `prepack` fixture and a `prepare` fixture that create the file in
+  the tarball still exit `0` with the skipped-files note, and a committed
+  client beside a `build` script stays clean without the built note. The
   README and `docs/repair.md` state the same rule.
 
 - **The compatibility answer now has a reproducible machine-readable form.**
