@@ -1,5 +1,14 @@
 ## 0.20.34
 
+- **`audit --remote --host` no longer claims a range it never read.** A
+  repository GitHub answered with a 500 or skipped after a rate limit was
+  printed as `unknown with dsh <version>; declares no engines.dsh range`, even
+  though `package.json` was never read. The host fields are now attached only
+  when a manifest exists, so unreadable and rate-limited rows keep their own
+  verdict without a fabricated range or compatibility answer. The regression
+  test pins the unreadable row, the skipped batch row and a readable control
+  that still gets `compatible`.
+
 - **`audit --remote` names every finding the same way and never reads a
   failed request as clean.** A batch given GitHub URLs reported the rows it had
   read as `owner/repo` but kept the URL for rows skipped after a rate limit, so

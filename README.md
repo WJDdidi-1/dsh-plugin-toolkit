@@ -529,8 +529,10 @@ the `--json` flag as a version. The value itself must be a complete version
 so a typo cannot turn into a clean-looking `unknown` row.
 
 `--host` still names the running app URL for a local `audit`; on `--remote` it
-is the DSH version to compare against. With `--json`, each finding gains
-`host` and `compatibility` beside `hostRange`.
+is the DSH version to compare against. With `--json`, each finding whose
+manifest was read gains `host` and `compatibility` beside `hostRange`; an
+unreadable or rate-limited repository has no manifest to compare, so it keeps
+its own verdict and does not invent a range or an `unknown` answer.
 
 Each repository gets one line with its verdict — `clean`, `failing`,
 `unreadable`, or `rate-limited` — and the run ends with a counted summary:
@@ -628,11 +630,11 @@ $ dsh-plugin audit --remote --from repos.txt --json
 Every repository produces one object with `target`, `version`, `hostRange`,
 `failures` (`{ check, message }`) and `notes`, and the command exits `1` when any
 repository has a problem. With `--host <version>` each object also carries
-`host` and `compatibility`. A rate-limited repository adds `rateLimited: true`
-and a `rateLimit` object with the HTTP `status` and, when GitHub sent one,
-`resetAt`; it is not marked `unreadable`. A network error is printed in `notes`
-and still exits `1`: a repository the tool could not read is never reported as
-clean. Packages that build before they pack
+`host` and `compatibility` once its manifest was read. A rate-limited
+repository adds `rateLimited: true` and a `rateLimit` object with the HTTP
+`status` and, when GitHub sent one, `resetAt`; it is not marked `unreadable`. A
+network error is printed in `notes` and still exits `1`: a repository the tool
+could not read is never reported as clean. Packages that build before they pack
 keep their file-level checks in `notes` as before.
 
 When the list is a repair queue rather than a report, add `--patch-dir`:
