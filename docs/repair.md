@@ -349,11 +349,11 @@ The list is the paths `doctor` tried, including the one from
 ```
 
 Then build or commit `dist/client.js` and add `dist/` to `files`. A bundle that
-is produced by `prepare`/`build` is not in the checkout until you run that
-build; run it before `doctor`, or point both fields at a committed file. If only
-`dsh.client.entry` points at the new path, the next check
-([client declaration](#client-declaration)) will still fail: the host reads
-`exports["./client"]`, not `dsh.client.entry`.
+is produced by `prepack`/`prepare` (or a `build` script those hooks run) is not
+in the checkout until npm runs that hook; run it before `doctor`, or point both
+fields at a committed file. If only `dsh.client.entry` points at the new path,
+the next check ([client declaration](#client-declaration)) will still fail: the
+host reads `exports["./client"]`, not `dsh.client.entry`.
 
 ## root export
 

@@ -1,5 +1,20 @@
 ## 0.20.35
 
+- **`audit --remote` no longer reads an arbitrary `build` script as a pre-pack
+  hook.** The remote audit skipped the patch, client and root-export file
+  checks whenever `scripts` had a `build` entry, but npm never runs a plain
+  `build` script during `npm pack`; only its lifecycle hooks do. A repository
+  whose only hook was `scripts.build` therefore passed with no `client.js` in
+  the tree even though the tarball contained no bundle either. Build evidence
+  now comes only from `prepack` and `prepare` (which run for `npm pack`) and
+  `prepublishOnly` (which runs before `npm publish` packs), and an empty hook
+  is not evidence. `test/audit-remote-build-hooks.test.mjs` crosses both
+  process boundaries: it asks npm what three build-only fixtures actually
+  ship, runs the shipped CLI against the same committed tree, and requires exit
+  `1` with a failure naming `client.js`; a `prepack` fixture that creates the
+  file in the tarball still exits `0` with the built-not-committed note. The
+  README and `docs/repair.md` state the same rule.
+
 - **The compatibility answer now has a reproducible machine-readable form.**
   The README's "Will this plugin install on my DSH?" section already showed
   the real `audit --remote --host` output for `L3n3L/dsh-resume@0.1.3` from the

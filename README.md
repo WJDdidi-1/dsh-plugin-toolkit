@@ -435,10 +435,13 @@ What it can see, and what it cannot:
   declares. A repository whose checkout fails `readme` fails the remote check
   too, with the same sentence.
 - File checks (does `exports["./client"]` point at a file that exists, does the
-  root export `apply`) need the tree. A package that runs `prepack`,
-  `prepublishOnly`, `prepare` or `build` publishes files it does not commit, so
-  those checks are **skipped with a note** instead of calling a working plugin
-  broken.
+  root export `apply`) need the tree. npm runs `prepack` and `prepare` before
+  `npm pack` creates the tarball, and `prepublishOnly` before `npm publish`
+  does, so a package whose lifecycle hook builds those files publishes files it
+  does not commit: those checks are **skipped with a note** instead of calling a
+  working plugin broken. A plain `build` script is not a lifecycle hook and is
+  not evidence by itself, because npm never runs it unless `prepack` or
+  `prepare` calls it; put the build there if it produces shipped files.
 - Public repositories work anonymously, but GitHub allows 60 requests an hour.
   Export `GH_TOKEN` (or `GITHUB_TOKEN`) to audit more than one or two.
 
