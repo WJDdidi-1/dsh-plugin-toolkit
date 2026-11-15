@@ -1,5 +1,21 @@
 ## 0.20.34
 
+- **A host-aimed repair can no longer write a range that excludes the host.**
+  `fix --engines --host 0.3.0 --range ">=0.5.0"` printed `host 0.3.0 is not
+  inside the explicit range`, then wrote `>=0.5.0` and exited `0` — the same
+  install failure if it was applied. The local fixer, `doctor --fix` and
+  `fix --remote` now share the same decision: an explicit `--range` wins only
+  when it accepts the named host, and a contradictory pair is a usage error
+  before anything is written or any GitHub request is made. The message names
+  both values, explains npm's pre-release rule when that is the only reason the
+  host is excluded, and points at dropping `--range` to aim the range
+  automatically. `fix --remote --host banana --write` also names the bad host
+  instead of the read-only refusal, and that refusal now names `--patch` as the
+  way to save the repair for a checkout. `test/fix-host-conflict.test.mjs`
+  pins the local, `doctor --fix` and remote paths, the accepting-range control,
+  and re-applies a remote patch to assert the written range accepts `0.3.0` and
+  rejects `1.0.0`.
+
 - **The remote audit refuses an invalid `--host` before any read, whichever
   entry point is used.** The CLI already stopped `--host banana` with exit `2`,
   but `auditRemote()` and `auditRemoteTargets()` — the single-target and batch

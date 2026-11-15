@@ -26,7 +26,10 @@ the range. The saved diff also keeps the manifest's CRLF line endings and
 final-newline state, so `git apply --check` accepts it in a checkout of the same
 bytes. A `--host` or `--range` the planner cannot parse is refused before
 GitHub is read, so a typo is named as a typo instead of becoming a network
-error. The command creates parent directories and refuses to
+error. Passing both is allowed only when the explicit range accepts the host;
+`--range ">=0.5.0" --host 0.3.0` is refused instead of writing a range that
+still fails the install, and dropping `--range` aims the range at the host
+automatically. The command creates parent directories and refuses to
 replace an existing file unless `--force` is passed. A manifest whose range
 already clears the check has nothing to apply: the command prints `ok
 engines.dsh is already ...; nothing to apply`, exits `1`, and writes no diff or
