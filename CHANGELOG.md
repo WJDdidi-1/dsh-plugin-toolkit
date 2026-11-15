@@ -1,4 +1,4 @@
-## 0.20.33
+## 0.20.34
 
 - **`audit --remote` names every finding the same way and never reads a
   failed request as clean.** A batch given GitHub URLs reported the rows it had
@@ -37,6 +37,9 @@
   `package.json does not hold a JSON object`, so the fixer reports the file the
   same way it reports a parse error. The installed-plugin audit uses the same
   reader and gets the cleaner message without a second code path.
+
+## 0.20.33
+
 - **`fix --remote --patch` keeps a CRLF manifest's line endings in the diff.**
   The diff splitter normalized `\r\n` to `\n`, so a `package.json` saved on
   Windows produced hunks whose context and removed lines lacked the carriage
