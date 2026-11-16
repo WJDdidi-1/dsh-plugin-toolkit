@@ -1,3 +1,16 @@
+## Unreleased
+
+- **The README tarball gate reads every relative `node <path>` command, not
+  only the `scripts/` and `examples/` folders in use today.** A future
+  `node ./bin/...`, quoted path, nested folder or `.js`/`.cjs` command is the
+  same promise to an installed reader, and previously stepped outside the
+  gate. The comparison also judges `package.json`'s `files` list with npm's
+  folder, glob and negation semantics instead of exact strings, so a valid
+  glob is not reported as a missing command and a trailing `!` entry that
+  removes a documented path is not ignored. `test/readme-commands.test.mjs`
+  pins the extractor and the files semantics; the 0.20.12 replay still names
+  the five paths that release left out.
+
 ## 0.20.36
 
 - **The installed preview command runs on Node 18, resolves its peers from the
