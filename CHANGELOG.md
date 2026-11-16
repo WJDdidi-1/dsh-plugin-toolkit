@@ -1,4 +1,4 @@
-## Unreleased
+## 0.20.39
 
 - **`release --dry-run` no longer plans a tag git will reject when the version
   is valid.** A pre-release or build identifier ending in `.lock`
