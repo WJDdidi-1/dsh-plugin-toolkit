@@ -1,5 +1,15 @@
 ## Unreleased
 
+- **`release --dry-run` no longer plans a tag git will reject when the version
+  is valid.** A pre-release or build identifier ending in `.lock`
+  (`1.2.3-rc.lock`) is legal SemVer and packs with npm, but
+  `git tag plugin-v1.2.3-rc.lock` fails; an invalid `--tag-prefix` (a space or
+  `..`) had the same effect. `plan()` and the real release now apply git's
+  ref-name rules before printing or creating the tag, and report a `tag`
+  failure instead. `test/release.test.mjs` covers the valid controls, the
+  `.lock` version, an invalid prefix, and that the real release makes no git
+  calls for a name it refuses.
+
 - **`doctor` validates `version` with the same strict SemVer parser the rest of
   the toolkit uses, and `release --dry-run` no longer prints a tag for a version
   the preflight rejects.** The package version check had its own regex while
