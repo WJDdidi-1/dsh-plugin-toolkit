@@ -1,3 +1,18 @@
+## Unreleased
+
+- **`doctor` validates `version` with the same strict SemVer parser the rest of
+  the toolkit uses, and `release --dry-run` no longer prints a tag for a version
+  the preflight rejects.** The package version check had its own regex while
+  the compatibility code had another parser, so the two could disagree about
+  forms such as `01.2.3`, `1.2.3-01` and `1.2.3-..`. The shared parser now also
+  rejects malformed build identifiers (`1.2.3+build..1`), which the older
+  compatibility parser let through. `plan()` refuses to build a `plugin-v...`
+  tag when the version is invalid, and the CLI reports the version failure
+  instead of printing a command the real release would never run.
+  `test/doctor-version-semver.test.mjs` checks the parser agreement, the
+  accepted `1.2.3` / `1.2.3-rc.1` controls, and that the invalid forms exit `1`
+  without a tag in the dry-run plan.
+
 ## 0.20.38
 
 - **`doctor` accepts SemVer 2.0 build metadata in `version`, and rejects

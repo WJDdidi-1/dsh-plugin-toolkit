@@ -139,8 +139,12 @@ tag is created, which is cheaper than discovering it after the tag is public.
 ```
 
 The quoted value in the second line is whatever is in `package.json` — `1.2`,
-`0.2`, `latest`, and a leading `v` all fail. So do empty pre-release or build
-identifiers, such as `1.0.0-..` and `1.0.0+build..1`.
+`0.2`, `latest`, and a leading `v` all fail. So do a leading zero in the core
+(`01.2.3`), a leading zero in a numeric pre-release identifier (`1.2.3-01`),
+and empty pre-release or build identifiers (`1.2.3-..`,
+`1.0.0+build..1`). The same strict parser decides whether `release --dry-run`
+may plan a `plugin-v...` tag, so a rejected version never prints a tag command
+that the real release would refuse to run.
 
 **Smallest fix.** Write a normal semver value in `package.json`:
 
