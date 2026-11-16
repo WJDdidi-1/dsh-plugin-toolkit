@@ -1,5 +1,35 @@
 ## 0.20.36
 
+- **The installed preview command runs on Node 18, resolves its peers from the
+  package, and the tarball gate now executes it instead of only comparing its
+  bytes.** `scripts/preview.mjs` located the package with
+  `import.meta.dirname`, which Node added in 20.11; on Node 18 — the oldest
+  version `engines.node` promises — the README's
+  `node scripts/preview.mjs /tmp/panel.html` threw before it rendered anything.
+  It now uses `path.dirname(fileURLToPath(import.meta.url))`, the idiom the
+  other shipped scripts already use, and resolves jsdom/React from the package
+  first and the caller's project second, so the installed command finds the
+  peers where they were installed without borrowing an unrelated checkout's
+  `node_modules` by accident.
+  `test/preview-tarball.test.mjs` installs the packed tarball into a temp
+  prefix, requires every `node <path>` command in the shipped READMEs to exist
+  there byte for byte, then runs the installed preview from outside the prefix
+  with the optional peers linked and requires exit `0` plus a real HTML page. A
+  missing-peer run exits `1` with the install command instead of a stack trace,
+  and `test/node18-paths.test.mjs` keeps `import.meta.dirname` and
+  `import.meta.filename` out of every shipped source file. The README states
+  the optional peers the preview needs.
+
+- **The four `node examples/*.mjs` commands run from the installed package, not
+  just from a checkout.** The examples mounted `fixtures/...` relative to the
+  caller's cwd and `files` omitted those fixtures, so the installed example
+  files existed but every command failed with `ENOENT` for the bundle they
+  mount. The examples now resolve their bundle and baseline from the package
+  root, the two fixture bundles are in `files`, and
+  `test/readme-examples-tarball.test.mjs` installs the tarball and runs all
+  four from outside the install with the optional peers linked, requiring the
+  output the README shows.
+
 - **`audit --remote` no longer reads an arbitrary `build` script as a pre-pack
   hook.** The remote audit skipped the patch, client and root-export file
   checks whenever `scripts` had a `build` entry, but npm never runs a plain
