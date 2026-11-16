@@ -1,4 +1,4 @@
-## Unreleased
+## 0.20.38
 
 - **`doctor` accepts SemVer 2.0 build metadata in `version`, and rejects
   malformed pre-release and build identifiers.** The hand-written check only
