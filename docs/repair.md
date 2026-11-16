@@ -146,6 +146,12 @@ and empty pre-release or build identifiers (`1.2.3-..`,
 may plan a `plugin-v...` tag, so a rejected version never prints a tag command
 that the real release would refuse to run.
 
+A valid version can still derive a tag git will not create: a pre-release or
+build identifier that ends in `.lock` (`1.2.3-rc.lock`) makes an illegal ref, as
+does a `--tag-prefix` containing a space, `..`, a leading dot or a `.lock`
+component. `release --dry-run` reports those as a `tag` failure before it prints
+any `git tag` command, instead of leaving the failure to the real release.
+
 **Smallest fix.** Write a normal semver value in `package.json`:
 
 ```json
