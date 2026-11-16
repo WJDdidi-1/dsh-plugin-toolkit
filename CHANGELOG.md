@@ -1,3 +1,17 @@
+## Unreleased
+
+- **`doctor` accepts SemVer 2.0 build metadata in `version`, and rejects
+  malformed pre-release and build identifiers.** The hand-written check only
+  allowed an optional pre-release and no `+build`, so valid package versions
+  (`1.0.0+build.5`, `2.3.4+sha.abc`, `0.1.0+20261103`) failed as `not semver`
+  and `release --dry-run` stopped at preflight even though npm accepts them.
+  The same loose pre-release pattern let `1.0.0-..` and `1.0.0-.` through. The
+  check now follows SemVer 2.0's core, pre-release and build grammar, so empty
+  identifiers and leading zeros in numeric identifiers fail. The acceptance
+  covers `checkVersion`, `doctor` at the process boundary, the
+  `release --dry-run` plan and the invalid forms in
+  `test/doctor-version-semver.test.mjs`; `docs/repair.md` states the same rule.
+
 ## 0.20.37
 
 - **The README tarball gate reads every relative `node <path>` command, not
