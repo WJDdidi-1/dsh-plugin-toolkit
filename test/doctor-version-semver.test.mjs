@@ -7,6 +7,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { checkVersion, doctor } from '../lib/doctor.mjs';
+import { run } from '../lib/exec.mjs';
 import { init } from '../lib/init.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -49,11 +50,62 @@ test('doctor exits 0 on a clean scaffold with build metadata', () => {
   }
 });
 
-test('release --dry-run reaches the plan with build metadata', () => {
+/** `npm pack --dry-run` in a scratch cache, so the test writes only under the temp dir. */
+function packDryRun(dir) {
+  const cache = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-plugin-version-npm-'));
+  const logs = path.join(cache, '_logs');
+  fs.mkdirSync(logs, { recursive: true });
+  try {
+    const stdout = run('npm', ['pack', '--dry-run', '--json'], {
+      cwd: dir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: { ...process.env, npm_config_cache: cache, npm_config_logs_dir: logs },
+    });
+    return { status: 0, stdout, stderr: '' };
+  } catch (error) {
+    return {
+      status: typeof error.status === 'number' ? error.status : 1,
+      stdout: String(error.stdout ?? ''),
+      stderr: String(error.stderr ?? error.message),
+    };
+  } finally {
+    fs.rmSync(cache, { recursive: true, force: true });
+  }
+}
+
+test('doctor, release --dry-run and npm pack agree on build metadata', (t) => {
+  const rows = [];
   for (const version of valid) {
-    const result = runCli(['release', scaffold(version), '--dry-run']);
-    assert.equal(result.status, 0, `${version}: ${result.stdout}${result.stderr}`);
-    assert.match(result.stdout, new RegExp(`Create the tag plugin-v${version.replace(/[.+]/gu, '\\$&')}`, 'u'));
+    const dir = scaffold(version);
+    t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+    const doctorResult = runCli(['doctor', dir]);
+    const releaseResult = runCli(['release', dir, '--dry-run']);
+    const packResult = packDryRun(dir);
+    rows.push({ version, doctor: doctorResult, release: releaseResult, pack: packResult });
+  }
+
+  const ok = (kind) => rows.filter((row) => row[kind].status === 0).length;
+  const summary = `doctor_ok=${ok('doctor')} release_ok=${ok('release')} pack_ok=${ok('pack')}`;
+  console.log(summary);
+  assert.equal(
+    summary,
+    'doctor_ok=3 release_ok=3 pack_ok=3',
+    rows.map((row) => [
+      `${row.version}: doctor=${row.doctor.status} release=${row.release.status} pack=${row.pack.status}`,
+      row.doctor.stdout + row.doctor.stderr,
+      row.release.stdout + row.release.stderr,
+      row.pack.stdout + row.pack.stderr,
+    ].join('\n')).join('\n'),
+  );
+
+  for (const row of rows) {
+    assert.match(row.doctor.stdout, new RegExp(`ok  version-check-plugin@${row.version.replace(/[.+]/gu, '\\$&')}`, 'u'));
+    assert.match(row.release.stdout, new RegExp(`Create the tag plugin-v${row.version.replace(/[.+]/gu, '\\$&')}`, 'u'));
+    const [packed] = JSON.parse(row.pack.stdout);
+    assert.equal(packed.name, 'version-check-plugin');
+    assert.equal(packed.version, row.version);
   }
 });
 
