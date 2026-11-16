@@ -1,5 +1,18 @@
 ## 0.20.39
 
+- **`doctor`'s files-list check honors a `.npmignore` in a subdirectory.** npm
+  disables the root `.npmignore` when `files` exists, but a `lib/.npmignore`
+  (or the `lib/.gitignore` fallback) still removes files from the tarball. A
+  package whose `files: ["lib"]` shipped the folder while `lib/.npmignore`
+  dropped the `lib/client.js` named by `exports["./client"]` used to pass
+  `doctor` and fail after install. The check walks each declared path through
+  the subdirectory ignore files and keeps npm's two exceptions: an explicit
+  file entry in `files` re-includes that file, and a later `!` rule in the
+  subdirectory ignore file puts it back. `test/doctor-files-npmignore.test.mjs`
+  pins the reported case, the `.gitignore` fallback, a nested
+  `lib/nested/.npmignore`, and the unrelated-file and negation controls against
+  `npm pack --dry-run --json`.
+
 - **`release --dry-run` no longer plans a tag git will reject when the version
   is valid.** A pre-release or build identifier ending in `.lock`
   (`1.2.3-rc.lock`) is legal SemVer and packs with npm, but
