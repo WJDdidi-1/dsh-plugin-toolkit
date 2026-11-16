@@ -12,6 +12,13 @@
   `release --dry-run` plan and the invalid forms in
   `test/doctor-version-semver.test.mjs`; `docs/repair.md` states the same rule.
 
+- **The build-metadata acceptance is checked against npm itself.** The CLI
+  regression test now runs `doctor`, `release --dry-run` and
+  `npm pack --dry-run` on the same three fixtures and requires
+  `doctor_ok=3 release_ok=3 pack_ok=3`, so a future version check cannot drift
+  away from what npm will actually pack even if the two toolkit paths still
+  agree with each other.
+
 ## 0.20.37
 
 - **The README tarball gate reads every relative `node <path>` command, not
