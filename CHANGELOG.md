@@ -1,4 +1,4 @@
-## Unreleased
+## 0.20.37
 
 - **The README tarball gate reads every relative `node <path>` command, not
   only the `scripts/` and `examples/` folders in use today.** A future
@@ -10,8 +10,6 @@
   removes a documented path is not ignored. `test/readme-commands.test.mjs`
   pins the extractor and the files semantics; the 0.20.12 replay still names
   the five paths that release left out.
-
-## 0.20.36
 
 - **The installed preview command runs on Node 18, resolves its peers from the
   package, and the tarball gate now executes it instead of only comparing its
@@ -42,6 +40,8 @@
   `test/readme-examples-tarball.test.mjs` installs the tarball and runs all
   four from outside the install with the optional peers linked, requiring the
   output the README shows.
+
+## 0.20.36
 
 - **`audit --remote` no longer reads an arbitrary `build` script as a pre-pack
   hook.** The remote audit skipped the patch, client and root-export file
