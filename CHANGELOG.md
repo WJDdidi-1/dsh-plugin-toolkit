@@ -1,5 +1,15 @@
 ## 0.20.39
 
+- **`doctor`'s subdirectory ignore matcher understands npm extglob patterns.**
+  A `lib/.npmignore` of `@(client|other).js` makes `npm pack` drop
+  `lib/client.js`, but the files-list check escaped the parentheses and read
+  the line as one literal filename, so it called the package clean. The glob
+  compiler now expands npm's extglob operators (`@()`, `+()`, `?()`, `*()` and
+  `!()`), including alternatives with their own wildcards, so the ignore rule
+  removes the same paths the packer does. `test/doctor-files-npmignore.test.mjs`
+  runs the extglob fixture and a literal `client.js` control against
+  `npm pack --dry-run --json` and three consecutive `doctor` runs.
+
 - **`doctor`'s files-list check honors a `.npmignore` in a subdirectory.** npm
   disables the root `.npmignore` when `files` exists, but a `lib/.npmignore`
   (or the `lib/.gitignore` fallback) still removes files from the tarball. A

@@ -145,6 +145,91 @@ test('the committed lib/.npmignore fixture makes npm pack and doctor omit the ex
   }
 });
 
+test('an extglob lib/.npmignore drops the same files as npm pack and doctor reports the client on three runs', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-doctor-extglob-'));
+  try {
+    const extglob = writeFixture(root, 'extglob-ignore', {
+      ignore: { name: '.npmignore', text: '@(client|other).js\n' },
+    });
+
+    const shipped = packedFiles(extglob);
+    assert.equal(
+      shipped.has('lib/client.js'),
+      false,
+      `npm pack unexpectedly ships the extglob client:\n${[...shipped].sort().join('\n')}`,
+    );
+    // The same extglob also names other.js, so both files in lib/ go away; a
+    // matcher that only handled the first alternative would pass the client
+    // check by accident while disagreeing with npm about the folder.
+    assert.equal(
+      shipped.has('lib/other.js'),
+      false,
+      `npm pack unexpectedly ships the extglob other file:\n${[...shipped].sort().join('\n')}`,
+    );
+
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      const result = await runDoctor(extglob);
+      assert.equal(result.code, 1, `run ${attempt} exited ${result.code}:\n${result.output}`);
+      assert.equal(result.failures.length, 1, `run ${attempt} failures:\n${result.output}`);
+      assert.match(
+        result.failures[0],
+        /✗ files list: files does not ship lib\/client\.js, which package\.json points at/u,
+        `run ${attempt} reported ${result.failures[0]}`,
+      );
+    }
+
+    // The literal control is the same tree and the same three runs, so the
+    // extglob branch cannot be the only thing that makes doctor fail.
+    const literal = writeFixture(root, 'literal-ignore', {
+      ignore: { name: '.npmignore', text: 'client.js\n' },
+    });
+    const literalShipped = packedFiles(literal);
+    assert.equal(literalShipped.has('lib/client.js'), false);
+    assert.ok(literalShipped.has('lib/other.js'), 'npm pack no longer traverses lib/ for the literal control');
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      const result = await runDoctor(literal);
+      assert.equal(result.code, 1, `control run ${attempt} exited ${result.code}:\n${result.output}`);
+      assert.match(result.failures.join('\n'), /files does not ship lib\/client\.js/u);
+    }
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('every extglob operator in a subdirectory ignore matches npm pack', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-doctor-extglob-operators-'));
+  try {
+    for (const [name, rule, otherShipped] of [
+      ['at-extglob', '@(client|other).js', false],
+      ['plus-extglob', '+(client|other).js', false],
+      ['optional-extglob', '?(client|other).js', false],
+      ['star-extglob', '*(client|other).js', false],
+      // A leading `/` keeps ignore-walk from reading the `!` as a negation, so
+      // the line reaches minimatch as a negative extglob: every `.js` file
+      // except `other.js` goes away.
+      ['negative-extglob', '/!(other).js', true],
+    ]) {
+      const dir = writeFixture(root, name, { ignore: { name: '.npmignore', text: `${rule}\n` } });
+      const shipped = packedFiles(dir);
+      assert.equal(
+        shipped.has('lib/client.js'),
+        false,
+        `npm pack unexpectedly ships ${name}:\n${[...shipped].sort().join('\n')}`,
+      );
+      assert.equal(
+        shipped.has('lib/other.js'),
+        otherShipped,
+        `npm pack disagrees with the ${name} rule about lib/other.js:\n${[...shipped].sort().join('\n')}`,
+      );
+      const failures = filesListFailures(dir);
+      assert.equal(failures.length, 1, `${name} doctor failures: ${JSON.stringify(doctor(dir).failures)}`);
+      assert.match(failures[0].message, /files does not ship lib\/client\.js/u, name);
+    }
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('the same fixture without lib/.npmignore is packed and passes doctor on three consecutive runs', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-doctor-npmignore-control-'));
   try {
