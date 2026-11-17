@@ -230,97 +230,94 @@ test('every extglob operator in a subdirectory ignore matches npm pack', async (
   }
 });
 
-test('experiment: npm pack and doctor agree on the extglob, literal and no-ignore fixtures for three runs', async () => {
+test('npm pack and doctor agree on the extglob, literal and no-ignore fixtures for three runs', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-doctor-npm-pack-parity-'));
   try {
-    // This is the reported false green: npm's ignore-walk expands
-    // `@(client|other).js` and drops both files, while a matcher that escapes
-    // the parentheses sees one literal filename and calls the package clean.
+    // The reported false green: npm's ignore-walk expands
+    // `@(client|other).js` and drops both files, while a matcher that escaped
+    // the parentheses saw one literal filename and called the package clean.
     const extglob = writeFixture(root, 'parity-extglob', {
       ignore: { name: '.npmignore', text: '@(client|other).js\n' },
     });
-    const extglobShipped = packedFiles(extglob);
-    assert.equal(
-      extglobShipped.has('lib/client.js'),
-      false,
-      `npm pack unexpectedly ships the extglob client:\n${[...extglobShipped].sort().join('\n')}`,
-    );
-
-    const extglobRuns = [];
-    let falseGreens = 0;
-    for (let attempt = 1; attempt <= 3; attempt += 1) {
-      const result = await runDoctor(extglob);
-      if (result.code === 0) falseGreens += 1;
-      extglobRuns.push(result);
-    }
 
     // The committed literal fixture is the control that already failed on
-    // 0.20.39, so it isolates the extglob from the subdirectory-ignore
-    // handling itself.
-    const literalShipped = packedFiles(COMMITTED_FIXTURE);
-    assert.equal(
-      literalShipped.has('lib/client.js'),
-      false,
-      `npm pack unexpectedly ships the literal client:\n${[...literalShipped].sort().join('\n')}`,
-    );
-
-    const literalRuns = [];
-    let literalFailures = 0;
-    for (let attempt = 1; attempt <= 3; attempt += 1) {
-      const result = await runDoctor(COMMITTED_FIXTURE);
-      if (result.code === 1) literalFailures += 1;
-      literalRuns.push(result);
-    }
-
+    // 0.20.39, so it isolates this from subdirectory-ignore handling itself.
     // The same tree without lib/.npmignore is the other control: npm ships the
     // client, so doctor must not invent a files-list failure.
     const noIgnore = path.join(root, 'parity-no-ignore');
     fs.cpSync(COMMITTED_FIXTURE, noIgnore, { recursive: true });
     fs.rmSync(path.join(noIgnore, 'lib', '.npmignore'));
-    const noIgnoreShipped = packedFiles(noIgnore);
-    assert.ok(
-      noIgnoreShipped.has('lib/client.js'),
-      `npm pack unexpectedly drops the client without an ignore file:\n${[...noIgnoreShipped].sort().join('\n')}`,
-    );
 
-    const noIgnoreRuns = [];
-    let noIgnoreOK = 0;
-    for (let attempt = 1; attempt <= 3; attempt += 1) {
-      const result = await runDoctor(noIgnore);
-      if (result.code === 0) noIgnoreOK += 1;
-      noIgnoreRuns.push(result);
+    const fixtures = [
+      { name: 'extglob', dir: extglob },
+      { name: 'literal', dir: COMMITTED_FIXTURE },
+      { name: 'no-ignore', dir: noIgnore },
+    ];
+
+    const observed = [];
+    for (const fixture of fixtures) {
+      // npm pack is the oracle. Deriving the expected verdict here means the
+      // test checks agreement even if a future npm changes its mind about one
+      // of these fixtures, instead of only repeating a hard-coded answer.
+      const shipped = packedFiles(fixture.dir);
+      const npmShipsClient = shipped.has('lib/client.js');
+      const runs = [];
+      for (let attempt = 1; attempt <= 3; attempt += 1) {
+        runs.push(await runDoctor(fixture.dir));
+      }
+      observed.push({ ...fixture, shipped, npmShipsClient, runs });
     }
 
+    const byName = Object.fromEntries(observed.map((entry) => [entry.name, entry]));
+    const falseGreens = byName.extglob.runs.filter((result) => result.code === 0).length;
+    const literalFailures = byName.literal.runs.filter((result) => result.code === 1).length;
+    const noIgnoreOK = byName['no-ignore'].runs.filter((result) => result.code === 0).length;
     const summary = `false_greens=${falseGreens}/3 literal_failures=${literalFailures}/3 no_ignore_ok=${noIgnoreOK}/3`;
     console.log(summary);
+
+    for (const fixture of observed) {
+      const files = [...fixture.shipped].sort().join('\n');
+      assert.equal(
+        fixture.npmShipsClient,
+        fixture.name === 'no-ignore',
+        `npm pack and the ${fixture.name} fixture disagree about lib/client.js:\n${files}`,
+      );
+    }
+
+    // A build without the extglob fix printed `false_greens=3/3`: the packer
+    // dropped the client, but doctor exited 0 on every run.
     assert.equal(
       summary,
       'false_greens=0/3 literal_failures=3/3 no_ignore_ok=3/3',
       [
-        `on 0.20.39 the extglob fixture was called clean on all three runs (false_greens=3/3)`,
-        ...extglobRuns.map((result, index) => `extglob run ${index + 1}: exit ${result.code}\n${result.output}`),
-        ...literalRuns.map((result, index) => `literal run ${index + 1}: exit ${result.code}\n${result.output}`),
-        ...noIgnoreRuns.map((result, index) => `no-ignore run ${index + 1}: exit ${result.code}\n${result.output}`),
+        'doctor disagreed with npm pack; on 0.20.39 the extglob fixture was called clean on all three runs (false_greens=3/3)',
+        ...observed.flatMap((fixture) =>
+          fixture.runs.map(
+            (result, index) =>
+              `${fixture.name} run ${index + 1}: exit ${result.code} (npm ${fixture.npmShipsClient ? 'ships' : 'drops'} lib/client.js)\n${result.output}`,
+          ),
+        ),
       ].join('\n'),
     );
 
-    for (const [attempt, result] of extglobRuns.entries()) {
-      assert.equal(result.code, 1, `extglob run ${attempt + 1} exited ${result.code}:\n${result.output}`);
-      assert.match(
-        result.failures.join('\n'),
-        /✗ files list: files does not ship lib\/client\.js, which package\.json points at/u,
-        `extglob run ${attempt + 1} failures:\n${result.output}`,
-      );
-    }
-    for (const [attempt, result] of literalRuns.entries()) {
-      assert.match(
-        result.failures.join('\n'),
-        /✗ files list: files does not ship lib\/client\.js, which package\.json points at/u,
-        `literal run ${attempt + 1} failures:\n${result.output}`,
-      );
-    }
-    for (const [attempt, result] of noIgnoreRuns.entries()) {
-      assert.deepEqual(result.failures, [], `no-ignore run ${attempt + 1} failures:\n${result.output}`);
+    for (const fixture of observed) {
+      for (const [index, result] of fixture.runs.entries()) {
+        const run = `${fixture.name} run ${index + 1}`;
+        assert.equal(
+          result.code,
+          fixture.npmShipsClient ? 0 : 1,
+          `${run} exited ${result.code}, but npm ${fixture.npmShipsClient ? 'ships' : 'drops'} lib/client.js:\n${result.output}`,
+        );
+        if (fixture.npmShipsClient === true) {
+          assert.deepEqual(result.failures, [], `${run} found failures:\n${result.output}`);
+        } else {
+          assert.match(
+            result.failures.join('\n'),
+            /✗ files list: files does not ship lib\/client\.js, which package\.json points at/u,
+            `${run} failures:\n${result.output}`,
+          );
+        }
+      }
     }
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
