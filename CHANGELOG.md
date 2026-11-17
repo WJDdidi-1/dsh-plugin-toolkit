@@ -1,4 +1,4 @@
-## 0.20.39
+## 0.20.40
 
 - **`doctor`'s subdirectory ignore matcher understands npm extglob patterns.**
   A `lib/.npmignore` of `@(client|other).js` makes `npm pack` drop
@@ -9,6 +9,8 @@
   removes the same paths the packer does. `test/doctor-files-npmignore.test.mjs`
   runs the extglob fixture and a literal `client.js` control against
   `npm pack --dry-run --json` and three consecutive `doctor` runs.
+
+## 0.20.39
 
 - **`doctor`'s files-list check honors a `.npmignore` in a subdirectory.** npm
   disables the root `.npmignore` when `files` exists, but a `lib/.npmignore`
