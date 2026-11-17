@@ -5,17 +5,21 @@
  * package clean while `npm pack` dropped the `lib/client.js` that
  * `exports["./client"]` names.
  *
- * Every fixture is handed to `npm pack --dry-run --json` and to `doctor`, so the
- * prediction is pinned to the packer rather than to a hand-written list. The
- * controls keep the fix from becoming "any subdirectory ignore file fails":
- * a rule for an unrelated file, an explicit file in `files`, and a negation
- * that puts the client back all have to stay clean.
+ * The reported case is a committed fixture, not one written on the fly: the
+ * same tree is handed to `npm pack --dry-run --json` and to the shipped
+ * `doctor` on three consecutive runs, so the prediction cannot borrow state
+ * from an earlier check or be tuned to a fixture only the test knows about.
+ * A no-ignore copy of that same tree is the control. The remaining fixtures
+ * keep the fix from becoming "any subdirectory ignore file fails": a rule for
+ * an unrelated file, an explicit file in `files`, and a negation that puts the
+ * client back all have to stay clean.
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import { run as runCli } from '../lib/cli.mjs';
 import { doctor } from '../lib/doctor.mjs';
@@ -35,6 +39,8 @@ process.on('exit', () => {
   }
 });
 
+const here = path.dirname(fileURLToPath(import.meta.url));
+const COMMITTED_FIXTURE = path.join(here, 'fixtures', 'npmignore-client');
 const DEFAULT_FILES = ['index.js', 'lib', 'cordis.patch.yml', 'README.md'];
 
 /**
@@ -106,27 +112,57 @@ function filesListFailures(dir) {
   return doctor(dir).failures.filter((failure) => failure.check === 'files list');
 }
 
-test('a lib/.npmignore that drops the exported client is reported by doctor', async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-doctor-npmignore-case-'));
+async function runDoctor(dir) {
+  const io = recorder();
+  const code = await runCli(['doctor', dir], io);
+  return {
+    code,
+    output: io.lines.join('\n'),
+    failures: io.lines.filter((line) => line.includes('✗')),
+  };
+}
+
+test('the committed lib/.npmignore fixture makes npm pack and doctor omit the exported client', async () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(COMMITTED_FIXTURE, 'package.json'), 'utf8'));
+  assert.equal(manifest.exports['./client'], './lib/client.js');
+
+  const shipped = packedFiles(COMMITTED_FIXTURE);
+  const files = [...shipped].sort().join('\n');
+  assert.equal(shipped.has('lib/client.js'), false, `npm pack unexpectedly ships the client:\n${files}`);
+  // The folder is still traversed and packed, so this proves the ignore rule
+  // removed one file rather than the whole `lib/` entry.
+  assert.ok(shipped.has('lib/other.js'), `npm pack no longer traverses lib/:\n${files}`);
+
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const result = await runDoctor(COMMITTED_FIXTURE);
+    assert.equal(result.code, 1, `run ${attempt} exited ${result.code}:\n${result.output}`);
+    assert.equal(result.failures.length, 1, `run ${attempt} failures:\n${result.output}`);
+    assert.match(
+      result.failures[0],
+      /✗ files list: files does not ship lib\/client\.js, which package\.json points at/u,
+      `run ${attempt} reported ${result.failures[0]}`,
+    );
+  }
+});
+
+test('the same fixture without lib/.npmignore is packed and passes doctor on three consecutive runs', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-doctor-npmignore-control-'));
   try {
-    const dir = writeFixture(root, 'nested-npmignore', {
-      ignore: { name: '.npmignore', text: 'client.js\n' },
-    });
+    const control = path.join(root, 'npmignore-client-control');
+    fs.cpSync(COMMITTED_FIXTURE, control, { recursive: true });
+    fs.rmSync(path.join(control, 'lib', '.npmignore'));
 
-    const shipped = packedFiles(dir);
-    const files = [...shipped].sort().join('\n');
-    assert.equal(shipped.has('lib/client.js'), false, `npm pack unexpectedly ships the client:\n${files}`);
-    assert.ok(shipped.has('lib/other.js'), `npm pack no longer traverses lib/:\n${files}`);
+    const shipped = packedFiles(control);
+    assert.ok(
+      shipped.has('lib/client.js'),
+      `npm pack unexpectedly drops the client without an ignore file:\n${[...shipped].sort().join('\n')}`,
+    );
 
-    const failures = filesListFailures(dir);
-    assert.equal(failures.length, 1, `doctor failures: ${JSON.stringify(doctor(dir).failures)}`);
-    assert.match(failures[0].message, /files does not ship lib\/client\.js/u);
-
-    const io = recorder();
-    const code = await runCli(['doctor', dir], io);
-    const output = io.lines.join('\n');
-    assert.equal(code, 1, output);
-    assert.match(output, /✗ files list: files does not ship lib\/client\.js/u);
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      const result = await runDoctor(control);
+      assert.equal(result.code, 0, `run ${attempt} exited ${result.code}:\n${result.output}`);
+      assert.deepEqual(result.failures, [], `run ${attempt} failures:\n${result.output}`);
+    }
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
