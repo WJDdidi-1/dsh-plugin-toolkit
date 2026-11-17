@@ -466,9 +466,13 @@ npm disables a root `.npmignore` when `files` is present, but it still applies a
 `.npmignore` inside a subdirectory, and uses that folder's `.gitignore` when it
 has no `.npmignore`. The check walks every declared path through those files
 too, so `"files": ["lib"]` plus a `lib/.npmignore` naming `client.js` is
-reported when `exports["./client"]` points at `lib/client.js`. Two npm
-exceptions are kept: an explicit file entry in `files` re-includes that file,
-and a later `!` rule in the subdirectory ignore file puts it back.
+reported when `exports["./client"]` points at `lib/client.js`. Those ignore
+rules use npm's minimatch syntax, including extglob:
+`@(client|other).js`, `+(client|other).js`, `?(client|other).js`,
+`*(client|other).js` and a negative `!(...)` group all remove the same paths
+`npm pack` removes. Two npm exceptions are kept: an explicit file entry in
+`files` re-includes that file, and a later `!` rule in the subdirectory ignore
+file puts it back.
 
 `doctor --remote` and `audit --remote` run this check against the manifest
 GitHub serves, so a glob or a negation that hides an exported file fails there
