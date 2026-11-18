@@ -20,7 +20,11 @@
   packed the file it was looking for. Those checks now wait until after the
   pack; a file that is still missing fails at `pack` naming it. Manifest and
   root-export failures still stop before npm is asked, and a `files` list that
-  omits a path already on disk still stops at `doctor`.
+  omits a path already on disk still stops at `doctor`. That includes a missing
+  `files` list, a `dsh.client.platform` other than `web`, and a client bundle
+  shipped without the `dsh.client` declaration or the `./client` export: no
+  file hook can add a manifest declaration, so verify reports those at `doctor`
+  and does not run the hook.
   `test/verify-prepack.test.mjs` spawns the shipped CLI on a generated-client
   fixture, checks `npm pack --dry-run --json` lists `client.js`, and keeps a
   control whose `prepack` writes nothing red at `pack`.

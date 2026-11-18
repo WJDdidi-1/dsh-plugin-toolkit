@@ -22,6 +22,7 @@ import { fileURLToPath } from 'node:url';
 
 import { run } from '../lib/exec.mjs';
 import { init } from '../lib/init.mjs';
+import { verify } from '../lib/verify.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..');
@@ -103,6 +104,105 @@ test('the unmodified scaffold still exits 0 with --no-mount', () => {
     const output = `${result.stdout}\n${result.stderr}`;
     assert.equal(result.status, 0, output);
     assert.match(result.stdout, /^ok {2}packed \d+ file\(s\)/m, output);
+  } finally {
+    fs.rmSync(parent, { recursive: true, force: true });
+  }
+});
+
+/** Edit the scaffold manifest, keeping the test's change readable. */
+function editManifest(dir, change) {
+  const file = path.join(dir, 'package.json');
+  const manifest = JSON.parse(fs.readFileSync(file, 'utf8'));
+  change(manifest);
+  fs.writeFileSync(file, `${JSON.stringify(manifest, null, 2)}\n`);
+}
+
+/**
+ * Add a `prepack` hook that leaves a marker. A manifest-only failure must be
+ * reported at `doctor`, so the marker staying absent proves no build hook ran.
+ */
+function addMarkerHook(dir) {
+  const scripts = path.join(dir, 'scripts');
+  fs.mkdirSync(scripts, { recursive: true });
+  fs.writeFileSync(
+    path.join(scripts, 'prepack-marker.mjs'),
+    "import fs from 'node:fs';\nimport { fileURLToPath } from 'node:url';\n\n" +
+      "fs.writeFileSync(fileURLToPath(new URL('../prepack-ran.txt', import.meta.url)), 'ran');\n",
+  );
+  editManifest(dir, (manifest) => {
+    manifest.scripts = { ...manifest.scripts, prepack: 'node scripts/prepack-marker.mjs' };
+  });
+}
+
+test('a client platform mismatch stops at doctor before the pack hook runs', async () => {
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-verify-prepack-platform-'));
+  const dir = path.join(parent, 'plugin');
+  try {
+    assert.equal(init({ dir, name: 'prepack-platform', title: 'Prepack platform' }).ok, true);
+    addMarkerHook(dir);
+    editManifest(dir, (manifest) => {
+      manifest.dsh.client.platform = 'node';
+    });
+
+    const result = await verify({ dir, mount: false });
+    assert.equal(result.ok, false, JSON.stringify(result.failures));
+    assert.equal(result.stage, 'doctor');
+    assert.match(result.failures[0].message, /platform is "node"/u);
+    assert.equal(
+      fs.existsSync(path.join(dir, 'prepack-ran.txt')),
+      false,
+      'a manifest-only client declaration failure ran the build hook before reporting itself',
+    );
+  } finally {
+    fs.rmSync(parent, { recursive: true, force: true });
+  }
+});
+
+test('a client file without the dsh.client declaration stops at doctor before the pack hook runs', async () => {
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-verify-prepack-undeclared-'));
+  const dir = path.join(parent, 'plugin');
+  try {
+    assert.equal(init({ dir, name: 'prepack-undeclared', title: 'Prepack undeclared' }).ok, true);
+    addMarkerHook(dir);
+    editManifest(dir, (manifest) => {
+      delete manifest.dsh.client;
+    });
+
+    const result = await verify({ dir, mount: false });
+    assert.equal(result.ok, false, JSON.stringify(result.failures));
+    assert.equal(result.stage, 'doctor');
+    assert.equal(result.failures[0].check, 'client declaration');
+    assert.match(result.failures[0].message, /is not declared/u);
+    assert.equal(
+      fs.existsSync(path.join(dir, 'prepack-ran.txt')),
+      false,
+      'a manifest-only client declaration failure ran the build hook before reporting itself',
+    );
+  } finally {
+    fs.rmSync(parent, { recursive: true, force: true });
+  }
+});
+
+test('a package with no files list stops at doctor without running the pack hook', async () => {
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-verify-prepack-nofiles-'));
+  const dir = path.join(parent, 'plugin');
+  try {
+    assert.equal(init({ dir, name: 'prepack-nofiles', title: 'Prepack no files' }).ok, true);
+    addMarkerHook(dir);
+    editManifest(dir, (manifest) => {
+      delete manifest.files;
+    });
+
+    const result = await verify({ dir, mount: false });
+    assert.equal(result.ok, false, JSON.stringify(result.failures));
+    assert.equal(result.stage, 'doctor');
+    assert.equal(result.failures[0].check, 'files list');
+    assert.match(result.failures[0].message, /no "files" list/u);
+    assert.equal(
+      fs.existsSync(path.join(dir, 'prepack-ran.txt')),
+      false,
+      'a missing files list is a manifest bug, not a file the pack hook can generate',
+    );
   } finally {
     fs.rmSync(parent, { recursive: true, force: true });
   }
