@@ -1,4 +1,4 @@
-## 0.20.40
+## 0.20.41
 
 - **`index` rejects an unauditable market index instead of reporting it clean
   or crashing.** A plugin without `versions` disappeared from the audit loop, a
@@ -53,6 +53,8 @@
   CLI. Omitting `--title` still gets the `My panel` template default, and a
   normal title is unchanged. `test/init.test.mjs` covers fresh targets,
   whitespace-only titles, `--force`, and the CLI exit code.
+
+## 0.20.40
 
 - **`doctor`'s subdirectory ignore matcher understands npm extglob patterns.**
   A `lib/.npmignore` of `@(client|other).js` makes `npm pack` drop
