@@ -27,6 +27,12 @@ test('the arm64 leg runs where a runner can actually be acquired', () => {
   assert.match(arm, /runs-on: ubuntu-24\.04-arm/u);
   assert.match(arm, /run: npm test/u);
 
+  // Asking for an arm64 label is not the same as getting one. The job proves
+  // its architecture, and the gate treats an unproven architecture as a
+  // failure, so "arm64 coverage" cannot quietly become an x64 run.
+  assert.match(arm, /id: arch/u);
+  assert.match(arm, /node -p 'process\.arch'/u);
+
   // Hosted macOS arm64 jobs that never acquire a runner are cancelled, and a
   // cancelled job fails the workflow even with continue-on-error. Do not put
   // the arm64 leg back on that pool, and do not paper over it with an escape
@@ -41,6 +47,7 @@ test('the arm64 gate still refuses a leg that started but did not finish its tes
   assert.match(gate, /name: arm64 job did not hide a test failure/u);
   assert.match(gate, /needs: linux-arm64/u);
   assert.match(gate, /RUNNER_OUTCOME: \$\{\{ needs\.linux-arm64\.outputs\.runner \}\}/u);
+  assert.match(gate, /ARCH_OUTCOME: \$\{\{ needs\.linux-arm64\.outputs\.arch \}\}/u);
   assert.match(gate, /TESTS_OUTCOME: \$\{\{ needs\.linux-arm64\.outputs\.tests \}\}/u);
 });
 

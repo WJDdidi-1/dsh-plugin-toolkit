@@ -42,6 +42,7 @@ jobs:
     timeout-minutes: 20
     outputs:
       runner: ${{ steps.checkout.outcome }}
+      arch: ${{ steps.arch.outcome }}
       tests: ${{ steps.tests.outcome }}
     steps:
       - uses: actions/checkout@v4
@@ -50,6 +51,18 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      # The label asks for an arm64 runner; this proves the job actually got
+      # one. Without it a label change (or a label silently served by x64)
+      # would turn the arm64 leg into a green x64 run that covers nothing.
+      - name: the runner really is arm64
+        id: arch
+        run: |
+          arch="$(node -p 'process.arch')"
+          if [ "$arch" != "arm64" ]; then
+            echo "expected an arm64 runner, got $arch"
+            exit 1
+          fi
+          echo "arm64 runner: $arch"
       - run: npm ci
       - id: tests
         run: npm test
@@ -63,10 +76,15 @@ jobs:
       - name: the arm64 job ran its tests
         env:
           RUNNER_OUTCOME: ${{ needs.linux-arm64.outputs.runner }}
+          ARCH_OUTCOME: ${{ needs.linux-arm64.outputs.arch }}
           TESTS_OUTCOME: ${{ needs.linux-arm64.outputs.tests }}
         run: |
           if [ "$RUNNER_OUTCOME" != "success" ]; then
             echo "the arm64 job did not complete its checkout (checkout: ${RUNNER_OUTCOME:-not run})"
+            exit 1
+          fi
+          if [ "$ARCH_OUTCOME" != "success" ]; then
+            echo "the arm64 job did not prove it ran on arm64 (arch: ${ARCH_OUTCOME:-not run})"
             exit 1
           fi
           if [ "$TESTS_OUTCOME" != "success" ]; then
