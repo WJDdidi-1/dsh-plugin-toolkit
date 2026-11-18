@@ -234,6 +234,22 @@ test('init --title "" exits 2, names --title and the fix, and leaves no target',
   assert.equal(fs.existsSync(dir), false);
 });
 
+// The reported failure was in the published binary, so pin the process
+// boundary too: run() and bin/dsh-plugin.mjs could drift apart on argv
+// handling without this test.
+test('the shipped CLI refuses a blank --title at the process boundary and writes nothing', () => {
+  const dir = path.join(scratch(), 'plugin');
+  const result = spawnSync(
+    process.execPath,
+    [path.join(ROOT, 'bin', 'dsh-plugin.mjs'), 'init', dir, '--name', 'p', '--title', ''],
+    { encoding: 'utf8' },
+  );
+  assert.equal(result.status, 2, result.stderr);
+  assert.match(result.stderr, /--title needs a panel title/);
+  assert.match(result.stderr, /--title "My panel"/);
+  assert.equal(fs.existsSync(dir), false);
+});
+
 test('the scaffold ships the test and the workflow it tells you to run', () => {
   const dir = path.join(scratch(), 'plugin');
   init({ dir, name: 'my-panel' });
