@@ -1,4 +1,4 @@
-## 0.20.41
+## 0.20.42
 
 - **`doctor --remote` and `audit --remote` name a `package.json` that is not a
   JSON object.** A manifest holding `null`, a string, a number or an array
@@ -11,6 +11,9 @@
   the same compatibility answer. `test/audit-remote-manifest-shape.test.mjs`
   pins the five shapes through the library, the CLI text row, `doctor --remote`
   and the `--host`/`--json` path, with an object control.
+
+## 0.20.41
+
 - **`index` rejects an unauditable market index instead of reporting it clean
   or crashing.** A plugin without `versions` disappeared from the audit loop, a
   `versions` string was read as an empty list and exited `0`, and an entry
