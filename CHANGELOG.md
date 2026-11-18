@@ -24,10 +24,13 @@
   `files` list, a `dsh.client.platform` other than `web`, and a client bundle
   shipped without the `dsh.client` declaration or the `./client` export: no
   file hook can add a manifest declaration, so verify reports those at `doctor`
-  and does not run the hook.
+  and does not run the hook. After the pack, `doctor` runs again even when the
+  first pass was clean: a hook that writes a `client.js` the manifest never
+  declares is rejected instead of passing a panel the host will not serve.
   `test/verify-prepack.test.mjs` spawns the shipped CLI on a generated-client
-  fixture, checks `npm pack --dry-run --json` lists `client.js`, and keeps a
-  control whose `prepack` writes nothing red at `pack`.
+  fixture, checks `npm pack --dry-run --json` lists `client.js`, keeps a
+  control whose `prepack` writes nothing red at `pack`, and covers the
+  generated-but-undeclared panel.
 
 - **`doctor`'s subdirectory ignore matcher understands npm extglob patterns.**
   A `lib/.npmignore` of `@(client|other).js` makes `npm pack` drop

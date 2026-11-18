@@ -6,11 +6,12 @@
  *
  * `verify --no-mount` used to run `doctor` first, so it rejected that plugin at
  * the source-only `client entry` checks and never reached the pack that would
- * have produced the file. These tests spawn the shipped CLI because that is
- * where a user or CI job sees the verdict: the generated-client fixture must
- * exit 0 with `ok packed`, npm's own file list must contain `client.js`, and a
- * control whose prepack does not generate the file must still exit 1 at
- * `pack`, naming `client.js`.
+ * have produced the file. These tests spawn the shipped CLI where the verdict
+ * is what a user or CI job sees: the generated-client fixture must exit 0 with
+ * `ok packed`, npm's own file list must contain `client.js`, and a control
+ * whose prepack does not generate the file must still exit 1 at `pack`, naming
+ * `client.js`. The post-pack state is also asserted through `verify` directly,
+ * where the stage and the failing check are easier to name.
  */
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -20,6 +21,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { doctor } from '../lib/doctor.mjs';
 import { run } from '../lib/exec.mjs';
 import { init } from '../lib/init.mjs';
 import { verify } from '../lib/verify.mjs';
@@ -88,6 +90,30 @@ test('a prepack that does not generate client.js still fails at pack and names i
     assert.doesNotMatch(output, /stopped at doctor/u, output);
     assert.equal(fs.existsSync(path.join(dir, 'client.js')), false, 'the control prepack wrote a panel');
     assert.ok(packedFiles(dir).has('client.js') === false, 'the control tarball unexpectedly contains client.js');
+  } finally {
+    fs.rmSync(path.dirname(dir), { recursive: true, force: true });
+  }
+});
+
+test('a prepack-generated client.js that dsh.client does not declare is rejected after the pack', async () => {
+  const dir = copyFixture('verify-prepack-generated');
+  try {
+    editManifest(dir, (manifest) => {
+      delete manifest.dsh.client;
+    });
+    // Before the hook runs the folder looks clean: no client.js, and nothing
+    // declares one. The tarball, however, will carry a panel the host never
+    // serves, so the post-pack source checks have to run even after a clean
+    // first pass.
+    assert.deepEqual(doctor(dir).failures, []);
+
+    const result = await verify({ dir, mount: false });
+    assert.equal(result.ok, false, JSON.stringify(result.failures));
+    assert.equal(result.stage, 'doctor');
+    assert.equal(result.failures[0].check, 'client declaration');
+    assert.match(result.failures[0].message, /is not declared/u);
+    assert.ok(result.files.includes('client.js'), 'the tarball did not carry the generated panel');
+    assert.ok(fs.existsSync(path.join(dir, 'client.js')), 'prepack did not run in the plugin folder');
   } finally {
     fs.rmSync(path.dirname(dir), { recursive: true, force: true });
   }
