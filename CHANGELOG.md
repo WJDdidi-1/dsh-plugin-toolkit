@@ -31,6 +31,15 @@
   fixture, checks `npm pack --dry-run --json` lists `client.js`, keeps a
   control whose `prepack` writes nothing red at `pack`, and covers the
   generated-but-undeclared panel.
+- **`audit --home` refuses an explicit path that is not a directory.** A
+  missing path, a regular file and a dangling symlink all made `listInstalled`
+  find no `profiles/` below the path, so the command printed "no plugins
+  installed in any profile" and exited `0`; a CI gate passed on a profile the
+  audit never read. The CLI now stats the resolved path first, exits `2` with
+  `--home` and that resolved path in the message, and prints no report. An
+  existing empty directory still exits `0` with the empty line, and omitting
+  `--home` still scans `~/.dsh`. `test/audit-home-not-directory.test.mjs` pins
+  the three invalid shapes at the process boundary plus both controls.
 
 - **`doctor`'s subdirectory ignore matcher understands npm extglob patterns.**
   A `lib/.npmignore` of `@(client|other).js` makes `npm pack` drop
