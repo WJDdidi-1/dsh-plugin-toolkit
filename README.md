@@ -319,7 +319,12 @@ exit code.
 `~\.dsh` expand. A bare `--home`, or one followed by another flag such as
 `--timeout 50` or `--json`, is a missing value rather than a request to scan
 `$HOME/.dsh` or a folder literally named after the flag: the command exits `2`,
-names `--home`, and prints no profile report.
+names `--home`, and prints no profile report. An explicit `--home` must be an
+existing directory: a missing path, a regular file and a dangling symlink each
+exit `2` naming `--home` and the resolved path, instead of printing "no plugins
+installed in any profile" for a home the audit never read. An existing empty
+directory still exits `0` with that line, and omitting `--home` still scans the
+default `~/.dsh`.
 
 Without `--host` the loaded column is `?`, because guessing would be worse than
 saying nothing. Only packages that declare a `dsh` field are audited — the rest of
