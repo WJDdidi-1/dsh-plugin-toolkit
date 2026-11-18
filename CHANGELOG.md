@@ -40,6 +40,19 @@
   existing empty directory still exits `0` with the empty line, and omitting
   `--home` still scans `~/.dsh`. `test/audit-home-not-directory.test.mjs` pins
   the three invalid shapes at the process boundary plus both controls.
+- **`init --title ""` is refused instead of writing a scaffold whose own test
+  does not parse.** An explicit empty (or whitespace-only) title reached the
+  template and became `assert.match(panel.text(), //)` in the generated
+  `test/panel.test.mjs`; `//` starts a comment, so the first `npm test` in a
+  brand-new plugin died with a generated `SyntaxError`. The CLI now exits `2`
+  with a message that names `--title` and the default to pass
+  (`--title "My panel"`), before it creates the target directory; a direct
+  `init()` caller gets the same refusal as a `title` failure and no files are
+  written. The template renderer that actually embeds the title refuses it as
+  well, so a future caller cannot regenerate the assertion by bypassing the
+  CLI. Omitting `--title` still gets the `My panel` template default, and a
+  normal title is unchanged. `test/init.test.mjs` covers fresh targets,
+  whitespace-only titles, `--force`, and the CLI exit code.
 
 - **`doctor`'s subdirectory ignore matcher understands npm extglob patterns.**
   A `lib/.npmignore` of `@(client|other).js` makes `npm pack` drop
