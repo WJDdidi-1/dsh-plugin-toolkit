@@ -1,5 +1,18 @@
 ## 0.20.40
 
+- **`index` rejects an unauditable market index instead of reporting it clean
+  or crashing.** A plugin without `versions` disappeared from the audit loop, a
+  `versions` string was read as an empty list and exited `0`, and an entry
+  without `version` or with a non-SemVer `version` either passed or produced a
+  raw TypeError. The command now validates the top-level `plugins` array, each
+  plugin's name and `versions` array, and each entry's SemVer `version` before
+  reading `engines.dsh`. Every finding exits `1` and names the index file plus
+  the plugin, entry position, or version at fault; invalid JSON and a missing
+  file name the path too. A valid `market/index.json` still exits `0` with its
+  `ok` line. `test/index-shape.test.mjs` pins the four reported shapes, a
+  top-level missing `plugins` array, invalid JSON, the valid SemVer controls,
+  and the clean CLI path.
+
 - **`doctor`'s subdirectory ignore matcher understands npm extglob patterns.**
   A `lib/.npmignore` of `@(client|other).js` makes `npm pack` drop
   `lib/client.js`, but the files-list check escaped the parentheses and read

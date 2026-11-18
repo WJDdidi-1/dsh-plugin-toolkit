@@ -401,8 +401,11 @@ forgets `client.js` passes it and fails only after `npm i`.
 `command: doctor` stops at the manifest checks (fast, no install), and
 `command: index` audits `market/index.json` instead, failing on any version whose
 `engines.dsh` is missing or is not a semver range (a malformed value such as
-`>=banana`, or a single pinned version such as `0.2.0`, both fail). Pin
-`version:` if you would rather not track the latest release.
+`>=banana`, or a single pinned version such as `0.2.0`, both fail). It also
+rejects an index it cannot audit: a missing `plugins` or `versions` array, a
+plugin entry without a name, a version entry without `version`, and a
+non-SemVer `version`. Each failure names the file and the plugin or entry.
+Pin `version:` if you would rather not track the latest release.
 
 ## Check a plugin you have not cloned
 
