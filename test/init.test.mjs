@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 import { run } from '../lib/cli.mjs';
 import { doctor } from '../lib/doctor.mjs';
-import { init } from '../lib/init.mjs';
+import { files, init } from '../lib/init.mjs';
 import { mountClient } from '../lib/testkit/index.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -213,6 +213,20 @@ test('a blank --title is refused before anything is written, with or without --f
   assert.equal(forced.ok, false);
   assert.deepEqual(fs.readdirSync(occupied), ['notes.md']);
   assert.equal(fs.readFileSync(path.join(occupied, 'notes.md'), 'utf8'), 'mine\n');
+});
+
+test('the template renderer cannot emit the broken assertion when called directly', () => {
+  for (const title of ['', '   ', '\t\n']) {
+    assert.throws(
+      () => files({ name: 'template-guard', title }),
+      /--title needs a panel title, for example --title "My panel"/,
+      `${JSON.stringify(title)} rendered a scaffold instead of failing`,
+    );
+  }
+
+  // The default is still a real title, and the generated test parses.
+  const rendered = files({ name: 'template-guard' })['test/panel.test.mjs'];
+  assert.match(rendered, /assert\.match\(panel\.text\(\), \/My panel\/\)/);
 });
 
 test('init --title "" exits 2, names --title and the fix, and leaves no target', async () => {

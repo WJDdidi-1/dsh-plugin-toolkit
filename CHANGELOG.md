@@ -48,7 +48,9 @@
   with a message that names `--title` and the default to pass
   (`--title "My panel"`), before it creates the target directory; a direct
   `init()` caller gets the same refusal as a `title` failure and no files are
-  written. Omitting `--title` still gets the `My panel` template default, and a
+  written. The template renderer that actually embeds the title refuses it as
+  well, so a future caller cannot regenerate the assertion by bypassing the
+  CLI. Omitting `--title` still gets the `My panel` template default, and a
   normal title is unchanged. `test/init.test.mjs` covers fresh targets,
   whitespace-only titles, `--force`, and the CLI exit code.
 
