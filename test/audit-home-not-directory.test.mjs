@@ -75,6 +75,30 @@ test('--home names a missing path, a regular file or a dangling symlink and exit
   }
 });
 
+test('a symlink to an existing directory is still a valid profile home', (t) => {
+  const dir = scratch(t);
+  const realHome = path.join(dir, 'real-home');
+  const linkedHome = path.join(dir, 'linked-home');
+  fs.mkdirSync(realHome);
+  try {
+    fs.symlinkSync(realHome, linkedHome, 'dir');
+  } catch {
+    // Windows without developer mode refuses symlinks; the directory control
+    // above still covers the accepting side there.
+    t.skip('this platform does not allow unprivileged symlinks');
+    return;
+  }
+
+  // `statSync` follows the link, so the audit reads the directory it names.
+  // A fix that switched to `lstatSync` to recognize a dangling link would
+  // start refusing real profile homes kept behind a symlink.
+  const result = runAudit(['audit', '--home', linkedHome, '--timeout', '50']);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.equal(result.status, 0, output);
+  assert.match(result.stdout, new RegExp(EMPTY, 'u'), output);
+  assert.equal(result.stderr, '', output);
+});
+
 test('an existing empty directory still exits 0 with the empty-profile line', (t) => {
   const dir = scratch(t);
   const emptyHome = path.join(dir, 'empty-home');
