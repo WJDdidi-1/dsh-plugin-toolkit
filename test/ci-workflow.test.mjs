@@ -5,7 +5,11 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const workflow = fs.readFileSync(path.join(here, '..', '.github', 'workflows', 'ci.yml'), 'utf8');
+// actions/checkout on Windows can hand this file back with CRLF line endings.
+// Normalise first so the job parser below finds the same markers on every OS.
+const workflow = fs
+  .readFileSync(path.join(here, '..', '.github', 'workflows', 'ci.yml'), 'utf8')
+  .replace(/\r\n/gu, '\n');
 
 /** The text of one two-space-indented job, without the jobs that follow it. */
 function job(name) {
