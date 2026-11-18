@@ -131,7 +131,7 @@ created 8 file(s) in /Users/you/my-panel
 next: npm install && npm test && npm run doctor
 ```
 
-What you get is not a snippet: it is a plugin whose `doctor` already passes (`engines.dsh`, the patch file, the `files` list), with a client bundle that registers a sidebar tab, a testkit test for it, and a CI workflow that runs both. `init` refuses a directory that is not empty unless you pass `--force`, and refuses a name npm would refuse — those are the two mistakes that cost the most time later.
+What you get is not a snippet: it is a plugin whose `doctor` already passes (`engines.dsh`, the patch file, the `files` list), with a client bundle that registers a sidebar tab, a testkit test for it, and a CI workflow that runs both. `init` refuses a directory that is not empty unless you pass `--force`, a name npm would refuse, and a blank `--title` (pass one, such as `--title "My panel"`) — mistakes that cost the most time later.
 
 Every command that takes a path expands a leading `~` before touching the filesystem. The tool, not the shell, expands `~` for these arguments: `cmd` and PowerShell pass `"~/my-panel"` through literally, while a POSIX shell usually expands it first. `init '~/my-panel' --name my-panel` writes into your home directory (the same files `init ~/my-panel` writes on a POSIX shell), and `doctor '~/my-panel'` reads it back. The Windows spelling `~\my-panel` works too; a directory literally named `~` is never created.
 

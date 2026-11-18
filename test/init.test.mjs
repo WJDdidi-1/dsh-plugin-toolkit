@@ -194,6 +194,46 @@ test('init --title "Bob\'s panel" writes JavaScript that parses and a client tha
   await panel.unmount();
 });
 
+test('a blank --title is refused before anything is written, with or without --force', () => {
+  for (const title of ['', '   ', '\t\n']) {
+    const dir = path.join(scratch(), 'plugin');
+    const result = init({ dir, name: 'blank-title', title });
+    assert.equal(result.ok, false, `${JSON.stringify(title)} should be refused`);
+    assert.equal(result.failures[0].check, 'title');
+    assert.match(result.failures[0].message, /--title/);
+    // The message has to say what to pass instead, not only that it is empty.
+    assert.match(result.failures[0].message, /--title "My panel"/);
+    assert.equal(fs.existsSync(dir), false, `${JSON.stringify(title)} created ${dir}`);
+  }
+
+  // --force governs overwriting an occupied directory, not an invalid flag.
+  const occupied = scratch();
+  fs.writeFileSync(path.join(occupied, 'notes.md'), 'mine\n');
+  const forced = init({ dir: occupied, name: 'blank-title', title: '', force: true });
+  assert.equal(forced.ok, false);
+  assert.deepEqual(fs.readdirSync(occupied), ['notes.md']);
+  assert.equal(fs.readFileSync(path.join(occupied, 'notes.md'), 'utf8'), 'mine\n');
+});
+
+test('init --title "" exits 2, names --title and the fix, and leaves no target', async () => {
+  const dir = path.join(scratch(), 'plugin');
+  const io = {
+    lines: [],
+    log(line) {
+      this.lines.push(String(line));
+    },
+    error(line) {
+      this.lines.push(String(line));
+    },
+  };
+  const code = await run(['init', dir, '--name', 'p', '--title', ''], io);
+  const output = io.lines.join('\n');
+  assert.equal(code, 2, output);
+  assert.match(output, /--title needs a panel title/);
+  assert.match(output, /--title "My panel"/);
+  assert.equal(fs.existsSync(dir), false);
+});
+
 test('the scaffold ships the test and the workflow it tells you to run', () => {
   const dir = path.join(scratch(), 'plugin');
   init({ dir, name: 'my-panel' });
