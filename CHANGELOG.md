@@ -12,6 +12,25 @@
   `ok` line. `test/index-shape.test.mjs` pins the four reported shapes, a
   top-level missing `plugins` array, invalid JSON, the valid SemVer controls,
   and the clean CLI path.
+- **`verify` packs before the source-only file checks, so a `prepack`-generated
+  `client.js` is no longer rejected.** `doctor` reads the working copy, but npm
+  runs `prepack` before it builds the tarball. A plugin that generated its panel
+  in that hook was complete after `npm pack` and incomplete before it, so
+  `verify --no-mount` stopped at `client entry` / `client declaration` and never
+  packed the file it was looking for. Those checks now wait until after the
+  pack; a file that is still missing fails at `pack` naming it. Manifest and
+  root-export failures still stop before npm is asked, and a `files` list that
+  omits a path already on disk still stops at `doctor`. That includes a missing
+  `files` list, a `dsh.client.platform` other than `web`, and a client bundle
+  shipped without the `dsh.client` declaration or the `./client` export: no
+  file hook can add a manifest declaration, so verify reports those at `doctor`
+  and does not run the hook. After the pack, `doctor` runs again even when the
+  first pass was clean: a hook that writes a `client.js` the manifest never
+  declares is rejected instead of passing a panel the host will not serve.
+  `test/verify-prepack.test.mjs` spawns the shipped CLI on a generated-client
+  fixture, checks `npm pack --dry-run --json` lists `client.js`, keeps a
+  control whose `prepack` writes nothing red at `pack`, and covers the
+  generated-but-undeclared panel.
 
 - **`doctor`'s subdirectory ignore matcher understands npm extglob patterns.**
   A `lib/.npmignore` of `@(client|other).js` makes `npm pack` drop
