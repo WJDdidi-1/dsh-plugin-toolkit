@@ -8,6 +8,17 @@
 
 ## 0.20.42
 
+- **`audit --remote --host` names a malformed `engines.dsh` instead of calling
+  it missing.** A numeric or object value made `hostRange` return `null`, and
+  both the local check and the remote audit used the "missing" sentence, so the
+  report told an author to add a field that was already there while the host
+  answer stayed `unknown` without naming the real problem. The check now quotes
+  the value it cannot read (`engines.dsh 0.2 is not a string`), and a
+  non-object `engines` is named the same way. A truly absent or blank field
+  keeps the installer wording, and a readable range keeps its old verdict.
+  `test/audit-host.test.mjs` pins the remote path at the CLI, and
+  `test/doctor.test.mjs` pins both malformed shapes beside the missing-field
+  control.
 - **A host-aimed repair keeps the range a plugin already supports, and
   `doctor --fix --host` now aims a valid range that excludes the host.** The
   fixer replaced any valid range with the host floor, so `engines.dsh:
