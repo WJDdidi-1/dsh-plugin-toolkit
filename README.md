@@ -477,7 +477,7 @@ verdict, and the remaining entries are reported without another request.
 
 ### Will this plugin install on my DSH?
 
-The fifteen compatibility reports, from four repositories, all end with the same
+The nineteen compatibility reports, from four repositories, all end with the same
 question. Add `--host <version>` to a remote audit and it answers that question
 for one repository. This is the output for `L3n3L/dsh-resume`, a real plugin
 whose declared range stops before DSH 0.2.0, checked against the
