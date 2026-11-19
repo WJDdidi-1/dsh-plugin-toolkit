@@ -1,3 +1,11 @@
+## 0.20.43
+
+- **Ships the host-aimed repair that 0.20.42 documented but was cut before it
+  merged.** The 0.20.42 entry below describes keeping the lower bound a plugin
+  already supports and capping each branch of an alternation range; the pull
+  request landed after that release was tagged, so installers of 0.20.42 still
+  got the old `>=0.3.0 <1.0.0` rewrite. This release is that change.
+
 ## 0.20.42
 
 - **A host-aimed repair keeps the range a plugin already supports, and
