@@ -1,5 +1,14 @@
 ## 0.20.43
 
+- **A host-aimed repair keeps the floor of a hyphen range that crosses the next
+  major.** `engines.dsh: "0.2.0 - 2.0.0"` plus `--host 0.3.0` could not carry
+  the appended `<1.0.0` comparator — npm only accepts the hyphen expression as
+  the whole branch — so the planner fell back to the host floor and wrote
+  `>=0.3.0 <1.0.0`, dropping the declared 0.2.x support. The hyphen branch is
+  now rewritten to its comparator form (`>=0.2.0 <1.0.0`), including partial
+  endpoints and a hyphen branch beside an alternation. `test/fix-host.test.mjs`
+  pins the local write, the alternation case, and the remote plan, asserting the
+  written range accepts the host and rejects one major above it.
 - **Ships the host-aimed repair that 0.20.42 documented but was cut before it
   merged.** The 0.20.42 entry below describes keeping the lower bound a plugin
   already supports and capping each branch of an alternation range; the pull
