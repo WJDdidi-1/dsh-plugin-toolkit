@@ -1,4 +1,4 @@
-## 0.20.43
+## 0.20.44
 
 - **`audit --home` reports a declared bundle whose `package.json` parses but has
   no `dsh` field.** The install scan skipped every package without a `dsh` field
@@ -12,6 +12,8 @@
   the ghost row and its exit status at the CLI beside a valid declared bundle
   and a profile holding only ordinary dependencies, while `test/audit.test.mjs`
   covers the row and the declared-name fallback.
+
+## 0.20.43
 
 - **A host-aimed repair keeps the floor of a hyphen range that crosses the next
   major.** `engines.dsh: "0.2.0 - 2.0.0"` plus `--host 0.3.0` could not carry
