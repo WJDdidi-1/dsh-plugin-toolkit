@@ -9,8 +9,9 @@
   `dsh field` failure naming the declaring `package.json` and exits 1. Packages
   the profile does not declare keep the old skip, so a profile containing only
   ordinary dependencies still exits 0. `test/audit-home-no-dsh.test.mjs` pins
-  both sides at the CLI, and `test/audit.test.mjs` covers the row and the
-  declared-name fallback.
+  the ghost row and its exit status at the CLI beside a valid declared bundle
+  and a profile holding only ordinary dependencies, while `test/audit.test.mjs`
+  covers the row and the declared-name fallback.
 
 - **A host-aimed repair keeps the floor of a hyphen range that crosses the next
   major.** `engines.dsh: "0.2.0 - 2.0.0"` plus `--host 0.3.0` could not carry
