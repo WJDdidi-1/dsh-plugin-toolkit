@@ -1,5 +1,17 @@
 ## 0.20.43
 
+- **`audit --home` reports a declared bundle whose `package.json` parses but has
+  no `dsh` field.** The install scan skipped every package without a `dsh` field
+  as an ordinary dependency, even when the profile named it in
+  `dsh.profile.bundles`. A profile that mounted one such broken bundle printed
+  "no plugins installed in any profile" and exited 0, so CI saw a clean profile
+  the loader could not mount. The scan now emits a `no dsh field` row with a
+  `dsh field` failure naming the declaring `package.json` and exits 1. Packages
+  the profile does not declare keep the old skip, so a profile containing only
+  ordinary dependencies still exits 0. `test/audit-home-no-dsh.test.mjs` pins
+  both sides at the CLI, and `test/audit.test.mjs` covers the row and the
+  declared-name fallback.
+
 - **A host-aimed repair keeps the floor of a hyphen range that crosses the next
   major.** `engines.dsh: "0.2.0 - 2.0.0"` plus `--host 0.3.0` could not carry
   the appended `<1.0.0` comparator — npm only accepts the hyphen expression as
