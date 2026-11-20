@@ -475,7 +475,10 @@ execution can see a tree the first one changed. A hook that removes a committed
 The post-pack pass runs even when the first pass was clean, so a hook that
 writes a `client.js` nothing declares is rejected instead of shipping a panel
 the host never serves, and the unpacked copy is checked once more after install.
-The unmodified `init` scaffold still passes both commands.
+A hook that prints while it builds does not disturb the pack stage: npm writes
+that output to stdout before its `--json` document, and `verify` reads the
+pack-shaped document out of the mixed stream. The unmodified `init` scaffold
+still passes both commands, with or without a prepack build line.
 
 ## files list
 

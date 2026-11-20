@@ -1,5 +1,17 @@
 ## 0.20.48
 
+- **`verify` reads npm's tarball answer even when `prepack` prints to stdout.**
+  `npm pack --json` runs the hook before writing its JSON, so an `init`
+  scaffold whose build prints `building panel` put that line ahead of the
+  document; treating all of stdout as JSON failed with `Unexpected token 'b'`
+  and `verify --no-mount` exited 1 at `pack` on a package that had shipped
+  correctly. The pack stage now locates npm's pack-shaped document in mixed
+  stdout, so hook lines and trailing npm notices are ignored, while the file
+  list still comes from the tarball that gets installed. `test/verify-prepack`
+  spawns the shipped CLI on a fresh scaffold with a silent `node build.mjs` and
+  the identical scaffold whose build prints one line: both exit 0 and print
+  exactly one `ok  packed` line, and the parser is pinned against mixed output.
+
 - **`verify` packs exactly once, so `prepack` cannot change the archive after
   the check read a different one.** The separate `npm pack --dry-run` was a
   second invocation of the same hook: a non-idempotent `prepack` could write
