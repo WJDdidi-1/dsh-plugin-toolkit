@@ -12,6 +12,11 @@
  * whose prepack does not generate the file must still exit 1 at `pack`, naming
  * `client.js`. The post-pack state is also asserted through `verify` directly,
  * where the stage and the failing check are easier to name.
+ *
+ * The file list has to come from the tarball `verify` installs, not from the
+ * dry run before it. A non-idempotent prepack can list the panel in the dry run
+ * and remove it from the next pack, so the non-idempotent fixture pins that the
+ * actual tarball's own list is the one that decides the verdict.
  */
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -90,6 +95,38 @@ test('a prepack that does not generate client.js still fails at pack and names i
     assert.doesNotMatch(output, /stopped at doctor/u, output);
     assert.equal(fs.existsSync(path.join(dir, 'client.js')), false, 'the control prepack wrote a panel');
     assert.ok(packedFiles(dir).has('client.js') === false, 'the control tarball unexpectedly contains client.js');
+  } finally {
+    fs.rmSync(path.dirname(dir), { recursive: true, force: true });
+  }
+});
+
+test('verify reads the file list from the tarball it installs, not from the dry run', async () => {
+  const dir = copyFixture('verify-prepack-non-idempotent');
+  try {
+    const result = await verify({ dir, mount: false });
+    assert.equal(result.ok, false, JSON.stringify(result.failures));
+    assert.equal(result.stage, 'pack');
+    assert.equal(result.failures[0].check, 'pack');
+    assert.match(result.failures[0].message, /client\.js/u);
+    assert.equal(result.files.includes('client.js'), false, 'the reported file list came from the dry run');
+  } finally {
+    fs.rmSync(path.dirname(dir), { recursive: true, force: true });
+  }
+});
+
+test('the shipped CLI fails a non-idempotent prepack whose tarball omits client.js', () => {
+  const dir = copyFixture('verify-prepack-non-idempotent');
+  try {
+    const result = verifyNoMount(dir);
+    const output = `${result.stdout}\n${result.stderr}`;
+    assert.equal(result.status, 1, output);
+    assert.match(output, /dsh-plugin verify: stopped at pack/u, output);
+    const line = output.split('\n').find((entry) => entry.includes('pack:'));
+    assert.ok(line, output);
+    assert.match(line, /client\.js/u, line);
+    assert.doesNotMatch(output, /^ok {2}packed/m, output);
+    // The second prepack invocation removed the panel the dry run had listed.
+    assert.equal(fs.existsSync(path.join(dir, 'client.js')), false, 'the fixture stopped being non-idempotent');
   } finally {
     fs.rmSync(path.dirname(dir), { recursive: true, force: true });
   }

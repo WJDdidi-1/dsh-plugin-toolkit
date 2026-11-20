@@ -1,5 +1,17 @@
 ## 0.20.46
 
+- **`verify` judges the tarball it installs, not the separate dry run.** A
+  non-idempotent `prepack` could write `client.js` during `npm pack --dry-run`
+  and remove it during the real `npm pack`, so `verify --no-mount` checked a
+  file list that did not describe the archive it installed and printed
+  `ok packed` for a tarball with no panel. The file-list check now reads npm's
+  file list for the exact tarball the install step receives, so a missing
+  `client.js` stops at `pack` and exits 1. A `prepack` that generates the panel
+  still passes, and the unchanged `init` scaffold still exits 0 with `ok
+  packed`. `test/verify-prepack.test.mjs` pins the non-idempotent fixture at the
+  library and the shipped CLI beside the generated, missing, and scaffold
+  controls.
+
 - **`index` rejects two plugin entries that share a name before auditing
   either.** The audit resolves a plugin by name, so a second `dup-plugin` entry
   re-read the first entry's versions and printed `ok` for both, even when the
