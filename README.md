@@ -416,8 +416,11 @@ forgets `client.js` passes it and fails only after `npm i`.
 `engines.dsh` is missing or is not a semver range (a malformed value such as
 `>=banana`, or a single pinned version such as `0.2.0`, both fail). It also
 rejects an index it cannot audit: a missing `plugins` or `versions` array, a
-plugin entry without a name, a version entry without `version`, and a
-non-SemVer `version`. Each failure names the file and the plugin or entry.
+plugin entry without a name, two entries sharing one name, a version entry
+without `version`, and a non-SemVer `version`. Each failure names the file and
+the plugin, entry, or both duplicate positions. A duplicate is rejected before
+any audit, so the second entry cannot inherit the first entry's clean result or
+produce an `ok` line.
 Pin `version:` if you would rather not track the latest release.
 
 ## Check a plugin you have not cloned
