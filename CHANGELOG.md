@@ -6,10 +6,13 @@
   duplicate was the broken one. The shape pass now groups plugin names by
   position and emits one finding naming every duplicate position
   (`plugins[0], plugins[1]`), so the command exits `1` before the `ok` loop can
-  start. Distinct names still audit and print `ok` for each entry, and a unique
-  entry with a missing `engines.dsh` still exits `1` with its own finding.
+  start. Distinct names still audit and print `ok` for each entry. A unique
+  plugin may list several versions, and when its second version (`1.0.1`) omits
+  `engines.dsh` the command still exits `1` with `1.0.1 no engines.dsh` instead
+  of inheriting the clean first version.
   `test/index-duplicate.test.mjs` pins the duplicate finding at the library and
-  the shipped CLI, the absence of either `ok` line, and both control paths.
+  the shipped CLI, the absence of either `ok` line, and both control paths,
+  including the finding for a second version that is missing its range.
 
 - **The reproducible compatibility sample answers for the DSH version the
   reader runs, not only the canary in the reports.**

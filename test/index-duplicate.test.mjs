@@ -16,7 +16,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { validateIndex } from '../lib/index-file.mjs';
+import { auditVersions, validateIndex } from '../lib/index-file.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..');
@@ -93,24 +93,38 @@ test('the CLI exits 1 for duplicate names without printing ok for either entry',
 });
 
 test('the unique-name and missing-engines paths keep their old answers', (t) => {
-  const unique = writeIndex(t, {
+  const unique = {
     formatVersion: 1,
     plugins: [plugin('first-plugin'), plugin('second-plugin')],
-  });
-  let result = runIndex(unique);
+  };
+  assert.deepEqual(validateIndex(unique), []);
+  let result = runIndex(writeIndex(t, unique));
   let output = `${result.stdout}\n${result.stderr}`;
   assert.equal(result.error, undefined);
   assert.equal(result.status, 0, output);
   assert.match(result.stdout, /^ok\s+first-plugin: 1 version\(s\) all carry engines\.dsh$/mu);
   assert.match(result.stdout, /^ok\s+second-plugin: 1 version\(s\) all carry engines\.dsh$/mu);
 
+  // A unique name may list several versions. The second version is the broken
+  // one, so a name-keyed lookup that stops at the first clean entry would print
+  // `ok` and hide it. The finding has to name `1.0.1`, not `1.0.0`.
   const missing = plugin('solo-plugin');
-  delete missing.versions[0].engines;
-  const broken = writeIndex(t, { formatVersion: 1, plugins: [missing] });
-  result = runIndex(broken);
+  missing.versions.push({
+    version: '1.0.1',
+    publishTimestamp: 2,
+    source: { type: 'npm' },
+  });
+  const broken = { formatVersion: 1, plugins: [missing] };
+  assert.deepEqual(validateIndex(broken), []);
+  assert.deepEqual(auditVersions(broken, 'solo-plugin'), [
+    { version: '1.0.1', problem: 'no engines.dsh' },
+  ]);
+
+  result = runIndex(writeIndex(t, broken));
   output = `${result.stdout}\n${result.stderr}`;
   assert.equal(result.error, undefined);
   assert.equal(result.status, 1, output);
-  assert.match(result.stderr, /no engines\.dsh/u);
+  assert.match(result.stderr, /✗ 1\.0\.1 no engines\.dsh/u);
+  assert.doesNotMatch(result.stderr, /1\.0\.0 no engines\.dsh/u);
   assert.doesNotMatch(result.stdout, /^ok\b/mu);
 });
