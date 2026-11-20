@@ -1,5 +1,16 @@
 ## 0.20.45
 
+- **`index` rejects two plugin entries that share a name before auditing
+  either.** The audit resolves a plugin by name, so a second `dup-plugin` entry
+  re-read the first entry's versions and printed `ok` for both, even when the
+  duplicate was the broken one. The shape pass now groups plugin names by
+  position and emits one finding naming every duplicate position
+  (`plugins[0], plugins[1]`), so the command exits `1` before the `ok` loop can
+  start. Distinct names still audit and print `ok` for each entry, and a unique
+  entry with a missing `engines.dsh` still exits `1` with its own finding.
+  `test/index-duplicate.test.mjs` pins the duplicate finding at the library and
+  the shipped CLI, the absence of either `ok` line, and both control paths.
+
 - **The reproducible compatibility sample answers for the DSH version the
   reader runs, not only the canary in the reports.**
   `node scripts/compatibility-sample.mjs --host 0.1.5` replays the frozen
