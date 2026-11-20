@@ -14,11 +14,21 @@ const invocations = fs.existsSync(marker) ? Number(fs.readFileSync(marker, 'utf8
 fs.writeFileSync(marker, `${invocations + 1}\n`);
 
 if (invocations === 0) {
+  // The panel has to be mountable: the CLI regression runs both `verify` and
+  // `verify --no-mount` on a fresh copy, and the full command must reach the
+  // mount stage on the run whose tarball carries this file. Registering a slot
+  // also keeps the bare-boot probe happy: `ctx.slots` is absent there.
   fs.writeFileSync(client, `window.__ModuleLoader__.load({
   id: 'verify-prepack-non-idempotent',
   factory: () => ({
-    inject: [],
-    apply() {},
+    inject: ['slots'],
+    apply(ctx) {
+      if (!ctx.slots) return;
+      ctx.slots.register(
+        { name: 'sidebar.right.pane.tab', key: 'verify-prepack-non-idempotent' },
+        () => null,
+      );
+    },
   }),
 });
 `);
