@@ -1,4 +1,4 @@
-## 0.20.46
+## 0.20.47
 
 - **`verify` judges the tarball it installs, not the separate dry run.** A
   non-idempotent `prepack` could write `client.js` during `npm pack --dry-run`
@@ -13,6 +13,8 @@
   controls. It also packs the fixture twice to prove the regression premise:
   the dry run lists `client.js` and the real tarball omits it, so the fixture
   cannot silently stop reproducing the bug.
+
+## 0.20.46
 
 - **`index` rejects two plugin entries that share a name before auditing
   either.** The audit resolves a plugin by name, so a second `dup-plugin` entry
