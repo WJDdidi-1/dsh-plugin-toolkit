@@ -1,4 +1,4 @@
-## 0.20.44
+## 0.20.45
 
 - **The reproducible compatibility sample answers for the DSH version the
   reader runs, not only the canary in the reports.**
@@ -13,6 +13,8 @@
   sample, pins the forwarded statuses, and now invokes the parser with every
   documented compatibility flag so a README flag cannot survive only in the
   help text.
+
+## 0.20.44
 
 - **`audit --home` reports a declared bundle whose `package.json` parses but has
   no `dsh` field.** The install scan skipped every package without a `dsh` field
