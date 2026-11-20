@@ -1,5 +1,16 @@
 ## 0.20.48
 
+- **The stdout-preceding-JSON path is pinned at the installed-tarball boundary.**
+  The earlier regression test spawned the checkout's `bin/dsh-plugin.mjs`, which
+  is not the file npm installs. A new test packs this package, installs the
+  tarball into a temp prefix, and spawns the installed CLI three times on an
+  `init` scaffold whose `prepack` prints `building panel` and three times on the
+  silent control: every run must exit 0 and print exactly one
+  `ok  packed 5 file(s)` line. It also packs the stdout scaffold and asserts its
+  tarball lists all five files a reader installs (`README.md`, `client.js`,
+  `cordis.patch.yml`, `index.js`, `package.json`), so a shipped CLI that cannot
+  read npm's contaminated answer fails before publication.
+
 - **`verify` reads npm's tarball answer even when `prepack` prints to stdout.**
   `npm pack --json` runs the hook before writing its JSON, so an `init`
   scaffold whose build prints `building panel` put that line ahead of the
