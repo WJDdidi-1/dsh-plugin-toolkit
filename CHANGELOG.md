@@ -10,7 +10,9 @@
   still passes, and the unchanged `init` scaffold still exits 0 with `ok
   packed`. `test/verify-prepack.test.mjs` pins the non-idempotent fixture at the
   library and the shipped CLI beside the generated, missing, and scaffold
-  controls.
+  controls. It also packs the fixture twice to prove the regression premise:
+  the dry run lists `client.js` and the real tarball omits it, so the fixture
+  cannot silently stop reproducing the bug.
 
 - **`index` rejects two plugin entries that share a name before auditing
   either.** The audit resolves a plugin by name, so a second `dup-plugin` entry
