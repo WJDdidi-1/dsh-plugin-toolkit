@@ -7,10 +7,14 @@
   and `verify --no-mount` exited 1 at `pack` on a package that had shipped
   correctly. The pack stage now locates npm's pack-shaped document in mixed
   stdout, so hook lines and trailing npm notices are ignored, while the file
-  list still comes from the tarball that gets installed. `test/verify-prepack`
-  spawns the shipped CLI on a fresh scaffold with a silent `node build.mjs` and
-  the identical scaffold whose build prints one line: both exit 0 and print
-  exactly one `ok  packed` line, and the parser is pinned against mixed output.
+  list still comes from the tarball that gets installed. A hook that writes with
+  `process.stdout.write` and no trailing newline no longer defeats the scan
+  either: when the answer does not begin a line, the scanner falls back to
+  trying every bracket in the stream instead of only line starts. `test/verify-prepack` spawns the shipped CLI on a fresh scaffold with a
+  silent `node build.mjs`, the identical scaffold whose build prints one line,
+  and the same build written without a newline: all exit 0 and print exactly
+  one `ok  packed` line, and the parser is pinned against mixed output,
+  including a hook that prints a pack-shaped document of its own.
 
 - **`verify` packs exactly once, so `prepack` cannot change the archive after
   the check read a different one.** The separate `npm pack --dry-run` was a
@@ -27,7 +31,9 @@
   run exits `0` after exactly one `prepack` and leaves the generated panel, and
   the second exits `1` at `pack` naming `client.js`. It also spawns the shipped
   CLI three times each for `verify .` and `verify --no-mount .` on the flip
-  fixture, requiring exit `1` every time; the generated-panel and
+  fixture, requiring exit `1` every time; each iteration first asserts that the
+  fixture's working copy is complete and doctor-clean, so the control cannot
+  pass by losing its committed panel. The generated-panel and
   unmodified-scaffold controls still exit `0` with `ok  packed`.
 
 ## 0.20.47

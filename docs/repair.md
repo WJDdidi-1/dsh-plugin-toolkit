@@ -477,8 +477,10 @@ writes a `client.js` nothing declares is rejected instead of shipping a panel
 the host never serves, and the unpacked copy is checked once more after install.
 A hook that prints while it builds does not disturb the pack stage: npm writes
 that output to stdout before its `--json` document, and `verify` reads the
-pack-shaped document out of the mixed stream. The unmodified `init` scaffold
-still passes both commands, with or without a prepack build line.
+pack-shaped document out of the mixed stream. That holds whether the hook ends
+its line with a newline or writes with `process.stdout.write`, because the
+answer is found by shape rather than by line position. The unmodified `init`
+scaffold still passes both commands, with or without a prepack build line.
 
 ## files list
 
