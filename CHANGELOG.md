@@ -1,3 +1,20 @@
+## 0.20.48
+
+- **`verify` packs exactly once, so `prepack` cannot change the archive after
+  the check read a different one.** The separate `npm pack --dry-run` was a
+  second invocation of the same hook: a non-idempotent `prepack` could write
+  `client.js` for the dry run and remove it for the real pack, and `verify` ran
+  user build code twice on every check. The dry run is gone. `verify` now runs a
+  single `npm pack`, judges that tarball's own file list, and — after installing
+  it — asks `doctor` again against the unpacked copy, so the installed patch,
+  client bundle and root are confirmed rather than assumed. A committed
+  `client.js` that `prepack` removes is caught at `pack` with the panel named.
+  `test/verify-prepack.test.mjs` pins one invocation per run on the
+  non-idempotent fixture across two runs, and spawns the shipped CLI three
+  times each for `verify .` and `verify --no-mount .` on the new flip fixture,
+  requiring exit `1` every time; the generated-panel and unmodified-scaffold
+  controls still exit `0` with `ok  packed`.
+
 ## 0.20.47
 
 - **`verify` judges the tarball it installs, not the separate dry run.** A
