@@ -1,4 +1,4 @@
-## 0.20.45
+## 0.20.46
 
 - **`index` rejects two plugin entries that share a name before auditing
   either.** The audit resolves a plugin by name, so a second `dup-plugin` entry
@@ -13,6 +13,8 @@
   `test/index-duplicate.test.mjs` pins the duplicate finding at the library and
   the shipped CLI, the absence of either `ok` line, and both control paths,
   including the finding for a second version that is missing its range.
+
+## 0.20.45
 
 - **The reproducible compatibility sample answers for the DSH version the
   reader runs, not only the canary in the reports.**
