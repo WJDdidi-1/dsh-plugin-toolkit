@@ -1,15 +1,4 @@
-## 0.20.48
-
-- **The stdout-preceding-JSON path is pinned at the installed-tarball boundary.**
-  The earlier regression test spawned the checkout's `bin/dsh-plugin.mjs`, which
-  is not the file npm installs. A new test packs this package, installs the
-  tarball into a temp prefix, and spawns the installed CLI three times on an
-  `init` scaffold whose `prepack` prints `building panel` and three times on the
-  silent control: every run must exit 0 and print exactly one
-  `ok  packed 5 file(s)` line. It also packs the stdout scaffold and asserts its
-  tarball lists all five files a reader installs (`README.md`, `client.js`,
-  `cordis.patch.yml`, `index.js`, `package.json`), so a shipped CLI that cannot
-  read npm's contaminated answer fails before publication.
+## 0.20.49
 
 - **`verify` reads npm's tarball answer even when `prepack` prints to stdout.**
   `npm pack --json` runs the hook before writing its JSON, so an `init`
@@ -27,6 +16,24 @@
   one `ok  packed` line, and the parser is pinned against mixed output,
   including a hook that prints a pack-shaped document of its own.
 
+- **The stdout-preceding-JSON path is pinned at the installed-tarball boundary.**
+  The earlier regression test spawned the checkout's `bin/dsh-plugin.mjs`, which
+  is not the file npm installs. A new test packs this package, installs the
+  tarball into a temp prefix, and spawns the installed CLI three times on an
+  `init` scaffold whose `prepack` prints `building panel` and three times on the
+  silent control: every run must exit 0 and print exactly one
+  `ok  packed 5 file(s)` line. It also packs the stdout scaffold and asserts its
+  tarball lists all five files a reader installs (`README.md`, `client.js`,
+  `cordis.patch.yml`, `index.js`, `package.json`), so a shipped CLI that cannot
+  read npm's contaminated answer fails before publication.
+
+- **The non-idempotent `prepack` and missing-panel controls assert their own
+  premise.** Each iteration first asserts that the fixture's working copy is
+  complete and doctor-clean, so a control cannot pass by losing its committed
+  panel.
+
+## 0.20.48
+
 - **`verify` packs exactly once, so `prepack` cannot change the archive after
   the check read a different one.** The separate `npm pack --dry-run` was a
   second invocation of the same hook: a non-idempotent `prepack` could write
@@ -42,9 +49,7 @@
   run exits `0` after exactly one `prepack` and leaves the generated panel, and
   the second exits `1` at `pack` naming `client.js`. It also spawns the shipped
   CLI three times each for `verify .` and `verify --no-mount .` on the flip
-  fixture, requiring exit `1` every time; each iteration first asserts that the
-  fixture's working copy is complete and doctor-clean, so the control cannot
-  pass by losing its committed panel. The generated-panel and
+  fixture, requiring exit `1` every time; the generated-panel and
   unmodified-scaffold controls still exit `0` with `ok  packed`.
 
 ## 0.20.47
