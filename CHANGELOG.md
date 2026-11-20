@@ -10,10 +10,13 @@
   client bundle and root are confirmed rather than assumed. A committed
   `client.js` that `prepack` removes is caught at `pack` with the panel named.
   `test/verify-prepack.test.mjs` pins one invocation per run on the
-  non-idempotent fixture across two runs, and spawns the shipped CLI three
-  times each for `verify .` and `verify --no-mount .` on the new flip fixture,
-  requiring exit `1` every time; the generated-panel and unmodified-scaffold
-  controls still exit `0` with `ok  packed`.
+  non-idempotent fixture across two runs at the library and, on the shipped CLI,
+  runs `verify` and `verify --no-mount` twice each on fresh copies: the first
+  run exits `0` after exactly one `prepack` and leaves the generated panel, and
+  the second exits `1` at `pack` naming `client.js`. It also spawns the shipped
+  CLI three times each for `verify .` and `verify --no-mount .` on the flip
+  fixture, requiring exit `1` every time; the generated-panel and
+  unmodified-scaffold controls still exit `0` with `ok  packed`.
 
 ## 0.20.47
 

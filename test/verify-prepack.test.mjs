@@ -138,6 +138,41 @@ test('verify packs a non-idempotent plugin once and judges the tarball it built'
   }
 });
 
+test('the shipped CLI runs a non-idempotent prepack once per verify, then rejects its tarball', () => {
+  // `verify` and `verify --no-mount` both have to judge the archive their own
+  // single pack produced. On a fresh copy the first invocation writes the
+  // panel, so that run exits 0; a second run on the same copy removes it, so
+  // that run must exit 1 at `pack` and name `client.js`. The old dry-run-then-
+  // pack sequence ran the hook twice on the first run, which changed the folder
+  // the tarball was checked against and could report success for a panel-less
+  // archive.
+  for (const args of [['verify'], ['verify', '--no-mount']]) {
+    const label = args.join(' ');
+    const dir = copyFixture('verify-prepack-non-idempotent');
+    try {
+      const first = spawnSync(process.execPath, [BIN, ...args, dir], { encoding: 'utf8' });
+      const firstOutput = `${first.stdout}\n${first.stderr}`;
+      assert.equal(first.status, 0, `${label} first run:\n${firstOutput}`);
+      assert.match(first.stdout, /^ok {2}/m, `${label} first run:\n${firstOutput}`);
+      assert.equal(prepackInvocations(dir), 1, `${label} first run ran prepack more than once:\n${firstOutput}`);
+      assert.ok(fs.existsSync(path.join(dir, 'client.js')), `${label} first run removed the panel it packed`);
+
+      const second = spawnSync(process.execPath, [BIN, ...args, dir], { encoding: 'utf8' });
+      const secondOutput = `${second.stdout}\n${second.stderr}`;
+      assert.equal(second.status, 1, `${label} second run:\n${secondOutput}`);
+      assert.match(secondOutput, /dsh-plugin verify: stopped at pack/u, `${label} second run:\n${secondOutput}`);
+      const line = secondOutput.split('\n').find((entry) => entry.includes('pack:'));
+      assert.ok(line, `${label} second run:\n${secondOutput}`);
+      assert.match(line, /client\.js/u, line);
+      assert.doesNotMatch(secondOutput, /^ok {2}/m, `${label} second run:\n${secondOutput}`);
+      assert.equal(prepackInvocations(dir), 2, `${label} second run should be exactly one more prepack`);
+      assert.equal(fs.existsSync(path.join(dir, 'client.js')), false, `${label} second run did not remove the panel`);
+    } finally {
+      fs.rmSync(path.dirname(dir), { recursive: true, force: true });
+    }
+  }
+});
+
 test('the shipped CLI rejects the flip fixture 3/3 times with and without --no-mount', () => {
   // The fixture's folder passes doctor (client.js is committed and declared)
   // and its prepack removes the panel while building the tarball. Each command
@@ -150,8 +185,11 @@ test('the shipped CLI rejects the flip fixture 3/3 times with and without --no-m
         const result = spawnSync(process.execPath, [BIN, ...args, dir], { encoding: 'utf8' });
         const output = `${result.stdout}\n${result.stderr}`;
         assert.equal(result.status, 1, `${args.join(' ')} run ${run}:\n${output}`);
-        assert.match(output, /(?:pack:|client\.js)/u, `${args.join(' ')} run ${run}:\n${output}`);
-        assert.doesNotMatch(output, /^ok {2}packed/m, `${args.join(' ')} run ${run}:\n${output}`);
+        assert.match(output, /dsh-plugin verify: stopped at pack/u, `${args.join(' ')} run ${run}:\n${output}`);
+        const line = output.split('\n').find((entry) => entry.includes('pack:'));
+        assert.ok(line, `${args.join(' ')} run ${run}:\n${output}`);
+        assert.match(line, /client\.js/u, line);
+        assert.doesNotMatch(output, /^ok {2}/m, `${args.join(' ')} run ${run}:\n${output}`);
         assert.equal(fs.existsSync(path.join(dir, 'client.js')), false, 'the prepack hook did not flip the panel off');
       } finally {
         fs.rmSync(path.dirname(dir), { recursive: true, force: true });
