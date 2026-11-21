@@ -18,6 +18,18 @@
   empty home still exits `0` with the empty-profile line, and an undeclared
   malformed dependency still contributes no row.
 
+- **The truncated-profile finding is pinned against the installed tarball.**
+  The earlier test spawned the checkout's `bin/dsh-plugin.mjs`, which is not the
+  file npm installs, so a tarball that omitted the audit fix could still pass.
+  A new test packs this package, installs the tarball into a temp prefix, and
+  spawns the installed CLI three times on the truncated-profile fixture and
+  three times on the clean control. All 3/3 damaged runs must exit `1`, name the
+  profile `package.json`, and print `unreadable profile` with the parse failure;
+  all 3/3 controls must exit `0` with the `clean-plugin` row and no
+  empty-profile line. `test/audit-home-unreadable-profile-tarball.test.mjs`
+  asserts the fixtures' parse state first, so a damaged profile that starts
+  parsing or a control that stops parsing fails before the shipped runs.
+
 - **`audit --remote --host` reads partial ranges the way npm does, so a
   malformed `engines.dsh` cannot be reported compatible.** `engines.dsh:
   ">=0.2+build"` was parsed as `>=0.2.0`: npm only reads a pre-release or build
