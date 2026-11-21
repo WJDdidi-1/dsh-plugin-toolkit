@@ -1,5 +1,21 @@
 ## 0.20.51
 
+- **`doctor` no longer calls a plugin clean when a `files` entry re-lists a file
+  after a `!` exclusion npm still omits.** npm treats an entry that names an
+  existing file as a strict rule and applies those strict rules in reverse
+  order, so the first explicit mention decides:
+  `["**/*.js", "cordis.patch.yml", "!lib/client.js", "lib/client.js"]` packs no
+  `lib/client.js`. The files-list check used last-match-wins for every entry,
+  saw the final positive entry, and exited `0` while the installed tarball was
+  missing the client `exports["./client"]` named. Explicit file entries now
+  resolve in npm's order, keeping the top-level folder exception (`lib`,
+  `lib/**`) that lets a later positive entry actually re-include the file. A
+  temp fixture hands that exact list to `npm pack --dry-run --json` and the
+  shipped CLI must exit `1`, name `lib/client.js` in a `files list` line, and
+  print no `ok` line; the folder-entry control must still exit `0`.
+  `test/doctor-files-reinclude.test.mjs` pins both directions, so the prediction
+  cannot drift from the packer.
+
 - **`doctor` requires the patch file and the client bundle to be regular files,
   not just paths that exist.** `checkPatchFile`, `checkClientEntry` and
   `checkClientDeclaration` used `fs.existsSync`, so a manifest whose
