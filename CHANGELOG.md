@@ -1,5 +1,20 @@
 ## 0.20.49
 
+- **`audit --home` reports a profile whose `package.json` does not parse
+  instead of calling the profile empty.** `readProfileBundles` caught the
+  `JSON.parse` failure and returned an empty `dsh.profile.bundles` list, so a
+  truncated profile looked like one that declares no plugins. When the only
+  declared plugin's own manifest was also unreadable, the scan found nothing and
+  printed "no plugins installed in any profile" with exit `0`, hiding both the
+  plugin and the damaged profile. The profile reader now carries the read or
+  parse failure, `listInstalled` emits an `unreadable profile` row, and
+  `audit` prints a `profile manifest` failure naming the exact `package.json`
+  and the parse error before exiting `1`. A valid plugin in the same profile is
+  still listed, and an empty or valid profile keeps its exit-`0` control.
+  `test/audit-home-unreadable-profile.test.mjs` pins the truncated profile with
+  a hidden declared plugin at the shipped-CLI boundary, the parse error and
+  profile row at the library boundary, and the valid and empty controls.
+
 - **`audit --remote --host` reads partial ranges the way npm does, so a
   malformed `engines.dsh` cannot be reported compatible.** `engines.dsh:
   ">=0.2+build"` was parsed as `>=0.2.0`: npm only reads a pre-release or build

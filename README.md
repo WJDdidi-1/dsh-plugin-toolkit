@@ -342,6 +342,14 @@ damaged `package.json` in a package that is neither in `dsh.profile.bundles` nor
 readable enough to expose a `dsh` field is still an ordinary dependency and is
 skipped, so one broken transitive install does not fail every audit.
 
+The profile file gets the same treatment. If
+`~/.dsh/profiles/<profile>/package.json` is truncated or is not a JSON object,
+`audit` prints an `unreadable profile` row with a `profile manifest` failure
+naming the file and the parse error, and exits `1`. It does not quietly treat
+the profile as one that declares no bundles, so a damaged profile cannot hide
+the plugin it declares behind "no plugins installed in any profile". Any valid
+plugin still installed in that profile is listed beside the profile finding.
+
 A declared bundle can also parse but carry no `dsh` field at all. The profile
 says the loader will mount it, so `audit` prints a `no dsh field` row with a
 `dsh field` failure naming the declaring `package.json` and exits `1`, instead
