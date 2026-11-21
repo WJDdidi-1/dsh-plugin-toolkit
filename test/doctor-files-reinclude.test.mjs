@@ -103,6 +103,27 @@ test('doctor reports the client that npm omits after a negation and explicit re-
   }
 });
 
+test('the plain folder-and-patch control has no negation and exits 0', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-doctor-files-reinclude-plain-control-'));
+  try {
+    const dir = writeFixture(root, ['lib', 'cordis.patch.yml']);
+    const shipped = packedFiles(dir);
+    assert.ok(
+      shipped.has('lib/client.js'),
+      `npm does not ship the client from a plain folder entry:\n${[...shipped].sort().join('\n')}`,
+    );
+
+    const io = recorder();
+    const code = await runCli(['doctor', dir], io);
+    const output = io.lines.join('\n');
+    assert.equal(code, 0, output);
+    assert.match(output, /^ok {2}/m, output);
+    assert.doesNotMatch(output, /files does not ship lib\/client\.js/u, output);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('an exact folder entry still lets npm and doctor ship the re-included client', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-doctor-files-reinclude-control-'));
   try {

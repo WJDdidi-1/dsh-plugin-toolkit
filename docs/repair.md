@@ -511,14 +511,21 @@ for the whole `dist/` subtree, and `lib/*.js` covers only direct children of
 ships the folder but not the file, and a later positive pattern can re-include
 what an earlier `!` removed.
 
-An entry that names an existing file is stricter than a pattern, and npm applies
-those strict entries in reverse order: the first explicit mention decides. So
-`["!lib/client.js", "lib/client.js"]` still omits the client, while
-`["lib/client.js", "!lib/client.js"]` still ships it. The later positive entry
-puts the file back only when a folder entry such as `lib` or `lib/**` makes npm
-walk that top-level folder; a root glob that merely reaches the file does not.
-The check follows that rule, so a path the tarball leaves out is reported as
-missing instead of being called clean by the last positive entry.
+An entry that names an existing file is stricter than a pattern, and npm
+prepends those strict entries: the first explicit mention decides. So
+`["**/*.js", "cordis.patch.yml", "!lib/client.js", "lib/client.js"]` still
+omits the client even though the positive entry comes last, while
+`["lib/client.js", "!lib/client.js"]` ships it. A later positive entry puts the
+file back only when a folder entry such as `lib` or `lib/**` makes npm walk that
+folder; a root glob that merely reaches the file does not start that walk.
+
+The check follows npm's walker rather than a last-match-wins list. A negated
+subtree such as `!lib/**` stops the walk, and a root glob such as `*.js` can
+reach nested files only after another entry has made npm walk their parent
+folder. npm strips a leading `./` from a positive entry but not from the path
+after `!`, so `!./lib/client.js` does not match `lib/client.js`. A path the
+tarball leaves out is reported as missing instead of being called clean by the
+last positive entry.
 
 npm disables a root `.npmignore` when `files` is present, but it still applies a
 `.npmignore` inside a subdirectory, and uses that folder's `.gitignore` when it
