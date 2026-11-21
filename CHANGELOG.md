@@ -14,6 +14,19 @@
   spawns the shipped CLI, requiring exit `1`, the check name, the directory, and
   no `ok` line for each fixture.
 
+- **`verify` stops at that same directory check instead of packing first.**
+  `verify` defers `patch file` and `client entry` failures to the pack because a
+  `prepack` hook may generate a missing file. It treated a directory at the
+  declared path as generatable too, so it packed and failed with `the tarball
+  does not contain bundle` — a message that sends the author to the `files` list
+  instead of the declaration that is actually wrong. Only an absent path is
+  deferred now (`ENOENT`/`ENOTDIR`); a directory, an unreadable path, or a
+  `client declaration` whose export is already a directory stops at `doctor`
+  with the same sentence. `test/doctor-verify-agreement.test.mjs` spawns both
+  commands on all six fixtures and requires exit `1` with the same
+  `is a directory, not a regular file` line and no `pack:` failure; the
+  unmodified `init` scaffold must still exit `0` from both commands.
+
 - **`audit --home` reports a profile whose `package.json` does not parse
   instead of calling the profile empty.** `readProfileBundles` caught the
   `JSON.parse` failure and returned an empty `dsh.profile.bundles` list, so a
