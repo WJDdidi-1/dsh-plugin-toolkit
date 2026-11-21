@@ -508,9 +508,17 @@ follow npm's own rules: `*` stays inside one path segment, so `*.js` ships
 root-level files only and does not cover `lib/client.js`; `dist/*` is shorthand
 for the whole `dist/` subtree, and `lib/*.js` covers only direct children of
 `lib`. A leading `!` is npm's exclusion marker: `["lib", "!lib/secret.js"]`
-ships the folder but not the file, and a later positive entry can re-include
-what an earlier `!` removed. A path covered only by the positive entry and then
-removed by a negation is reported as missing.
+ships the folder but not the file, and a later positive pattern can re-include
+what an earlier `!` removed.
+
+An entry that names an existing file is stricter than a pattern, and npm applies
+those strict entries in reverse order: the first explicit mention decides. So
+`["!lib/client.js", "lib/client.js"]` still omits the client, while
+`["lib/client.js", "!lib/client.js"]` still ships it. The later positive entry
+puts the file back only when a folder entry such as `lib` or `lib/**` makes npm
+walk that top-level folder; a root glob that merely reaches the file does not.
+The check follows that rule, so a path the tarball leaves out is reported as
+missing instead of being called clean by the last positive entry.
 
 npm disables a root `.npmignore` when `files` is present, but it still applies a
 `.npmignore` inside a subdirectory, and uses that folder's `.gitignore` when it
@@ -520,9 +528,9 @@ reported when `exports["./client"]` points at `lib/client.js`. Those ignore
 rules use npm's minimatch syntax, including extglob:
 `@(client|other).js`, `+(client|other).js`, `?(client|other).js`,
 `*(client|other).js` and a negative `!(...)` group all remove the same paths
-`npm pack` removes. Two npm exceptions are kept: an explicit file entry in
-`files` re-includes that file, and a later `!` rule in the subdirectory ignore
-file puts it back.
+`npm pack` removes. Two npm exceptions are kept: an explicit positive file entry
+in `files` keeps that file over a subdirectory ignore, and a later `!` rule in
+the subdirectory ignore file puts it back.
 
 `doctor --remote` and `audit --remote` run this check against the manifest
 GitHub serves, so a glob or a negation that hides an exported file fails there
