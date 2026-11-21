@@ -1,5 +1,18 @@
 ## 0.20.51
 
+- **The files-list check resolves negations through npm's walker instead of a
+  last-match-wins list.** The failing list
+  `["**/*.js", "cordis.patch.yml", "!lib/client.js", "lib/client.js"]` still
+  omits `lib/client.js`, because a root glob does not make npm walk `lib`; the
+  plain control `["lib", "cordis.patch.yml"]` is clean. Around that case the
+  check now also matches npm when a negated subtree (`!lib/**`) stops the walk,
+  when a root glob reaches a nested file only after another entry walks the
+  parent folder, and when a negation is not normalized like its positive
+  spelling (`!./lib/client.js` does not match `lib/client.js`). `npm test` packs
+  the failing list and the plain folder-and-patch control, requires the CLI to
+  exit `1` naming `lib/client.js` and `0` with an `ok` line respectively, and
+  keeps the direct negation and glob cases green.
+
 - **`doctor` no longer calls a plugin clean when a `files` entry re-lists a file
   after a `!` exclusion npm still omits.** npm treats an entry that names an
   existing file as a strict rule and applies those strict rules in reverse
