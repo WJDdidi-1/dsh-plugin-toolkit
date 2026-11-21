@@ -793,8 +793,8 @@ the diff in the terminal.
 | `engines.dsh` | The market index copies this into every version entry. Missing it, or a value that is not a semver range (including a pinned version such as `0.2.0`), fails the index PR |
 | `readme` | A `Requirements` section that states the declared range, so an install failure is predictable |
 | `dsh field` | `dsh.bundle.patch` must exist for the host to load the plugin |
-| `patch file` | The path declared above must be a real file |
-| `client entry` | If `dsh.client` is declared, the bundle has to be there |
+| `patch file` | The path declared above must be a regular file; a directory with that name is a failure |
+| `client entry` | If `dsh.client` is declared, the bundle has to be a regular file, not just a directory that exists |
 | `files list` | Every path `package.json` points at (`exports`, patch, client) must be covered by `files` and not removed by a `.npmignore`/`.gitignore` in a subdirectory it passes through; a leading `!` excludes what the positive entries would ship |
 | `root export` | The loader imports the bare package name; if that module is missing, is a directory, is the CLI, exports no `apply`, or the `exports` map has no `.` entry, the row mounts nothing while the install reports success |
 
