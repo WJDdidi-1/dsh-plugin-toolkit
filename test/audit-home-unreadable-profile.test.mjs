@@ -48,11 +48,11 @@ function profileDir(home, name = 'desktop') {
   return dir;
 }
 
-function writeProfile(dir, bundles) {
-  fs.writeFileSync(
-    path.join(dir, 'package.json'),
-    JSON.stringify({ name: 'desktop', private: true, dsh: { profile: { bundles } } }, null, 2),
-  );
+function writeProfile(dir, bundles, { bom = false } = {}) {
+  const raw = JSON.stringify({ name: 'desktop', private: true, dsh: { profile: { bundles } } }, null, 2);
+  // Notepad writes a UTF-8 BOM; the profile reader must keep reading that file
+  // as a normal profile instead of reporting it as an unreadable one.
+  fs.writeFileSync(path.join(dir, 'package.json'), `${bom === true ? '\uFEFF' : ''}${raw}`);
   return path.join(dir, 'package.json');
 }
 
@@ -203,4 +203,59 @@ test('a valid profile with no plugins still prints the empty line and exits 0', 
   assert.equal(result.status, 0, output);
   assert.match(result.stdout, new RegExp(EMPTY, 'u'));
   assert.doesNotMatch(output, /unreadable profile/u);
+});
+
+test('a BOM profile with a healthy plugin still exits 0 with its row', (t) => {
+  const home = scratch(t);
+  const dir = profileDir(home);
+  writeProfile(dir, ['good-plugin'], { bom: true });
+  goodPlugin(dir, 'good-plugin');
+
+  const result = runAudit(['audit', '--home', home, '--timeout', '50']);
+  const output = `${result.stdout}\n${result.stderr}`;
+  // The new profile finding must not swallow the BOM support the reader
+  // already had: a BOM profile is a valid profile with a plugin row, not a
+  // damaged file.
+  assert.equal(result.status, 0, output);
+  assert.match(result.stdout, /^good-plugin\s+1\.0\.0\s+\?\s+ok$/mu);
+  assert.doesNotMatch(output, /unreadable profile/u);
+  assert.doesNotMatch(output, new RegExp(EMPTY, 'u'));
+});
+
+test('an empty home still exits 0 with the empty line, whether profiles exists or not', (t) => {
+  const withoutProfiles = scratch(t);
+  const withProfiles = scratch(t);
+  fs.mkdirSync(path.join(withProfiles, 'profiles'));
+
+  for (const [label, home] of [
+    ['no profiles directory', withoutProfiles],
+    ['empty profiles directory', withProfiles],
+  ]) {
+    const result = runAudit(['audit', '--home', home, '--timeout', '50']);
+    const output = `${result.stdout}\n${result.stderr}`;
+    assert.equal(result.status, 0, `${label}\n${output}`);
+    assert.match(result.stdout, new RegExp(EMPTY, 'u'), `${label}\n${output}`);
+    assert.doesNotMatch(output, /unreadable profile/u, `${label}\n${output}`);
+    assert.equal(result.stderr, '', `${label}\n${output}`);
+  }
+});
+
+test('a malformed package.json in an undeclared dependency still adds no row', (t) => {
+  const home = scratch(t);
+  const dir = profileDir(home);
+  writeProfile(dir, []);
+  const ordinary = path.join(dir, 'node_modules', 'ordinary-dependency');
+  fs.mkdirSync(ordinary, { recursive: true });
+  // The profile never names this package and its dsh field cannot be read, so
+  // there is no evidence that it was installed as a plugin. The profile
+  // finding must not widen the exception to every broken transitive install.
+  fs.writeFileSync(path.join(ordinary, 'package.json'), '{"name": "ordinary-dependency"');
+
+  assert.deepEqual(listInstalled({ home }), [], 'the undeclared broken dependency must not be an installed plugin');
+
+  const result = runAudit(['audit', '--home', home, '--timeout', '50']);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.equal(result.status, 0, output);
+  assert.match(result.stdout, new RegExp(EMPTY, 'u'));
+  assert.doesNotMatch(output, /ordinary-dependency|unreadable profile/u);
 });

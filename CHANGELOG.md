@@ -13,7 +13,10 @@
   still listed, and an empty or valid profile keeps its exit-`0` control.
   `test/audit-home-unreadable-profile.test.mjs` pins the truncated profile with
   a hidden declared plugin at the shipped-CLI boundary, the parse error and
-  profile row at the library boundary, and the valid and empty controls.
+  profile row at the library boundary, and the controls that keep the finding
+  narrow: a BOM profile with a healthy plugin still exits `0` with its row, an
+  empty home still exits `0` with the empty-profile line, and an undeclared
+  malformed dependency still contributes no row.
 
 - **`audit --remote --host` reads partial ranges the way npm does, so a
   malformed `engines.dsh` cannot be reported compatible.** `engines.dsh:
