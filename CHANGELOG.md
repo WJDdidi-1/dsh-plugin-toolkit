@@ -1,5 +1,19 @@
 ## 0.20.50
 
+- **`doctor` requires the patch file and the client bundle to be regular files,
+  not just paths that exist.** `checkPatchFile`, `checkClientEntry` and
+  `checkClientDeclaration` used `fs.existsSync`, so a manifest whose
+  `dsh.bundle.patch` named a directory, or whose `exports["./client"]` resolved
+  to one, passed every path check. The host then had no patch to apply and no
+  client module to serve, while `doctor` printed `ok`. Those checks now stat the
+  declared path and report a directory as `is a directory, not a regular file`;
+  the missing-path wording is unchanged. Six fixtures cover a bare patch path, a
+  `./`-prefixed one and a nested one, plus the same three spellings for the
+  client export (bare, `./`-prefixed, and a conditions object).
+  `test/doctor-declared-path-directory.test.mjs` asserts the library verdict and
+  spawns the shipped CLI, requiring exit `1`, the check name, the directory, and
+  no `ok` line for each fixture.
+
 - **`audit --home` reports a profile whose `package.json` does not parse
   instead of calling the profile empty.** `readProfileBundles` caught the
   `JSON.parse` failure and returned an empty `dsh.profile.bundles` list, so a
