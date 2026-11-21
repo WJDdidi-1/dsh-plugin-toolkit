@@ -1,4 +1,4 @@
-## 0.20.49
+## 0.20.50
 
 - **`audit --home` reports a profile whose `package.json` does not parse
   instead of calling the profile empty.** `readProfileBundles` caught the
@@ -42,6 +42,19 @@
   build case and both wildcard forms at the CLI and in the parser, beside the
   compatible and next-major controls.
 
+- **A host-aimed repair no longer writes an alternation branch that the
+  next-major ceiling empties.** For `engines.dsh: ">=0.2.0 <2.0.0 || >=2.0.0"`,
+  `--host 1.5.0` appended `<2.0.0` to both branches, producing
+  `>=0.2.0 <2.0.0 || >=2.0.0 <2.0.0`; the second alternative matches nothing.
+  The planner now drops a capped branch whose floor is already the ceiling, so
+  the same repair writes `>=0.2.0 <2.0.0` and keeps the declared 0.2.x floor.
+  `test/fix-host.test.mjs` pins the local write and the remote plan, and
+  `test/fix-remote-host-shipped.test.mjs` saves the planned patch from the
+  shipped CLI, applies it with `git apply`, and asserts the written range
+  accepts `1.5.0` and rejects `2.0.0`.
+
+## 0.20.49
+
 - **`verify` reads npm's tarball answer even when `prepack` prints to stdout.**
   `npm pack --json` runs the hook before writing its JSON, so an `init`
   scaffold whose build prints `building panel` put that line ahead of the
@@ -73,17 +86,6 @@
   premise.** Each iteration first asserts that the fixture's working copy is
   complete and doctor-clean, so a control cannot pass by losing its committed
   panel.
-
-- **A host-aimed repair no longer writes an alternation branch that the
-  next-major ceiling empties.** For `engines.dsh: ">=0.2.0 <2.0.0 || >=2.0.0"`,
-  `--host 1.5.0` appended `<2.0.0` to both branches, producing
-  `>=0.2.0 <2.0.0 || >=2.0.0 <2.0.0`; the second alternative matches nothing.
-  The planner now drops a capped branch whose floor is already the ceiling, so
-  the same repair writes `>=0.2.0 <2.0.0` and keeps the declared 0.2.x floor.
-  `test/fix-host.test.mjs` pins the local write and the remote plan, and
-  `test/fix-remote-host-shipped.test.mjs` saves the planned patch from the
-  shipped CLI, applies it with `git apply`, and asserts the written range
-  accepts `1.5.0` and rejects `2.0.0`.
 
 ## 0.20.48
 
