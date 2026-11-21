@@ -1,4 +1,4 @@
-## 0.20.50
+## 0.20.51
 
 - **`doctor` requires the patch file and the client bundle to be regular files,
   not just paths that exist.** `checkPatchFile`, `checkClientEntry` and
@@ -26,6 +26,8 @@
   commands on all six fixtures and requires exit `1` with the same
   `is a directory, not a regular file` line and no `pack:` failure; the
   unmodified `init` scaffold must still exit `0` from both commands.
+
+## 0.20.50
 
 - **`audit --home` reports a profile whose `package.json` does not parse
   instead of calling the profile empty.** `readProfileBundles` caught the
