@@ -1,5 +1,17 @@
 ## 0.20.51
 
+- **The re-inclusion verdict is pinned against the installed tarball.** The
+  earlier test spawned the checkout's `bin/dsh-plugin.mjs`, which is not the
+  file npm installs, so a tarball that omitted the files-list fix could still
+  pass. A new test packs this package, installs the tarball into a temp prefix,
+  and spawns the installed CLI three times on a committed fixture with
+  `["**/*.js", "cordis.patch.yml", "!lib/client.js", "lib/client.js"]`. All 3/3
+  runs must exit `1` with the `files list` line naming `lib/client.js`; the
+  unmodified `init` scaffold from the same installed CLI must still exit `0` on
+  3/3 runs. `test/doctor-files-reinclude-tarball.test.mjs` asserts the fixture
+  is still packed without the client first, so the test cannot pass by no longer
+  reproducing the bug.
+
 - **The files-list check resolves negations through npm's walker instead of a
   last-match-wins list.** The failing list
   `["**/*.js", "cordis.patch.yml", "!lib/client.js", "lib/client.js"]` still

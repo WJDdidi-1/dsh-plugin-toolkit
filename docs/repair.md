@@ -546,7 +546,12 @@ packed tarball actually contains the file. The test suite packs a committed
 negation fixture (`files: ["lib", "!lib/secret.js"]`) and a set of temp
 subdirectory-ignore fixtures, requires `npm pack` and `doctor` to agree on each,
 and requires the missing exported client to be reported on every run, so the
-prediction cannot drift from the packer.
+prediction cannot drift from the packer. The re-included-file case is also
+pinned from the installed tarball: the suite packs and installs this toolkit,
+then runs the installed `doctor` three times on a committed
+`["**/*.js", "cordis.patch.yml", "!lib/client.js", "lib/client.js"]` fixture and
+requires the same `files list` failure each time, while the unmodified `init`
+scaffold stays clean.
 
 **What you see.**
 
