@@ -252,6 +252,8 @@ the host with nothing to insert, so the plugin never loads.
 
 The path after `points at` is the value from `package.json`, relative to the
 plugin root. A leading `./` is fine; the check resolves it the same way.
+`verify` stops at this same check instead of packing: an absent file may be a
+`prepack` job, but a directory is not a file a hook can generate.
 
 **Smallest fix.** Either create the file at the path you declared, or point
 `dsh.bundle.patch` at the file that already exists. A minimal patch file, the
@@ -302,7 +304,8 @@ serves today.
 ```
 
 A directory is not a bundle. A folder named by `exports["./client"]` is
-reported instead of being accepted because it exists.
+reported instead of being accepted because it exists, and `verify` stops at
+that same check rather than packing a tarball that cannot contain it.
 
 The last line names whichever bundle file exists — a conventional `client.js`,
 `lib/client.js`, or `dist/client.js`, or the target of an existing
@@ -367,7 +370,8 @@ aligned.
 ```
 
 A directory at one of those paths does not satisfy the check, even though it
-exists.
+exists. `verify` stops at this same check instead of waiting for the pack,
+because a hook cannot turn the directory into the entry file.
 
 The list is the paths `doctor` tried, including the one from
 `dsh.client.entry` and the one from `exports["./client"]` when they are set.
