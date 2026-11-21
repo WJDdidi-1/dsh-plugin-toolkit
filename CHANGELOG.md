@@ -1,4 +1,4 @@
-## 0.20.51
+## 0.20.52
 
 - **The re-inclusion verdict is pinned against the installed tarball.** The
   earlier test spawned the checkout's `bin/dsh-plugin.mjs`, which is not the
@@ -40,6 +40,8 @@
   print no `ok` line; the folder-entry control must still exit `0`.
   `test/doctor-files-reinclude.test.mjs` pins both directions, so the prediction
   cannot drift from the packer.
+
+## 0.20.51
 
 - **`doctor` requires the patch file and the client bundle to be regular files,
   not just paths that exist.** `checkPatchFile`, `checkClientEntry` and
