@@ -33,11 +33,13 @@ function run(command, args) {
 }
 
 test('the invalid fixtures really carry the patch shape they name', () => {
-  assert.equal(fs.readFileSync(path.join(fixture('patch-empty'), 'cordis.patch.yml'), 'utf8'), '');
-  assert.equal(fs.readFileSync(path.join(fixture('patch-no-insert'), 'cordis.patch.yml'), 'utf8'), 'foo: bar\n');
-  assert.equal(fs.readFileSync(path.join(fixture('patch-empty-insert'), 'cordis.patch.yml'), 'utf8'), '- insert: []\n');
+  const read = (name) => fs.readFileSync(path.join(fixture(name), 'cordis.patch.yml'), 'utf8')
+    .replace(/\r\n/gu, '\n'); // a Windows checkout is CRLF; the fixture content is LF
+  assert.equal(read('patch-empty'), '');
+  assert.equal(read('patch-no-insert'), 'foo: bar\n');
+  assert.equal(read('patch-empty-insert'), '- insert: []\n');
   assert.match(
-    fs.readFileSync(path.join(fixture('patch-valid'), 'cordis.patch.yml'), 'utf8'),
+    read('patch-valid'),
     /^- insert:\n {4}- id: patch-valid$/mu,
   );
 });
