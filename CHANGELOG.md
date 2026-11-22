@@ -1,5 +1,18 @@
 ## 0.20.52
 
+- **The patch-shape rejection is pinned against the installed tarball.** The
+  earlier test spawned the checkout's `bin/dsh-plugin.mjs`, which is not the
+  file npm installs, so a tarball that omitted the patch-shape fix or a module
+  it needs could still pass and ship the false clean. A new test packs this
+  package, installs the tarball into a temp prefix, and spawns the installed CLI
+  with `doctor` and `verify --no-mount` once per committed fixture. The empty
+  file, `foo: bar` mapping and `- insert: []` list must all be rejected 3/3 with
+  the `patch file` line naming `cordis.patch.yml`; the valid `- insert:` control
+  must stay clean 1/1 on both commands.
+  `test/doctor-patch-shape-tarball.test.mjs` also asserts the fixtures still
+  carry the shapes they name and that the tarball ships the CLI, doctor and
+  verify code, so it cannot pass without reproducing the bug.
+
 - **`doctor` and `verify --no-mount` reject a patch file that cannot insert a
   loader row.** `checkPatchFile` used to stop after proving the declared path
   was a regular file, so a plugin whose `cordis.patch.yml` was empty, was a
