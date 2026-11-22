@@ -259,7 +259,11 @@ relative to the plugin root. A leading `./` is fine; the check resolves it the
 same way. `verify` stops at this same check instead of packing: an absent file
 may be a `prepack` job, but an existing directory or a patch with no insert row
 is already the declared file, so it is reported at the doctor stage rather than
-packing to see whether a hook rewrites it.
+packing to see whether a hook rewrites it. The rejection is also pinned from the
+installed tarball: the suite packs and installs this toolkit, then runs the
+installed `doctor` and `verify --no-mount` once on each of the empty,
+`foo: bar` and `- insert: []` fixtures and requires the same `patch file`
+failure, while the valid `- insert:` control stays clean.
 
 **Smallest fix.** Either create the file at the path you declared, or point
 `dsh.bundle.patch` at the file that already exists. A minimal patch file, the
