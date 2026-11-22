@@ -1,5 +1,23 @@
 ## 0.20.52
 
+- **`doctor` and `verify --no-mount` reject a patch file that cannot insert a
+  loader row.** `checkPatchFile` used to stop after proving the declared path
+  was a regular file, so a plugin whose `cordis.patch.yml` was empty, was a
+  mapping such as `foo: bar`, or contained `- insert: []` printed `ok` while the
+  host had nothing to mount. The check now reads the file and requires one
+  top-level `- insert:` row with at least one entry; comments, an inline list,
+  an indentless sequence and multiple rows still parse, and an existing file
+  with no usable row stops `verify` at `doctor` instead of packing a declared
+  file that already says there is nothing to insert. `doctor --fix` now tells
+  the author to add a row when the file exists, instead of telling them to
+  create it.
+  `test/doctor-patch-shape.test.mjs` runs the shipped CLI on empty, no-insert
+  and `- insert: []` fixtures, requiring exit `1`, a `patch file` line naming
+  `cordis.patch.yml`, and no `pack:` failure from `verify --no-mount`; the
+  valid `- insert:` fixture must still exit `0` from both. Existing test
+  fixtures that used `- insert: []` only as a placeholder now carry a real row,
+  so they keep testing their own check rather than this one.
+
 - **The re-inclusion verdict is pinned against the installed tarball.** The
   earlier test spawned the checkout's `bin/dsh-plugin.mjs`, which is not the
   file npm installs, so a tarball that omitted the files-list fix could still
