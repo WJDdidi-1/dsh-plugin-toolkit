@@ -1,4 +1,4 @@
-## 0.20.52
+## 0.21.0
 
 - **The patch-shape rejection is pinned against the installed tarball.** The
   earlier test spawned the checkout's `bin/dsh-plugin.mjs`, which is not the
@@ -30,6 +30,8 @@
   valid `- insert:` fixture must still exit `0` from both. Existing test
   fixtures that used `- insert: []` only as a placeholder now carry a real row,
   so they keep testing their own check rather than this one.
+
+## 0.20.52
 
 - **The re-inclusion verdict is pinned against the installed tarball.** The
   earlier test spawned the checkout's `bin/dsh-plugin.mjs`, which is not the
