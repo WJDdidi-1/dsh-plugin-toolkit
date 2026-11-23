@@ -6,9 +6,10 @@
  *
  * This test packs this repository, installs the tarball into a temp prefix, and
  * spawns the *installed* CLI on each committed patch fixture: `doctor` and
- * `verify --no-mount` once per fixture. The empty file, `foo: bar` mapping, and
- * `- insert: []` list must all be rejected 3/3 with the `patch file` line
- * naming `cordis.patch.yml`; the valid `- insert:` control must stay clean 1/1.
+ * `verify --no-mount` once per fixture. The empty file, `foo: bar` mapping,
+ * `- insert: []` list, and the `- insert: [{}]`, `[null]` and `[false]` lists
+ * must all be rejected 6/6 with the `patch file` line naming
+ * `cordis.patch.yml`; both valid `- insert:` controls must stay clean 2/2.
  */
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -25,8 +26,15 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
 const fixture = (name) => path.join(HERE, 'fixtures', name);
 
-const INVALID = ['patch-empty', 'patch-no-insert', 'patch-empty-insert'];
-const CONTROL = 'patch-valid';
+const INVALID = [
+  'patch-empty',
+  'patch-no-insert',
+  'patch-empty-insert',
+  'patch-insert-empty-object',
+  'patch-insert-null',
+  'patch-insert-false',
+];
+const CONTROLS = ['patch-valid', 'patch-insert-inline-valid'];
 const NO_INSERT = /no insert row the host can apply/u;
 
 function packToolkit(scratch) {
@@ -76,7 +84,7 @@ function invoke(installedBin, scratch, args) {
   });
 }
 
-test('the installed tarball CLI rejects every insert-less patch 3/3 and keeps the control clean 1/1', () => {
+test('the installed tarball CLI rejects every unnameable insert 6/6 and keeps both controls clean 2/2', () => {
   const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-patch-shape-tarball-'));
   try {
     // Keep the fixtures honest before the shipped runs. If a fixture stops
@@ -87,7 +95,11 @@ test('the installed tarball CLI rejects every insert-less patch 3/3 and keeps th
     assert.equal(readPatch('patch-empty'), '');
     assert.equal(readPatch('patch-no-insert'), 'foo: bar\n');
     assert.equal(readPatch('patch-empty-insert'), '- insert: []\n');
-    assert.match(readPatch(CONTROL), /^- insert:\n {4}- id: patch-valid$/mu);
+    assert.equal(readPatch('patch-insert-empty-object'), '- insert: [{}]\n');
+    assert.equal(readPatch('patch-insert-null'), '- insert: [null]\n');
+    assert.equal(readPatch('patch-insert-false'), '- insert: [false]\n');
+    assert.match(readPatch('patch-valid'), /^- insert:\n {4}- id: patch-valid$/mu);
+    assert.equal(readPatch('patch-insert-inline-valid'), '- insert: [{ id: x, name: x, config: {} }]\n');
 
     const toolkit = packToolkit(scratch);
     // A tarball without its CLI, doctor, or verify code cannot be the boundary
@@ -126,20 +138,22 @@ test('the installed tarball CLI rejects every insert-less patch 3/3 and keeps th
       assert.match(verifyOutput, NO_INSERT, `${name}:\n${verifyOutput}`);
       assert.doesNotMatch(verifyOutput, /✗ pack:/u, `${name} packed instead of stopping at doctor:\n${verifyOutput}`);
     }
-    assert.deepEqual(doctorStatuses, [1, 1, 1], 'all three malformed fixtures must fail the installed doctor');
-    assert.deepEqual(verifyStatuses, [1, 1, 1], 'all three malformed fixtures must fail the installed verify');
+    assert.deepEqual(doctorStatuses, [1, 1, 1, 1, 1, 1], 'all six unnameable fixtures must fail the installed doctor');
+    assert.deepEqual(verifyStatuses, [1, 1, 1, 1, 1, 1], 'all six unnameable fixtures must fail the installed verify');
 
-    const doctorControl = invoke(installedBin, scratch, ['doctor', fixture(CONTROL)]);
-    const doctorControlOutput = `${doctorControl.stdout}\n${doctorControl.stderr}`;
-    assert.equal(doctorControl.status, 0, `installed CLI doctor on the control:\n${doctorControlOutput}`);
-    assert.match(doctorControlOutput, /^ok {2}patch-valid@1\.0\.0 /mu, doctorControlOutput);
-    assert.doesNotMatch(doctorControlOutput, NO_INSERT, doctorControlOutput);
+    for (const control of CONTROLS) {
+      const doctorControl = invoke(installedBin, scratch, ['doctor', fixture(control)]);
+      const doctorControlOutput = `${doctorControl.stdout}\n${doctorControl.stderr}`;
+      assert.equal(doctorControl.status, 0, `installed CLI doctor on ${control}:\n${doctorControlOutput}`);
+      assert.match(doctorControlOutput, new RegExp(`^ok {2}${control}@1\\.0\\.0 `, 'mu'), doctorControlOutput);
+      assert.doesNotMatch(doctorControlOutput, NO_INSERT, doctorControlOutput);
 
-    const verifyControl = invoke(installedBin, scratch, ['verify', fixture(CONTROL), '--no-mount']);
-    const verifyControlOutput = `${verifyControl.stdout}\n${verifyControl.stderr}`;
-    assert.equal(verifyControl.status, 0, `installed CLI verify --no-mount on the control:\n${verifyControlOutput}`);
-    assert.match(verifyControlOutput, /^ok {2}packed \d+ file\(s\)/mu, verifyControlOutput);
-    assert.doesNotMatch(verifyControlOutput, /stopped at doctor|no insert row/u, verifyControlOutput);
+      const verifyControl = invoke(installedBin, scratch, ['verify', fixture(control), '--no-mount']);
+      const verifyControlOutput = `${verifyControl.stdout}\n${verifyControl.stderr}`;
+      assert.equal(verifyControl.status, 0, `installed CLI verify --no-mount on ${control}:\n${verifyControlOutput}`);
+      assert.match(verifyControlOutput, /^ok {2}packed \d+ file\(s\)/mu, verifyControlOutput);
+      assert.doesNotMatch(verifyControlOutput, /stopped at doctor|no insert row/u, verifyControlOutput);
+    }
   } finally {
     fs.rmSync(scratch, { recursive: true, force: true });
   }
