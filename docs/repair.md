@@ -266,7 +266,9 @@ installed tarball: the suite packs and installs this toolkit, then runs the
 installed `doctor` and `verify --no-mount` once on each of the empty,
 `foo: bar`, `- insert: []`, `- insert: [{}]`, `- insert: [null]` and
 `- insert: [false]` fixtures and requires the same `patch file` failure, while
-both valid `- insert:` controls stay clean.
+both valid `- insert:` controls stay clean. The three unnameable shapes have
+their own installed-tarball test too: `doctor` must reject 3/3 and
+`verify --no-mount` 3/3, so it prints and requires `false_greens=0/6`.
 
 **Smallest fix.** Either create the file at the path you declared, or point
 `dsh.bundle.patch` at the file that already exists. A minimal patch file, the

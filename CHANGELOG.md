@@ -1,4 +1,15 @@
-## Unreleased
+## 0.21.2
+
+- **The three unnameable insert shapes are pinned from the installed tarball.**
+  `test/doctor-patch-insert-tarball.test.mjs` packs this package, installs the
+  tarball into a temp prefix, and runs the installed `doctor` once on each of
+  the `- insert: [{}]`, `[null]` and `[false]` fixtures and the installed
+  `verify --no-mount` once on each of the same three. All six runs must exit
+  `1` with the `patch file` line naming `cordis.patch.yml`, so the test prints
+  and requires `false_greens=0/6`; the inline
+  `- insert: [{ id: x, name: x, config: {} }]` control still exits `0` from both
+  commands. A tarball that omits the row check or a module it needs can no
+  longer pass the suite and ship the 0.21.1 false green.
 
 - **`doctor` and `verify --no-mount` reject insert entries that name no loader
   row.** The patch check treated any non-empty `- insert:` list as mountable, so
