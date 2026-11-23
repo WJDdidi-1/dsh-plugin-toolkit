@@ -30,6 +30,9 @@
   control stays clean; a fifth fixture declares README, LICENSE, COPYING,
   package.json and `main` while omitting them from `files`, and must stay clean
   in 5/5 runs with all five present in `npm pack --dry-run --json`.
+  `test/doctor-always-included-paths.test.mjs` isolates those five declarations
+  in separate committed fixtures, so each path has to stay clean 5/5 from the
+  installed CLI while `npm pack --dry-run --json` ships it 5/5 on its own.
 
 - **The patch-shape rejection is pinned against the installed tarball.** The
   earlier test spawned the checkout's `bin/dsh-plugin.mjs`, which is not the
