@@ -571,10 +571,12 @@ scaffold stays clean.
 ```
 
 The second line names every path that is missing, separated by commas. npm always
-adds `package.json`, the README, the license, the changelog, and the `main` file
-to the `files` allowlist, so `doctor` does not ask for those; everything else
-has to be listed. A subdirectory ignore file can still remove one of them from
-the tarball, and that is reported the same way.
+adds `package.json`, the README, COPYING, the license, and the `main` file to
+the `files` allowlist, so `doctor` does not ask for those; everything else has
+to be listed. A changelog is not on that list: npm drops a `CHANGELOG*` file the
+`files` list omits, so exporting one needs an explicit entry. A subdirectory
+ignore file can still remove an always-included file from the tarball, and that
+is reported the same way.
 
 **Smallest fix.** Add the missing path, or its parent folder, to `files`:
 
