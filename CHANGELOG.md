@@ -1,5 +1,19 @@
 ## 0.21.0
 
+- **`doctor` no longer treats a changelog as an always-shipped client.** npm's
+  always-included set is `package.json`, README, COPYING, LICENSE and the
+  `main` file; it does not add a `CHANGELOG*`. `doctor` listed `CHANGELOG*`
+  anyway, so a plugin whose `exports["./client"]` named `CHANGELOG`,
+  `CHANGELOG.md` or `CHANGELOG.txt` but whose `files` list omitted it printed
+  `ok` while `npm pack` dropped the client. The set now matches npm-packlist
+  (including COPYING and README/LICENSE suffixes), and a changelog has to be
+  listed. `test/doctor-changelog-always-shipped.test.mjs` packs the three
+  failing fixtures and a listed control, installs this toolkit's tarball, and
+  requires the installed CLI to reject the omitted clients 3/3 while the
+  control stays clean; a fifth fixture declares README, LICENSE, COPYING,
+  package.json and `main` while omitting them from `files`, and must stay clean
+  in 5/5 runs with all five present in `npm pack --dry-run --json`.
+
 - **The patch-shape rejection is pinned against the installed tarball.** The
   earlier test spawned the checkout's `bin/dsh-plugin.mjs`, which is not the
   file npm installs, so a tarball that omitted the patch-shape fix or a module
