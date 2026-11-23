@@ -573,7 +573,11 @@ scaffold stays clean.
 The second line names every path that is missing, separated by commas. npm always
 adds `package.json`, the README, COPYING, the license, `main`, `browser`, and
 every `bin` target to the `files` allowlist, so `doctor` does not ask for those;
-everything else has to be listed. `main` and `browser` are matched as written:
+everything else has to be listed. Each of the five root declarations has its own
+committed fixture in `test/doctor-always-included-paths.test.mjs`, pinned to
+both the installed CLI and `npm pack --dry-run --json` for five trials, so no
+single name can quietly stop being treated as always shipped. `main` and
+`browser` are matched as written:
 `./index.js` is not the tarball path `index.js`, so npm drops it and `doctor`
 asks for the entry. A `bin` target is normalised, so `./bin/cli.mjs` is still
 always shipped. A changelog is not on the list: npm drops a `CHANGELOG*` file the
