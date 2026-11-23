@@ -241,9 +241,9 @@ If `doctor` also reports `readme`, put the same range text in the README's
 **What it means.** `dsh.bundle.patch` points at the YAML file the host applies
 when it loads the plugin. `doctor` checks that the path is a regular file and
 that the file has a top-level loader row whose `insert` list contains at least
-one entry. A missing path, a directory that happens to have the declared name,
-an empty file, and a file with no usable `insert` row all leave the host with
-nothing to insert, so the plugin never loads.
+one mapping that names a row. A missing path, a directory that happens to have
+the declared name, an empty file, and a file with no usable `insert` row all
+leave the host with nothing to insert, so the plugin never loads.
 
 **What you see.**
 
@@ -253,8 +253,10 @@ nothing to insert, so the plugin never loads.
   ✗ patch file: dsh.bundle.patch points at ./cordis.patch.yml, which has no insert row the host can apply, so the plugin never mounts
 ```
 
-The last line covers an empty patch, a mapping such as `foo: bar`, and
-`- insert: []`. The path after `points at` is the value from `package.json`,
+The last line covers an empty patch, a mapping such as `foo: bar`,
+`- insert: []`, and entries that do not name a row: `- insert: [{}]`,
+`- insert: [null]` and `- insert: [false]`. The entry must be a mapping with a
+non-empty `name:`. The path after `points at` is the value from `package.json`,
 relative to the plugin root. A leading `./` is fine; the check resolves it the
 same way. `verify` stops at this same check instead of packing: an absent file
 may be a `prepack` job, but an existing directory or a patch with no insert row
@@ -262,8 +264,9 @@ is already the declared file, so it is reported at the doctor stage rather than
 packing to see whether a hook rewrites it. The rejection is also pinned from the
 installed tarball: the suite packs and installs this toolkit, then runs the
 installed `doctor` and `verify --no-mount` once on each of the empty,
-`foo: bar` and `- insert: []` fixtures and requires the same `patch file`
-failure, while the valid `- insert:` control stays clean.
+`foo: bar`, `- insert: []`, `- insert: [{}]`, `- insert: [null]` and
+`- insert: [false]` fixtures and requires the same `patch file` failure, while
+both valid `- insert:` controls stay clean.
 
 **Smallest fix.** Either create the file at the path you declared, or point
 `dsh.bundle.patch` at the file that already exists. A minimal patch file, the

@@ -1,3 +1,17 @@
+## Unreleased
+
+- **`doctor` and `verify --no-mount` reject insert entries that name no loader
+  row.** The patch check treated any non-empty `- insert:` list as mountable, so
+  `- insert: [{}]`, `- insert: [null]` and `- insert: [false]` passed even though
+  the loader had no row to apply. Each entry now has to be a mapping with a
+  non-empty `name:`; an empty mapping, a boolean and a null are rejected with
+  the same `patch file` sentence that names `cordis.patch.yml`. The inline
+  `- insert: [{ id: x, name: x, config: {} }]` control still exits `0`.
+  `test/doctor-patch-shape.test.mjs` adds committed fixtures for the three
+  shapes and runs both commands on them; the installed-tarball test now requires
+  all 6/6 malformed fixtures to exit `1` and both valid controls to stay clean
+  2/2.
+
 ## 0.21.1
 
 - **`doctor` now matches npm's full always-included set.** Besides
