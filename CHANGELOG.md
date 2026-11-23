@@ -1,4 +1,4 @@
-## 0.21.0
+## 0.21.1
 
 - **`doctor` now matches npm's full always-included set.** Besides
   `package.json`, README, COPYING, LICENSE and `main`, npm-packlist also adds
@@ -33,6 +33,8 @@
   `test/doctor-always-included-paths.test.mjs` isolates those five declarations
   in separate committed fixtures, so each path has to stay clean 5/5 from the
   installed CLI while `npm pack --dry-run --json` ships it 5/5 on its own.
+
+## 0.21.0
 
 - **The patch-shape rejection is pinned against the installed tarball.** The
   earlier test spawned the checkout's `bin/dsh-plugin.mjs`, which is not the
