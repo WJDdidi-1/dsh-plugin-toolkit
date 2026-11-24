@@ -1,4 +1,4 @@
-## 0.22.0
+## 0.22.1
 
 - **`doctor --remote` and `audit --remote` read the declared patch body.**
   The remote reader only checked that `dsh.bundle.patch` existed, so a
@@ -17,6 +17,8 @@
   `3 clean, 3 failing (3 problems)` summary and exit `1`, and checks every
   malformed `--json` object for the `patch file` failure, so no repository in a
   repair sweep can be counted clean.
+
+## 0.22.0
 
 - **The dry-run index preflight is pinned at the installed-tarball boundary.**
   The earlier tests spawned the checkout's `bin/dsh-plugin.mjs`, which is not
