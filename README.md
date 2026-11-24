@@ -493,6 +493,12 @@ at a time, the timing the command had before batching. The output — and the
 sequential run produced, so a diff between two runs compares repositories rather
 than scheduling.
 
+The batch keeps the same `patch file` finding as a single repository. Three
+malformed and three valid repositories print `3 clean, 3 failing (3 problems)`
+and exit `1`, and each malformed repository's `--json` object carries the
+`patch file` failure, so a batched repair sweep cannot count an unmountable
+repository clean.
+
 When GitHub answers `403` or `429`, the shared quota is gone, so the batch stops
 starting new repositories and marks every entry it could not read as
 `rate-limited` instead of `clean` or `unreadable`. If the response carries
