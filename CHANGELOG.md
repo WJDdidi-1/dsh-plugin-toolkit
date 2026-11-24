@@ -1,5 +1,17 @@
 ## 0.21.2
 
+- **The real `release` runs the same index preflight before it tags.**
+  `release --dry-run` already refused to print a tag step for an index that
+  `index` rejects, but the real command still created and pushed
+  `plugin-v...` before reading `market/index.json`. It now runs the identical
+  read/shape/`engines.dsh` check before it inspects or creates any tag, prints
+  the same sections `index` prints, exits `1`, and leaves `git tag -l` empty.
+  This includes the `--market` checkout and an explicit `--index` file, and a
+  resume is covered too: pushing an existing tag starts the publish, so the
+  index is checked first. A clean index still proceeds to the tag step.
+  `test/release-index-preflight.test.mjs` covers the three malformed shapes at
+  the library and CLI boundary, the empty-tag assertion, and a clean release.
+
 - **`release --dry-run` reads the market index before it prints a tag step.**
   A dry run used to list `git tag` and `patch market/index.json` even when
   `index` rejected that file, so the first time the author learned the index
