@@ -1,5 +1,21 @@
 ## 0.22.1
 
+- **`audit --home` treats a malformed `dsh.profile.bundles` value as an
+  unreadable profile, not an empty one.** The profile reader returned `[]` for
+  any value that was not an array and for arrays whose entries were not
+  strings, so a profile saved with `"bundles": "ghost-plugin"`, `"bundles":
+  {"ghost-plugin": true}` or `"bundles": [42]` scanned as a profile with no
+  plugins: the command printed "no plugins installed in any profile" and exited
+  `0`. A present value that is not a list of non-empty plugin-name strings now
+  carries the same read error as a truncated profile, so `listInstalled` emits
+  an `unreadable profile` row and `audit` prints the `profile manifest` failure
+  naming the exact `package.json` before exiting `1`. The valid
+  `["ghost-plugin"]` control still reports a `missing` install and exits `1`,
+  and an empty list still exits `0` with the empty-profile line.
+  `test/audit-home-malformed-bundles.test.mjs` pins the string, object and
+  `[42]` shapes at the shipped-CLI and library boundaries together with those
+  two controls.
+
 - **`doctor --remote` and `audit --remote` read the declared patch body.**
   The remote reader only checked that `dsh.bundle.patch` existed, so a
   repository whose committed `cordis.patch.yml` was empty, a plain mapping such
