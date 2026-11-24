@@ -349,6 +349,10 @@ naming the file and the parse error, and exits `1`. It does not quietly treat
 the profile as one that declares no bundles, so a damaged profile cannot hide
 the plugin it declares behind "no plugins installed in any profile". Any valid
 plugin still installed in that profile is listed beside the profile finding.
+A present `dsh.profile.bundles` value that is not a list of plugin names — a
+string, an object, or an array entry that is not a non-empty string such as
+`[42]` — gets the same row and exit `1`, so a malformed list is not mistaken
+for a profile that declares no bundles.
 
 A declared bundle can also parse but carry no `dsh` field at all. The profile
 says the loader will mount it, so `audit` prints a `no dsh field` row with a
