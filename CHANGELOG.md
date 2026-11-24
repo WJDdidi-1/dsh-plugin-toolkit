@@ -1,5 +1,19 @@
 ## 0.22.1
 
+- **The malformed-`dsh.profile.bundles` verdict is pinned at the
+  installed-tarball boundary.** The earlier test spawned the checkout's
+  `bin/dsh-plugin.mjs`, which is not the file npm installs, so a tarball that
+  omitted the profile fix or a module it needs could still pass the suite and
+  ship the false clean. `test/audit-home-malformed-bundles-tarball.test.mjs`
+  now packs this package, installs the tarball into a temp prefix, and runs the
+  installed `audit --home` once on each malformed profile shape (a string, an
+  object, and `[42]`) and once on the valid `["ghost-plugin"]` control. Every
+  malformed run must exit `1`, name the profile `package.json`, and print the
+  `profile manifest` finding, so the test requires `false_cleans=0/3`; the
+  control must still report the declared but absent install as a `missing` row
+  and exit `1`, so it requires `control_exit1=1/1`. Against the published
+  0.22.0 tarball the same test records `false_cleans=3/3`.
+
 - **`audit --home` treats a malformed `dsh.profile.bundles` value as an
   unreadable profile, not an empty one.** The profile reader returned `[]` for
   any value that was not an array and for arrays whose entries were not
