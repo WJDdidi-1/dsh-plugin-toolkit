@@ -1,5 +1,18 @@
 ## 0.22.0
 
+- **`doctor --remote` and `audit --remote` read the declared patch body.**
+  The remote reader only checked that `dsh.bundle.patch` existed, so a
+  repository whose committed `cordis.patch.yml` was empty, a plain mapping such
+  as `foo: bar`, or `- insert: []` printed `ok` and exited `0`, while a local
+  `doctor` rejected the same tree with a `patch file` failure. The remote checks
+  now run the same row detector and print the same sentence a checkout does:
+  the patch needs a top-level `- insert:` row whose entry is a mapping with a
+  non-empty `name:`. A read that failed is still a note, never a false clean.
+  `test/doctor-remote-patch-shape.test.mjs` serves the three malformed bodies
+  through the mocked contents API and compares each `doctor --remote` sentence
+  with the local `doctor()` one, then requires three valid block, indentless and
+  inline `- insert:` bodies to exit `0`.
+
 - **The dry-run index preflight is pinned at the installed-tarball boundary.**
   The earlier tests spawned the checkout's `bin/dsh-plugin.mjs`, which is not
   the file npm installs, so a tarball that omitted the preflight or a module it
