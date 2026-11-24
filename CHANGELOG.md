@@ -11,7 +11,12 @@
   `test/doctor-remote-patch-shape.test.mjs` serves the three malformed bodies
   through the mocked contents API and compares each `doctor --remote` sentence
   with the local `doctor()` one, then requires three valid block, indentless and
-  inline `- insert:` bodies to exit `0`.
+  inline `- insert:` bodies to exit `0`. The batch form carries the same
+  finding: `test/audit-batch-patch-shape.test.mjs` serves three malformed and
+  three valid repositories to `audit --remote --from`, requires the printed
+  `3 clean, 3 failing (3 problems)` summary and exit `1`, and checks every
+  malformed `--json` object for the `patch file` failure, so no repository in a
+  repair sweep can be counted clean.
 
 - **The dry-run index preflight is pinned at the installed-tarball boundary.**
   The earlier tests spawned the checkout's `bin/dsh-plugin.mjs`, which is not

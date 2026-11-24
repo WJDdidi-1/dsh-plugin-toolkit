@@ -275,7 +275,8 @@ The same check reads the file over the GitHub API. `doctor --remote` and
 sentence above instead of printing `ok`, and
 `test/doctor-remote-patch-shape.test.mjs` compares each remote sentence with the
 local `doctor()` one while keeping block, indentless and inline valid `- insert:`
-bodies clean.
+bodies clean. A batch keeps the finding in every row and `--json` object too, so
+`audit --remote --from` cannot count one of those repositories clean.
 
 **Smallest fix.** Either create the file at the path you declared, or point
 `dsh.bundle.patch` at the file that already exists. A minimal patch file, the
