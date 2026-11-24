@@ -1,4 +1,4 @@
-## 0.21.2
+## 0.22.0
 
 - **The dry-run index preflight is pinned at the installed-tarball boundary.**
   The earlier tests spawned the checkout's `bin/dsh-plugin.mjs`, which is not
@@ -36,6 +36,8 @@
   with no index keeps its old plan.
   `test/release-dry-run-index.test.mjs` covers three malformed shapes, the
   valid control, `--market`, and an invalid named `--index`.
+
+## 0.21.2
 
 - **The three unnameable insert shapes are pinned from the installed tarball.**
   `test/doctor-patch-insert-tarball.test.mjs` packs this package, installs the
