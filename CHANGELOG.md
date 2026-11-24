@@ -1,5 +1,18 @@
 ## 0.21.2
 
+- **The dry-run index preflight is pinned at the installed-tarball boundary.**
+  The earlier tests spawned the checkout's `bin/dsh-plugin.mjs`, which is not
+  the file npm installs, so a tarball that omitted the preflight or a module it
+  needs could still pass the suite. `test/release-dry-run-index-tarball.test.mjs`
+  now packs this package, installs the tarball into a temp prefix, and runs the
+  installed `index` and `release --dry-run` on three malformed index shapes
+  (missing `plugins`, non-array `versions`, a version without `engines.dsh`) and
+  three valid ones (empty versions, one version, two plugins). Each malformed
+  index must be rejected 3/3 with the same finding and no tag or patch step, so
+  the test requires `false_plans=0/3`; every valid index must keep the tag and
+  patch step, `clean_plans=3/3`. Against the published 0.21.2 tarball the same
+  test records `false_plans=3/3`.
+
 - **The real `release` runs the same index preflight before it tags.**
   `release --dry-run` already refused to print a tag step for an index that
   `index` rejects, but the real command still created and pushed
