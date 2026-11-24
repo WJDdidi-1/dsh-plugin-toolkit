@@ -1114,7 +1114,7 @@ The install reports success and nothing shows up. In this order:
 
 `release` runs the sequence in the order that fails cheapest first:
 
-1. Preflight (`doctor`) — stop before tagging anything.
+1. Preflight (`doctor`, then the same read/shape/`engines.dsh` check as `index` on the file the release would patch) — stop before tagging anything.
 2. Refuse to run on a dirty tree. If the tag already exists and points at the current commit, reuse it, push it again, and resume; if it points somewhere else, stop with the tag's commit and HEAD, and print the `git tag -d` / `git push --delete` recovery.
 3. Create and push the tag, which starts the plugin's release workflow. A retry pushes an existing local tag too, so a tag left behind by a failed `git push` still reaches origin.
 4. Poll the registry until it actually serves that version, reporting each wait.
@@ -1133,7 +1133,7 @@ checks settled after 1s (1 look(s))
 merged
 ```
 
-Without `--pr` it prints the `git add` / `gh pr create` commands instead of running them; `--dry-run` prints the whole sequence before anything happens. The dry run first runs the same read/shape/`engines.dsh` check as `index` on the file it would patch (including `--market` and `--index`): if that file exists and `index` would reject it, the dry run prints the same finding, exits `1`, and does not list the tag step. A checkout with no index still plans its release. A re-run after a failure is safe: when the tag already points at HEAD it is reused rather than recreated, it is pushed again so a local-only tag left by a failed push reaches origin, the release continues with the registry wait, and the same version with the same publish time is a no-op once the index entry is committed. A no-op release prints `<index> already carried <version>; nothing to commit`, exits `0`, leaves `git log -1` unchanged, and creates no `market/<version>` branch, even when `--pr` or `--merge` is passed. A different publish time is not a no-op: the release stops at `index`, names the indexed and registry timestamps in the error, exits `1`, and creates no `market/<version>` branch.
+Without `--pr` it prints the `git add` / `gh pr create` commands instead of running them; `--dry-run` prints the whole sequence before anything happens. Both the dry run and the real release run the same read/shape/`engines.dsh` check as `index` on the file they would patch (including `--market` and `--index`) before any tag is created or listed: if that file exists and `index` would reject it, the command prints the same finding, exits `1`, and no tag is listed or created. A checkout with no index still plans and runs its release. A re-run after a failure is safe: when the tag already points at HEAD it is reused rather than recreated, it is pushed again so a local-only tag left by a failed push reaches origin, the release continues with the registry wait, and the same version with the same publish time is a no-op once the index entry is committed. A no-op release prints `<index> already carried <version>; nothing to commit`, exits `0`, leaves `git log -1` unchanged, and creates no `market/<version>` branch, even when `--pr` or `--merge` is passed. A different publish time is not a no-op: the release stops at `index`, names the indexed and registry timestamps in the error, exits `1`, and creates no `market/<version>` branch.
 
 If that tag points at another commit, the release does not move it. It exits `1`
 and names the tag, the commit it points at, HEAD, and the recovery:
