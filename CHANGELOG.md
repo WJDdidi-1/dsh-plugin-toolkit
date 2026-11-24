@@ -1,5 +1,17 @@
 ## 0.21.2
 
+- **`release --dry-run` reads the market index before it prints a tag step.**
+  A dry run used to list `git tag` and `patch market/index.json` even when
+  `index` rejected that file, so the first time the author learned the index
+  was malformed was after the tag was public. The plan now runs the same
+  read/shape/`engines.dsh` preflight as `index`, prints those exact sections,
+  and exits `1` without listing the tag step. This includes the `--market`
+  checkout and an explicit `--index` file, so the dry run validates the file it
+  says it will patch. A valid index still plans the release, and a checkout
+  with no index keeps its old plan.
+  `test/release-dry-run-index.test.mjs` covers three malformed shapes, the
+  valid control, `--market`, and an invalid named `--index`.
+
 - **The three unnameable insert shapes are pinned from the installed tarball.**
   `test/doctor-patch-insert-tarball.test.mjs` packs this package, installs the
   tarball into a temp prefix, and runs the installed `doctor` once on each of
