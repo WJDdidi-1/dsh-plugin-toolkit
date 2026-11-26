@@ -38,7 +38,7 @@
     "scripts/preview.mjs"
   ],
   "engines": {
-    "node": ">=18",
+    "node": ">=22",
     "dsh": ">=0.2.0"
   },
   "keywords": [
