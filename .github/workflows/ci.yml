@@ -20,7 +20,7 @@ jobs:
         # Keep the push/PR macOS leg on the predictable Intel image. The Linux
         # arm64 job below covers the architecture the plugin is loaded on.
         os: [ubuntu-latest, macos-15-intel, windows-latest]
-        node: [18, 20, 22, 24, 26]
+        node: [22, 24, 26]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

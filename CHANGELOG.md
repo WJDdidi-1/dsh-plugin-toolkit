@@ -6,6 +6,12 @@
   Node 24 and 26; the support range itself is unchanged by this commit and the
   narrower range is proposed separately.
 
+- **Node 18 and 20 leave the test matrix and `engines`.** Node 18 reached
+  end-of-life on 2025-04-30 and Node 20 on 2026-04-30, so the declared minimum
+  becomes `>=22` and the matrix keeps the maintained lines 22, 24 and 26. This
+  narrows the supported range; whether to adopt it is **not decided yet** and is
+  left to the owner, separately from the added coverage above.
+
 ## 0.23.0
 
 - **The malformed-`dsh.profile.bundles` verdict is pinned at the

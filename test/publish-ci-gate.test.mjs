@@ -30,7 +30,7 @@ const verdictOf = (runs, extra = {}) =>
   evaluate(runs, { required: REQUIRED, alternatives: policy.alternatives, ...extra });
 
 test('the policy names the checks that actually exist in ci.yml', () => {
-  assert.ok(REQUIRED.includes('node 20 on windows-latest'));
+  assert.ok(REQUIRED.includes('node 24 on windows-latest'));
   assert.ok(REQUIRED.includes('node 22 on macos-15-intel'));
   assert.ok(REQUIRED.includes('the tool on a real plugin'));
   assert.equal(REQUIRED.some((name) => name.includes('arm64')), false);
@@ -66,11 +66,11 @@ test('identity comes from the run id in the URL, never from the job name', () =>
 
 test('a failing Windows job blocks the publish', () => {
   const runs = allGreen().map((run) =>
-    run.name === 'node 20 on windows-latest' ? { ...run, conclusion: 'failure' } : run,
+    run.name === 'node 24 on windows-latest' ? { ...run, conclusion: 'failure' } : run,
   );
   const verdict = verdictOf(runs);
   assert.equal(verdict.ok, false);
-  assert.match(verdict.why, /node 20 on windows-latest: failure/u);
+  assert.match(verdict.why, /node 24 on windows-latest: failure/u);
 });
 
 test('a missing required check blocks the publish', () => {
@@ -146,10 +146,10 @@ test('the arm64 gate is best effort: absent or queued warns, failing refuses', (
 
 test('a cancelled job that never got a runner is capacity, not a failure', () => {
   const runs = allGreen().map((run) =>
-    run.name === 'node 20 on macos-15-intel' ? { ...run, conclusion: 'cancelled' } : run,
+    run.name === 'node 24 on macos-15-intel' ? { ...run, conclusion: 'cancelled' } : run,
   );
   const jobs = new Map([
-    ['node 20 on macos-15-intel', { name: 'node 20 on macos-15-intel', runner_name: '', steps: [] }],
+    ['node 24 on macos-15-intel', { name: 'node 24 on macos-15-intel', runner_name: '', steps: [] }],
   ]);
   const verdict = verdictOf(runs, { jobOf: (name) => jobs.get(name) ?? null });
   assert.equal(verdict.ok, true, verdict.why);
@@ -159,12 +159,12 @@ test('a cancelled job that never got a runner is capacity, not a failure', () =>
 
 test('a cancelled job that had started is a failure', () => {
   const runs = allGreen().map((run) =>
-    run.name === 'node 20 on macos-15-intel' ? { ...run, conclusion: 'cancelled' } : run,
+    run.name === 'node 24 on macos-15-intel' ? { ...run, conclusion: 'cancelled' } : run,
   );
   const jobs = new Map([
     [
-      'node 20 on macos-15-intel',
-      { name: 'node 20 on macos-15-intel', runner_name: 'GitHub Actions 1', steps: [{ name: 'npm test' }] },
+      'node 24 on macos-15-intel',
+      { name: 'node 24 on macos-15-intel', runner_name: 'GitHub Actions 1', steps: [{ name: 'npm test' }] },
     ],
   ]);
   const verdict = verdictOf(runs, { jobOf: (name) => jobs.get(name) ?? null });
@@ -174,7 +174,7 @@ test('a cancelled job that had started is a failure', () => {
 
 test('a cancelled job whose job list cannot be read is a failure, not capacity', () => {
   const runs = allGreen().map((run) =>
-    run.name === 'node 20 on macos-15-intel' ? { ...run, conclusion: 'cancelled' } : run,
+    run.name === 'node 24 on macos-15-intel' ? { ...run, conclusion: 'cancelled' } : run,
   );
   const verdict = verdictOf(runs, { jobOf: () => null });
   assert.equal(verdict.ok, false);
@@ -184,7 +184,7 @@ test('a cancelled job whose job list cannot be read is a failure, not capacity',
 
 test('every page of check runs is read before claiming the commit is green', async () => {
   const first = Array.from({ length: 100 }, (_, index) => green(`filler ${index}`));
-  const second = [green('node 20 on windows-latest')];
+  const second = [green('node 24 on windows-latest')];
   const pages = [first, second];
   let calls = 0;
   const runs = await fetchCheckRuns({
@@ -242,7 +242,7 @@ test('jobs are found through the workflow runs of the commit, not its check suit
         seen.push(runId);
         return [
           { name: 'node 22 on macos-15-intel', runner_name: '', steps: [] },
-          { name: 'node 20 on windows-latest', runner_name: 'r', steps: [{ name: 'npm test' }] },
+          { name: 'node 24 on windows-latest', runner_name: 'r', steps: [{ name: 'npm test' }] },
         ];
       },
     },
