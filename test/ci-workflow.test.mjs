@@ -53,5 +53,5 @@ test('the arm64 gate still refuses a leg that started but did not finish its tes
 
 test('the macOS matrix keeps the Intel image the release policy requires', () => {
   assert.match(workflow, /os: \[ubuntu-latest, macos-15-intel, windows-latest\]/u);
-  assert.match(workflow, /node: \[18, 20, 22\]/u);
+  assert.match(workflow, /node: \[18, 20, 22, 24, 26\]/u);
 });

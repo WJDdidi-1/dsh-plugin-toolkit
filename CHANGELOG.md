@@ -1,3 +1,11 @@
+## Unreleased
+
+- **The test matrix runs the current Node LTS lines too.** `ci.yml` covered
+  Node 18, 20 and 22 only, while `engines` accepts every Node above 18, so the
+  LTS releases users actually run were never exercised. The matrix now adds
+  Node 24 and 26; the support range itself is unchanged by this commit and the
+  narrower range is proposed separately.
+
 ## 0.23.0
 
 - **The malformed-`dsh.profile.bundles` verdict is pinned at the
