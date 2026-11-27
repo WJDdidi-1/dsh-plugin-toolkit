@@ -1,4 +1,4 @@
-## Unreleased
+## 0.23.1
 
 - **`mountClient` returns with the fetched value on screen under a production
   React build.** Development React exports `act`, which flushes the panel's
