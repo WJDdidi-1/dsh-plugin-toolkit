@@ -1,3 +1,19 @@
+## Unreleased
+
+- **`mountClient` returns with the fetched value on screen under a production
+  React build.** Development React exports `act`, which flushes the panel's
+  effects and their fetches before the mount returns; production builds have no
+  `act`, and the three zero-delay timers the testkit waited on do not guarantee
+  that React's scheduler has committed the update. `panel.text()` could then
+  read the loading placeholder (`Score …` instead of `Score 71`) — a race that
+  Node 24.15.0 loses far more often than Node 20.18.0 or 23.4.0. The mount and
+  the interaction helpers now yield through `setImmediate` — the callback
+  Node's React scheduler uses — so the commit lands before the mount returns;
+  development still goes through `act`, and callers see the same API.
+  `test/fixtures/production-mount.mjs` pins the production path by collapsing
+  zero-delay timers to microtasks, so a mount that only waits on a timer fails
+  every time.
+
 ## 0.23.0
 
 - **The malformed-`dsh.profile.bundles` verdict is pinned at the
